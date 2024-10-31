@@ -6,7 +6,6 @@ import openpyxl
 import openpyxl.worksheet
 import openpyxl.worksheet.worksheet
 import pandas as pd
-from fuzzywuzzy import fuzz, process
 
 from otld.paths import input_dir, inter_dir
 from otld.utils import delete_empty_columns, get_column_names
