@@ -1,7 +1,14 @@
+cffi==1.17.1
+charset-normalizer==3.4.0
+cryptography==43.0.3
 et_xmlfile==2.0.0
+fuzzywuzzy==0.18.0
 numpy==2.1.2
+-e git+https://github.com/HHS/acf-ofa-tanf-longitudinal-dataset.git@6ca884fc2fd5d31d0178c68dc840ba8dc6115519#egg=ofa_tanf_longitudinal_dataset
 openpyxl==3.1.5
 pandas==2.2.3
+pdfminer.six==20240706
+pycparser==2.22
 python-dateutil==2.9.0.post0
 pytz==2024.2
 six==1.16.0
