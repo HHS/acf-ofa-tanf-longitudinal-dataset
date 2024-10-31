@@ -1,0 +1,17 @@
+[project]
+name = "ofa_tanf_longitudinal_dataset"
+version = "0.0.1"
+description = "OFA TANF Longitudinal Dataset"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pandas"
+]
+
+[project.optional-dependencies]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
