@@ -1,3 +1,4 @@
+import json
 import os
 import re
 from io import StringIO
@@ -47,4 +48,7 @@ column_dict = [split_line(line) for line in lines]
 column_dict = {
     key: value for key, value in column_dict if key and value and len(key) < 10
 }
-# print(column_dict, len(column_dict))
+
+# Save dictionary
+with open(os.path.join(input_dir, "column_dict_196.json"), "w") as file:
+    json.dump(column_dict, file, indent=4)

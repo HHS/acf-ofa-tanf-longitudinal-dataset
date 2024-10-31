@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -32,4 +33,7 @@ assert len(lines) == 49, "Too few lines found"
 # Create dictionary
 column_dict = [split_line(line) for line in lines]
 column_dict = {key: value for key, value in column_dict if key.strip() != "2 and 3"}
-# print(column_dict)
+
+# Save dictionary
+with open(os.path.join(input_dir, "column_dict_196_r.json"), "w") as file:
+    json.dump(column_dict, file, indent=4)

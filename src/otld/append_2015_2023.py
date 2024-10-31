@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -7,11 +8,10 @@ import openpyxl.worksheet.worksheet
 import pandas as pd
 from fuzzywuzzy import fuzz, process
 
-from otld.generate_column_dict_196_r import column_dict
 from otld.paths import input_dir, inter_dir
 
-# Might want to set the name to be the number first, easier to do assertions etc.
-# Then, after all assertions pass, can conver the name to human-readable name
+with open(os.path.join(input_dir, "column_dict_196_r.json"), "r") as file:
+    column_dict = json.load(file)
 
 
 # Appropriated from Gemini code sample
