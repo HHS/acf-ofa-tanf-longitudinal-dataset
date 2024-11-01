@@ -48,8 +48,9 @@ def get_tanf_df(
     tanf_path: str | os.PathLike, sheets: list[str], year: int
 ) -> pd.DataFrame:
     data = []
+    tanf_excel_file = openpyxl.load_workbook(tanf_path)
+
     for sheet in sheets:
-        tanf_excel_file = openpyxl.load_workbook(tanf_path)
         tanf_df = tanf_excel_file[sheet]
         delete_empty_columns(tanf_df)
         columns, i = get_column_names(tanf_df)
