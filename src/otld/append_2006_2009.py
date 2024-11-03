@@ -3,16 +3,26 @@ import os
 import re
 
 import pandas as pd
-import xlrd
 
 from otld.paths import input_dir, inter_dir
 from otld.utils import standardize_name
 
+# Load column dictionary for 196 instructions
 with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
     column_dict = json.load(file)
 
 
 def rename_columns(name: str) -> str:
+    """Rename columns
+
+    Rename data frame columns to only numbers.
+
+    Args:
+        name (str): Original column name.
+
+    Returns:
+        str: New column name.
+    """
     if name == "STATE":
         pass
     else:
@@ -22,7 +32,15 @@ def rename_columns(name: str) -> str:
     return name
 
 
-def convert_to_int(series: pd.Series) -> int:
+def convert_to_int(series: pd.Series) -> pd.Series:
+    """Convert the elements in a series to integers
+
+    Args:
+        series (pd.Series): Pandas series to conver to integer type.
+
+    Returns:
+        pd.Series: Series converted to type int.
+    """
     try:
         series = series.map(
             lambda x: (
@@ -39,9 +57,19 @@ def convert_to_int(series: pd.Series) -> int:
 
 
 def get_tanf_df(paths: list[str], year: int) -> pd.DataFrame:
+    """Get data from TANF Financial files
+
+    Args:
+        paths (list[str]): List of paths to Excel workbooks.
+        year (int): The year associated with the Excel workbooks.
+
+    Returns:
+        pd.DataFrame: Appended workbooks as data frames.
+    """
     state = []
 
     for path in paths:
+        # Load file and get sheets
         tanf_excel_file = pd.ExcelFile(path)
         sheets = tanf_excel_file.sheet_names
         data = []
@@ -60,11 +88,16 @@ def get_tanf_df(paths: list[str], year: int) -> pd.DataFrame:
 
             # Load data
             tanf_df = pd.read_excel(tanf_excel_file, sheet_name=sheet, skiprows=skip)
+
+            # Drop if column is fully NA
             tanf_df.dropna(axis=1, how="all", inplace=True)
             columns = list(tanf_df.columns)
+
+            # Drop if STATE is an invalid value or NAs
             if columns[0] != "STATE":
                 columns[0] = "STATE"
                 tanf_df.columns = columns
+
             tanf_df.dropna(subset=["STATE"], inplace=True)
             tanf_df = tanf_df[
                 tanf_df["STATE"].map(
@@ -76,6 +109,7 @@ def get_tanf_df(paths: list[str], year: int) -> pd.DataFrame:
 
             # Remove NAs and set index to state
             tanf_df.dropna(axis=1)
+            tanf_df["STATE"] = tanf_df["STATE"].apply(lambda x: x.strip())
             tanf_df.set_index("STATE", inplace=True)
             tanf_df = tanf_df.filter(regex="^\s*Line")
             tanf_df = tanf_df.dropna(axis=0, how="all")
@@ -89,19 +123,22 @@ def get_tanf_df(paths: list[str], year: int) -> pd.DataFrame:
             )
             tanf_df = tanf_df.apply(convert_to_int)
 
-            # Remove duplicated columns
-            ~ tanf_df = tanf_df[not tanf_df.columns.duplicated()]
-
             data.append(tanf_df)
 
+        # Concatenate data frames and remove duplicated columns
         tanf_df = pd.concat(data, axis=1)
+        tanf_df = tanf_df.loc[:, ~tanf_df.columns.duplicated()]
+
+        # Determine whether the data frame is state or federal
         if re.search(r"\sB\s|\sC\s", path):
             state.append(tanf_df)
         else:
             federal = tanf_df
 
-    # Concatenate
+    # Add state MOE files
     state = state[0].add(state[1], level=0)
+
+    # Add year column
     state["year"] = year
     federal["year"] = year
 
@@ -109,9 +146,21 @@ def get_tanf_df(paths: list[str], year: int) -> pd.DataFrame:
 
 
 def get_tanf_files(directory: str) -> list[str]:
+    """Choose the workbooks to extract data from.
+
+    Args:
+        directory (str): The directory to search for Excel workbooks.
+
+    Returns:
+        list[str]: A list of paths to Excel workbooks.
+    """
+
+    # Walk directory for TANF files
     tanf_files = os.walk(directory)
     tanf_files = next(tanf_files)
     files = []
+
+    # Identify the relevant workbooks
     for file in tanf_files[2]:
         clean_file = standardize_name(file)
         if re.search(r"table_a.*_combined.*_in_fy_\d+.xls", clean_file):
@@ -124,23 +173,32 @@ def get_tanf_files(directory: str) -> list[str]:
 
 
 def main():
+    """Entry point for appending years 2006-2009"""
+
+    # Select directories
     tanf_dirs = list(range(2006, 2010))
     tanf_dirs = [os.path.join(input_dir, str(directory)) for directory in tanf_dirs]
     federal = []
     state = []
+
+    # Loop through directories and get data
     for directory in tanf_dirs:
         year = re.search(r"(\d{4})$", directory).group(1)
         year = int(year)
+
         files = get_tanf_files(directory)
         federal_df, state_df = get_tanf_df(files, year)
+
         federal.append(federal_df)
         state.append(state_df)
 
+    # Concatenate all years
     federal_df = pd.concat(federal)
     state_df = pd.concat(state)
 
-    exit()
     # Export
+    federal_df.to_csv(os.path.join(inter_dir, "federal_2006_2009.csv"))
+    state_df.to_csv(os.path.join(inter_dir, "state_2006_2009.csv"))
 
 
 if __name__ == "__main__":
