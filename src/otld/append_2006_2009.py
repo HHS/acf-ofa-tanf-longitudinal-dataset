@@ -56,7 +56,7 @@ def convert_to_int(series: pd.Series) -> pd.Series:
     return series
 
 
-def get_tanf_df(paths: list[str], year: int) -> pd.DataFrame:
+def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
     """Get data from TANF Financial files
 
     Args:
@@ -64,7 +64,7 @@ def get_tanf_df(paths: list[str], year: int) -> pd.DataFrame:
         year (int): The year associated with the Excel workbooks.
 
     Returns:
-        pd.DataFrame: Appended workbooks as data frames.
+       tuple[pd.DataFrame]: Appended workbooks as data frames.
     """
     state = []
 
