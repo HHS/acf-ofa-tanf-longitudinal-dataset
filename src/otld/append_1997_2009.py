@@ -5,7 +5,7 @@ import re
 import pandas as pd
 
 from otld.paths import input_dir, inter_dir
-from otld.utils import standardize_name
+from otld.utils import standardize_line_number, standardize_name
 
 # Load column dictionary for 196 instructions
 with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
@@ -27,7 +27,7 @@ def rename_columns(name: str) -> str:
         pass
     else:
         name = re.search(r"Line\s*(.+)", name).group(1)
-        name = name.replace(" ", "")
+        name = standardize_line_number(name)
 
     return name
 

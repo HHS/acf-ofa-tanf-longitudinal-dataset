@@ -6,7 +6,7 @@ import openpyxl
 import pandas as pd
 
 from otld.paths import input_dir, inter_dir
-from otld.utils import delete_empty_columns, get_column_names
+from otld.utils import delete_empty_columns, get_column_names, standardize_line_number
 
 # Load column dictionary for 196 instructions
 with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
@@ -56,7 +56,7 @@ def rename_columns(df: pd.DataFrame, sheet: str, column_dict: dict) -> pd.DataFr
     # Rename columns
     columns = ["STATE"]
     columns.extend(column_dict.keys())
-    df.columns = columns
+    df.columns = [standardize_line_number(column) for column in columns]
 
     return df
 

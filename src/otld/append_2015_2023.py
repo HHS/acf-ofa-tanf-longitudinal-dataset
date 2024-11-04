@@ -7,7 +7,7 @@ import pandas as pd
 from fuzzywuzzy import fuzz, process
 
 from otld.paths import input_dir, inter_dir
-from otld.utils import delete_empty_columns, get_column_names
+from otld.utils import delete_empty_columns, get_column_names, standardize_line_number
 
 # Load column dictionary for 196 revised instructions
 with open(os.path.join(input_dir, "column_dict_196_r.json"), "r") as file:
@@ -61,6 +61,7 @@ def rename_columns(df: pd.DataFrame) -> pd.DataFrame:
                 renamer[column] = inverted_column_dict[column_list[i]]
 
     df.rename(columns=renamer, inplace=True)
+    df.columns = df.columns.map(standardize_line_number)
 
     return df
 
