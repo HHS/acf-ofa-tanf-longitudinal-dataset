@@ -27,6 +27,7 @@ def split_line(
     return line_number, name
 
 
+# Extract PDF text as HTML (this allows identifying bolded sections)
 instructions = os.path.join(input_dir, "ACF_196_Instructions.pdf")
 output_string = StringIO()
 with open(instructions, "rb") as file:

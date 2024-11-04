@@ -51,12 +51,14 @@ def rename_columns(df: pd.DataFrame) -> pd.DataFrame:
 
         renamer = {}
 
-        # If no match, choose column name based on position
         for i, column in enumerate(columns):
+            # If match and column at position are identical, use match
             if fuzzy_matches[i] == column_list[i]:
                 renamer[column] = inverted_column_dict[fuzzy_matches[i][0]]
+            # If there is a perfect match, use match
             elif fuzzy_matches[i] is not None and fuzzy_matches[i][1] == 100:
                 renamer[column] = inverted_column_dict[fuzzy_matches[i][0]]
+            # Otherwise, use column at the current position
             else:
                 renamer[column] = inverted_column_dict[column_list[i]]
 

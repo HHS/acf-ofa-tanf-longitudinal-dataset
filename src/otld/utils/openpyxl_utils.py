@@ -7,6 +7,14 @@ import openpyxl
 def delete_empty_columns(
     worksheet: openpyxl.worksheet.worksheet.Worksheet,
 ) -> openpyxl.worksheet.worksheet.Worksheet:
+    """Delete columns with all NA/empty values
+
+    Args:
+        worksheet (openpyxl.worksheet.worksheet.Worksheet): Worksheet to delete columns from.
+
+    Returns:
+        openpyxl.worksheet.worksheet.Worksheet: Worksheet with empty columns removed
+    """
     # Iterate over columns in reverse order to avoid index issues when deleting
     for column in range(worksheet.max_column, 0, -1):
         is_empty = True
@@ -23,6 +31,16 @@ def delete_empty_columns(
 def get_merged_value(
     worksheet: openpyxl.worksheet.worksheet.Worksheet, cell: openpyxl.cell.cell.Cell
 ) -> str:
+    """Return the value in the first cell of a range of merged cells
+
+    Args:
+        worksheet (openpyxl.worksheet.worksheet.Worksheet): The worksheet to search in for merged cells.
+        cell (openpyxl.cell.cell.Cell): The cell to check for in the merged cells.
+
+    Returns:
+        str: The value of the first merged cell or the cell's value if it is not in a
+        range of merged cells.
+    """
     merged_cells = list(worksheet.merged_cells)
     for merged_cell in merged_cells:
         if cell.coordinate in merged_cell:
@@ -33,6 +51,17 @@ def get_merged_value(
 
 
 def get_column_names(worksheet: openpyxl.worksheet.worksheet.Worksheet) -> list[str]:
+    """Get the column names of an Excel worksheet
+
+    This function iterates through the rows in an Excel worksheet until all columns
+    have a non-empty value and then returns these as candidate column names.
+
+    Args:
+        worksheet (openpyxl.worksheet.worksheet.Worksheet): An Excel worksheet.
+
+    Returns:
+        list[str]: A list of potential column names
+    """
     i = 0
     columns = []
     # If not all column names are present, concatenate current row with next

@@ -5,7 +5,7 @@ import re
 import pandas as pd
 
 from otld.paths import input_dir, inter_dir
-from otld.utils import standardize_line_number, standardize_name
+from otld.utils import standardize_file_name, standardize_line_number
 
 # Load column dictionary for 196 instructions
 with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
@@ -181,7 +181,7 @@ def get_tanf_files(directory: str) -> list[str]:
 
     # Identify the relevant workbooks
     for file in tanf_files[2]:
-        clean_file = standardize_name(file)
+        clean_file = standardize_file_name(file)
         table_a_condition = re.search(
             r"table_a.*_combined.*_in_fy_\d+(_through_the_fourth_quarter)?.xls",
             clean_file,

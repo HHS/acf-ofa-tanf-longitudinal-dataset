@@ -20,6 +20,7 @@ def split_line(
     return line_number, name
 
 
+# Extract PDF text
 instructions = os.path.join(input_dir, "ACF_196R_Instructions.pdf")
 instructions = extract_text(instructions)
 instructions = instructions.replace("\x0c", "")
