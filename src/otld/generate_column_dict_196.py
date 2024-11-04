@@ -1,3 +1,9 @@
+"""Generate column dictionary for 196 instructions
+
+Parse 196 instructions PDF, extracting line numbers and line
+label to create a dictionary which can map column names to line numbers.
+"""
+
 import json
 import os
 import re

@@ -1,3 +1,5 @@
+"""Paths to TANF files"""
+
 import getpass
 
 user = getpass.getuser()

@@ -1,3 +1,5 @@
+"""Append Excel workbooks for 2010-2014"""
+
 import json
 import os
 import re

@@ -1,3 +1,5 @@
+"""Common openpyxl utilities"""
+
 __all__ = ["delete_empty_columns", "get_merged_value", "get_column_names"]
 
 import openpyxl

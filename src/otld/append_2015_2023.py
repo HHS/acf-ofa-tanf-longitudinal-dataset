@@ -1,3 +1,5 @@
+"""Append Excel workbooks for 2015-2023"""
+
 import json
 import os
 import re

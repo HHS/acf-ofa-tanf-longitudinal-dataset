@@ -1,3 +1,5 @@
+"""Common string utilities"""
+
 __all__ = ["standardize_file_name", "standardize_line_number"]
 
 import re
