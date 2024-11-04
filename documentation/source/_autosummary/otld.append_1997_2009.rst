@@ -1,7 +1,7 @@
-otld.append\_2006\_2009
+otld.append\_1997\_2009
 =======================
 
-.. automodule:: otld.append_2006_2009
+.. automodule:: otld.append_1997_2009
 
    
    .. rubric:: Functions
@@ -13,5 +13,6 @@ otld.append\_2006\_2009
       get_tanf_df
       get_tanf_files
       main
+      make_negative_string
       rename_columns
    

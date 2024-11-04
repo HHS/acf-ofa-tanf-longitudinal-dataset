@@ -11,7 +11,7 @@
    :template: custom-module-template.rst
    :recursive:
 
-   append_2006_2009
+   append_1997_2009
    append_2010_2014
    append_2015_2023
    generate_column_dict_196
