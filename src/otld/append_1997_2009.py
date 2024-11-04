@@ -32,6 +32,22 @@ def rename_columns(name: str) -> str:
     return name
 
 
+def make_negative_string(string: str) -> str:
+    """Make negative string
+
+    Convert a string to a negative string.
+
+    Args:
+        x (str): String to convert.
+
+    Returns:
+        str: Negative string.
+    """
+    string = re.sub(r"\<|\(", "-", string)
+    string = re.sub(r"\>|\)|\,", "", string)
+    return string
+
+
 def convert_to_int(series: pd.Series) -> pd.Series:
     """Convert the elements in a series to integers
 
@@ -43,11 +59,7 @@ def convert_to_int(series: pd.Series) -> pd.Series:
     """
     try:
         series = series.map(
-            lambda x: (
-                x.replace("<", "-").replace(">", "").replace(",", "")
-                if type(x) is str
-                else x
-            )
+            lambda x: (make_negative_string(x) if type(x) is str else x)
         )
         series = series.astype(int)
     except:
@@ -77,17 +89,22 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
             if sheet.startswith("Footnotes"):
                 continue
 
-            # Determine rows to skip
-            if year == 2009:
-                if sheet == "A-1":
-                    skip = 2
-                else:
-                    skip = 3
-            else:
-                skip = 4
-
             # Load data
-            tanf_df = pd.read_excel(tanf_excel_file, sheet_name=sheet, skiprows=skip)
+            tanf_df = pd.read_excel(tanf_excel_file, sheet_name=sheet, header=None)
+
+            # Find the row with column names
+            i = 0
+            columns = tanf_df.iloc[i].map(
+                lambda x: re.search(r"^\s*Line", x) if type(x) is str else None
+            )
+            while not columns.any():
+                i += 1
+                columns = tanf_df.iloc[i].map(
+                    lambda x: re.search(r"^\s*Line", x) if type(x) is str else None
+                )
+
+            tanf_df.columns = tanf_df.iloc[i]
+            tanf_df = tanf_df.iloc[i + 1 :]
 
             # Drop if column is fully NA
             tanf_df.dropna(axis=1, how="all", inplace=True)
@@ -108,11 +125,11 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
             ]
 
             # Remove NAs and set index to state
-            tanf_df.dropna(axis=1)
             tanf_df["STATE"] = tanf_df["STATE"].apply(lambda x: x.strip())
             tanf_df.set_index("STATE", inplace=True)
             tanf_df = tanf_df.filter(regex="^\s*Line")
             tanf_df = tanf_df.dropna(axis=0, how="all")
+            tanf_df.fillna("0", inplace=True)
 
             # Rename columns
             tanf_df = tanf_df.rename(rename_columns, axis=1)
@@ -130,7 +147,7 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
         tanf_df = tanf_df.loc[:, ~tanf_df.columns.duplicated()]
 
         # Determine whether the data frame is state or federal
-        if re.search(r"\sB\s|\sC\s", path):
+        if re.search(r"table\s*[bc]\s?(latest)?", path, re.IGNORECASE):
             state.append(tanf_df)
         else:
             federal = tanf_df
@@ -156,17 +173,34 @@ def get_tanf_files(directory: str) -> list[str]:
     """
 
     # Walk directory for TANF files
-    tanf_files = os.walk(directory)
-    tanf_files = next(tanf_files)
+    tanf_file_generator = os.walk(directory)
+    tanf_files = next(tanf_file_generator)
+    while not tanf_files[2]:
+        tanf_files = next(tanf_file_generator)
     files = []
 
     # Identify the relevant workbooks
     for file in tanf_files[2]:
         clean_file = standardize_name(file)
-        if re.search(r"table_a.*_combined.*_in_fy_\d+.xls", clean_file):
+        table_a_condition = re.search(
+            r"table_a.*_combined.*_in_fy_\d+(_through_the_fourth_quarter)?.xls",
+            clean_file,
+        )
+        table_b_c_condition = (
+            clean_file.find("table_b") > -1 or clean_file.find("table_c") > -1
+        )
+        combined_table_condition = clean_file.startswith("combined")
+        latest_table_condition = re.search(r"table[abc]latest", clean_file)
+
+        if (
+            table_a_condition
+            or table_b_c_condition
+            or combined_table_condition
+            or latest_table_condition
+        ):
             files.append(os.path.join(tanf_files[0], file))
-        elif clean_file.find("table_b") > -1 or clean_file.find("table_c") > -1:
-            files.append(os.path.join(tanf_files[0], file))
+        else:
+            continue
 
     assert len(files) == 3, "Incorrect number of files"
     return files
@@ -176,7 +210,7 @@ def main():
     """Entry point for appending years 2006-2009"""
 
     # Select directories
-    tanf_dirs = list(range(2006, 2010))
+    tanf_dirs = list(range(1997, 2010))
     tanf_dirs = [os.path.join(input_dir, str(directory)) for directory in tanf_dirs]
     federal = []
     state = []
@@ -197,8 +231,8 @@ def main():
     state_df = pd.concat(state)
 
     # Export
-    federal_df.to_csv(os.path.join(inter_dir, "federal_2006_2009.csv"))
-    state_df.to_csv(os.path.join(inter_dir, "state_2006_2009.csv"))
+    federal_df.to_csv(os.path.join(inter_dir, "federal_1997_2009.csv"))
+    state_df.to_csv(os.path.join(inter_dir, "state_1997_2009.csv"))
 
 
 if __name__ == "__main__":
