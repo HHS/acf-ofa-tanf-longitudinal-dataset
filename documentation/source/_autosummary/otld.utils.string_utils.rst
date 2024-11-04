@@ -9,6 +9,6 @@ otld.utils.string\_utils
    .. autosummary::
       :toctree:
    
+      standardize_file_name
       standardize_line_number
-      standardize_name
    
