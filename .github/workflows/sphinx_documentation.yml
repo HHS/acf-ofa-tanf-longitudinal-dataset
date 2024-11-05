@@ -1,0 +1,15 @@
+name: Update Documentation
+run-name: ${{ github.actor }} has pushed; updating documentation.
+on: [push]
+
+jobs:
+  update-documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Update documentation
+        run: code/generate_documentation.sh
+      - run: |
+          git commit -m "Update documentation"
+          git push 
