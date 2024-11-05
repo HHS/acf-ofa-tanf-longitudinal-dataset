@@ -139,4 +139,3 @@ if __name__ == "__main__":
     with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
         column_dict = json.load(file)
     main()
-    main()
