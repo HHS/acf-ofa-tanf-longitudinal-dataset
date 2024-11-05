@@ -6,10 +6,7 @@
 OFA TANF Longitudinal Dataset documentation
 ===========================================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
+This documentation outlines the modules and functions for appending OFA's TANF data.
 
 .. autosummary::
    :toctree: _autosummary
