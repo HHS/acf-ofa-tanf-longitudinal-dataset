@@ -91,8 +91,9 @@ def get_tanf_df(
         tanf_df.set_index("STATE", inplace=True)
         data.append(tanf_df)
 
-    # Concatenate
+    # Concatenate and remove duplicated columns
     tanf_df = pd.concat(data, axis=1)
+    tanf_df = tanf_df.loc[:, ~tanf_df.columns.duplicated()]
     tanf_df["year"] = year
 
     return tanf_df
