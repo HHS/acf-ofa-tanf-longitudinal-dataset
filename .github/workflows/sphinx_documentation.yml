@@ -5,6 +5,10 @@ on: [push]
 jobs:
   update-documentation:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - name: Check out repository code
         id: checkout
@@ -32,5 +36,3 @@ jobs:
       - name: Deploy to GitHub pages
         id: deployment
         uses: actions/deploy-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
