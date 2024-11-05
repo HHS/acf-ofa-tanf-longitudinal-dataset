@@ -9,7 +9,7 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v4
       - name: Update documentation
-        run: code/generate_documentation.sh
+        run: bash code/generate_documentation.sh
       - run: |
           git commit -m "Update documentation"
           git push 
