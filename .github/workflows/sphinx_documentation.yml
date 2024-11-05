@@ -7,12 +7,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
+        id: checkout
         uses: actions/checkout@v4
       - name: Update documentation
+        id: update
         run: bash code/generate_documentation.sh
-      - run: |
+      - name: Commit and push documentation
+        id: push
+        run: |
           git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
           git config user.name "${{ github.actor }}"
           git add .
           git commit -m "Update documentation"
-          git push 
+          git push
+        continue-on-error: true
