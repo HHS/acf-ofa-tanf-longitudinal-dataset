@@ -1,5 +1,5 @@
 pip install sphinx
-pip install -e .
+pip install .
 rm -rf documentation/source/_autosummary
 cd documentation
 make html
