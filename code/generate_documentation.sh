@@ -1,3 +1,4 @@
+pip install -U pip
 pip install sphinx
 python -m pip install .
 rm -rf documentation/source/_autosummary
