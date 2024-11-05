@@ -1,4 +1,5 @@
-code_dir=$(pwd)
-rm -rf $code_dir/../documentation/source/_autosummary
-cd $code_dir/../documentation
-cmd //c make html
+pip install -U pip
+pip install .
+rm -rf documentation/source/_autosummary
+cd documentation
+make html

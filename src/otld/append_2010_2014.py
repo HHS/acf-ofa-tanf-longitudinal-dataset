@@ -10,10 +10,6 @@ import pandas as pd
 from otld.paths import input_dir, inter_dir
 from otld.utils import delete_empty_columns, get_column_names, standardize_line_number
 
-# Load column dictionary for 196 instructions
-with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
-    column_dict = json.load(file)
-
 
 def rename_columns(df: pd.DataFrame, sheet: str, column_dict: dict) -> pd.DataFrame:
     """Rename TANF dataframe columns
@@ -139,4 +135,7 @@ def main():
 
 
 if __name__ == "__main__":
+    # Load column dictionary for 196 instructions
+    with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
+        column_dict = json.load(file)
     main()

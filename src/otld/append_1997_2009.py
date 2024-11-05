@@ -9,10 +9,6 @@ import pandas as pd
 from otld.paths import input_dir, inter_dir
 from otld.utils import standardize_file_name, standardize_line_number
 
-# Load column dictionary for 196 instructions
-with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
-    column_dict = json.load(file)
-
 
 def rename_columns(name: str) -> str:
     """Rename columns
@@ -238,4 +234,7 @@ def main():
 
 
 if __name__ == "__main__":
+    # Load column dictionary for 196 instructions
+    with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
+        column_dict = json.load(file)
     main()
