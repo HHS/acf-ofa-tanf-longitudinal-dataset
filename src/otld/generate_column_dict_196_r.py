@@ -26,21 +26,26 @@ def split_line(
     return line_number, name
 
 
-# Extract PDF text
-instructions = os.path.join(input_dir, "ACF_196R_Instructions.pdf")
-instructions = extract_text(instructions)
-instructions = instructions.replace("\x0c", "")
+def main():
+    # Extract PDF text
+    instructions = os.path.join(input_dir, "ACF_196R_Instructions.pdf")
+    instructions = extract_text(instructions)
+    instructions = instructions.replace("\x0c", "")
 
-# Extract line numbers and names
-line_re = re.compile(r"(?<=\n)(Lines?\s?\d.+?\.\s+.+?\.)", re.DOTALL)
-lines = line_re.findall(instructions)
-# lines.sort()
-assert len(lines) == 49, "Too few lines found"
+    # Extract line numbers and names
+    line_re = re.compile(r"(?<=\n)(Lines?\s?\d.+?\.\s+.+?\.)", re.DOTALL)
+    lines = line_re.findall(instructions)
+    # lines.sort()
+    assert len(lines) == 49, "Too few lines found"
 
-# Create dictionary
-column_dict = [split_line(line) for line in lines]
-column_dict = {key: value for key, value in column_dict if key.strip() != "2 and 3"}
+    # Create dictionary
+    column_dict = [split_line(line) for line in lines]
+    column_dict = {key: value for key, value in column_dict if key.strip() != "2 and 3"}
 
-# Save dictionary
-with open(os.path.join(input_dir, "column_dict_196_r.json"), "w") as file:
-    json.dump(column_dict, file, indent=4)
+    # Save dictionary
+    with open(os.path.join(input_dir, "column_dict_196_r.json"), "w") as file:
+        json.dump(column_dict, file, indent=4)
+
+
+if __name__ == "__main__":
+    main()
