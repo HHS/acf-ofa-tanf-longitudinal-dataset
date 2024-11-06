@@ -11,6 +11,7 @@ from otld.utils import (
     convert_to_numeric,
     standardize_file_name,
     standardize_line_number,
+    validate_data_frame,
 )
 
 
@@ -194,7 +195,13 @@ def main():
 
     # Concatenate all years
     federal_df = pd.concat(federal)
+    federal_df.set_index("year", append=True, inplace=True)
+
     state_df = pd.concat(state)
+    state_df.set_index("year", append=True, inplace=True)
+
+    for df in [federal_df, state_df]:
+        validate_data_frame(df)
 
     # Export
     federal_df.to_csv(os.path.join(inter_dir, "federal_1997_2009.csv"))
