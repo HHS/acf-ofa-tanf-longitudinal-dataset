@@ -30,3 +30,19 @@ def standardize_line_number(line_number: str) -> str:
         str: Line number with all non word characters removed
     """
     return re.sub(r"\W", "", line_number).strip()
+
+
+def make_negative_string(string: str) -> str:
+    """Make negative string
+
+    Convert a string to a negative string.
+
+    Args:
+        x (str): String to convert.
+
+    Returns:
+        str: Negative string.
+    """
+    string = re.sub(r"\<|\(", "-", string)
+    string = re.sub(r"\>|\)|\,", "", string)
+    return string

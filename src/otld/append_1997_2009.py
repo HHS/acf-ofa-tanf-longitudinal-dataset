@@ -7,7 +7,7 @@ import re
 import pandas as pd
 
 from otld.paths import input_dir, inter_dir
-from otld.utils import standardize_file_name, standardize_line_number
+from otld.utils import convert_to_int, standardize_file_name, standardize_line_number
 
 
 def rename_columns(name: str) -> str:
@@ -28,42 +28,6 @@ def rename_columns(name: str) -> str:
         name = standardize_line_number(name)
 
     return name
-
-
-def make_negative_string(string: str) -> str:
-    """Make negative string
-
-    Convert a string to a negative string.
-
-    Args:
-        x (str): String to convert.
-
-    Returns:
-        str: Negative string.
-    """
-    string = re.sub(r"\<|\(", "-", string)
-    string = re.sub(r"\>|\)|\,", "", string)
-    return string
-
-
-def convert_to_int(series: pd.Series) -> pd.Series:
-    """Convert the elements in a series to integers
-
-    Args:
-        series (pd.Series): Pandas series to conver to integer type.
-
-    Returns:
-        pd.Series: Series converted to type int.
-    """
-    try:
-        series = series.map(
-            lambda x: (make_negative_string(x) if type(x) is str else x)
-        )
-        series = series.astype(int)
-    except:
-        raise
-
-    return series
 
 
 def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
@@ -237,4 +201,5 @@ if __name__ == "__main__":
     # Load column dictionary for 196 instructions
     with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
         column_dict = json.load(file)
+    main()
     main()
