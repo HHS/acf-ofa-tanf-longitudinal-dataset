@@ -5,7 +5,7 @@ description = "OFA TANF Longitudinal Dataset"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "pandas", "openpyxl", "fuzzywuzzy", "pdfminer.six", "sphinx", "ruff"
+    "pandas", "openpyxl", "fuzzywuzzy", "pdfminer.six", "sphinx"
 ]
 
 [project.optional-dependencies]
@@ -15,6 +15,3 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
-
-[tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["E402"]
