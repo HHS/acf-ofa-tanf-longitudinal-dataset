@@ -8,7 +8,12 @@ import openpyxl
 import pandas as pd
 
 from otld.paths import input_dir, inter_dir
-from otld.utils import delete_empty_columns, get_column_names, standardize_line_number
+from otld.utils import (
+    convert_to_numeric,
+    delete_empty_columns,
+    get_column_names,
+    standardize_line_number,
+)
 
 
 def rename_columns(df: pd.DataFrame, sheet: str, column_dict: dict) -> pd.DataFrame:
@@ -88,12 +93,19 @@ def get_tanf_df(
 
         # Clean up and add to data list
         tanf_df.dropna(subset=["STATE"], inplace=True)
+        tanf_df["STATE"] = tanf_df["STATE"].map(lambda x: x.strip())
         tanf_df.set_index("STATE", inplace=True)
         data.append(tanf_df)
 
     # Concatenate and remove duplicated columns
     tanf_df = pd.concat(data, axis=1)
     tanf_df = tanf_df.loc[:, ~tanf_df.columns.duplicated()]
+
+    # Convert columns to int
+    tanf_df = tanf_df.apply(convert_to_numeric)
+    tanf_df.fillna(0, inplace=True)
+
+    # Add year
     tanf_df["year"] = year
 
     return tanf_df
@@ -115,24 +127,24 @@ def main():
 
     for file in tanf_files:
         # Extract year from file name
-        file_year = re.search(r"(\d{4}).xlsx?", str(file.path)).group(1)
-        file_year = int(file_year)
-        if file_year >= 2015:
+        year = re.search(r"(\d{4}).xlsx?", str(file.path)).group(1)
+        year = int(year)
+        if year >= 2015:
             continue
 
-        federal_df = get_tanf_df(file.path, fed_sheets, file_year)
-        state_df = get_tanf_df(file.path, state_sheets, file_year)
+        federal_df = get_tanf_df(file.path, fed_sheets, year)
+        state_df = get_tanf_df(file.path, state_sheets, year)
 
         federal.append(federal_df)
         state.append(state_df)
 
     # Concatenate all years and reset index
-    federal_df = pd.concat(federal).reset_index()
-    state_df = pd.concat(state).reset_index()
+    federal_df = pd.concat(federal)
+    state_df = pd.concat(state)
 
     # Export
-    federal_df.to_csv(os.path.join(inter_dir, "federal_2010_2014.csv"), index=False)
-    state_df.to_csv(os.path.join(inter_dir, "state_2010_2014.csv"), index=False)
+    federal_df.to_csv(os.path.join(inter_dir, "federal_2010_2014.csv"))
+    state_df.to_csv(os.path.join(inter_dir, "state_2010_2014.csv"))
 
 
 if __name__ == "__main__":

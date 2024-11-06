@@ -7,7 +7,11 @@ import re
 import pandas as pd
 
 from otld.paths import input_dir, inter_dir
-from otld.utils import convert_to_int, standardize_file_name, standardize_line_number
+from otld.utils import (
+    convert_to_numeric,
+    standardize_file_name,
+    standardize_line_number,
+)
 
 
 def rename_columns(name: str) -> str:
@@ -91,7 +95,6 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
             tanf_df.set_index("STATE", inplace=True)
             tanf_df = tanf_df.filter(regex="^\s*Line")
             tanf_df = tanf_df.dropna(axis=0, how="all")
-            tanf_df.fillna("0", inplace=True)
 
             # Rename columns
             tanf_df = tanf_df.rename(rename_columns, axis=1)
@@ -100,7 +103,8 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
             tanf_df = tanf_df.map(
                 lambda x: 0 if type(x) is str and x.strip() == "-" else x
             )
-            tanf_df = tanf_df.apply(convert_to_int)
+            tanf_df = tanf_df.apply(convert_to_numeric)
+            tanf_df.fillna(0, inplace=True)
 
             data.append(tanf_df)
 
@@ -201,5 +205,4 @@ if __name__ == "__main__":
     # Load column dictionary for 196 instructions
     with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
         column_dict = json.load(file)
-    main()
     main()

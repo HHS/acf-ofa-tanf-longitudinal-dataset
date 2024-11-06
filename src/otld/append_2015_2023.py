@@ -9,7 +9,12 @@ import pandas as pd
 from fuzzywuzzy import fuzz, process
 
 from otld.paths import input_dir, inter_dir
-from otld.utils import delete_empty_columns, get_column_names, standardize_line_number
+from otld.utils import (
+    convert_to_numeric,
+    delete_empty_columns,
+    get_column_names,
+    standardize_line_number,
+)
 
 
 def rename_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -90,6 +95,17 @@ def get_tanf_df(tanf_path: str | os.PathLike, sheet: str, year: int) -> pd.DataF
     # Rename columns and add year
     tanf_df.columns = columns
     tanf_df = rename_columns(tanf_df)
+
+    # Set state as index
+    tanf_df.dropna(subset=["STATE"], inplace=True)
+    tanf_df["STATE"] = tanf_df["STATE"].map(lambda x: x.strip())
+    tanf_df.set_index("STATE", inplace=True)
+
+    # Convert to numeric
+    tanf_df = tanf_df.apply(convert_to_numeric)
+    tanf_df.fillna(0, inplace=True)
+
+    # Add year column
     tanf_df["year"] = year
 
     return tanf_df
@@ -119,8 +135,8 @@ def main():
     state_df = pd.concat(state)
 
     # Export
-    federal_df.to_csv(os.path.join(inter_dir, "federal_2015_2023.csv"), index=False)
-    state_df.to_csv(os.path.join(inter_dir, "state_2015_2023.csv"), index=False)
+    federal_df.to_csv(os.path.join(inter_dir, "federal_2015_2023.csv"))
+    state_df.to_csv(os.path.join(inter_dir, "state_2015_2023.csv"))
 
 
 if __name__ == "__main__":
