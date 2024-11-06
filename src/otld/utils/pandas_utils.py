@@ -1,13 +1,13 @@
 """Common pandas utilities"""
 
-__all__ = ["convert_to_int"]
+__all__ = ["convert_to_numeric"]
 
 import pandas as pd
 
 from otld.utils.string_utils import make_negative_string
 
 
-def convert_to_int(series: pd.Series) -> pd.Series:
+def convert_to_numeric(series: pd.Series, numeric_type: type = float) -> pd.Series:
     """Convert the elements in a series to integers
 
     Args:
@@ -20,10 +20,8 @@ def convert_to_int(series: pd.Series) -> pd.Series:
         series = series.map(
             lambda x: (make_negative_string(x) if type(x) is str else x)
         )
-        series = series.astype(int)
+        series = series.astype(numeric_type)
     except:
         raise
 
-    return series
-    return series
     return series
