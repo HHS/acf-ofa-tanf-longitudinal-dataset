@@ -153,6 +153,23 @@ def main():
     federal_df.to_csv(os.path.join(inter_dir, "federal_2010_2014.csv"))
     state_df.to_csv(os.path.join(inter_dir, "state_2010_2014.csv"))
 
+    # Output list of lines missing from appended file
+    instruction_file = os.path.join(input_dir, "Instruction Crosswalk.xlsx")
+    sheet_name = "Missing Lines 2010-2014"
+    writer = pd.ExcelWriter(
+        instruction_file, engine="openpyxl", mode="a", if_sheet_exists="replace"
+    )
+
+    all_line_numbers = [standardize_line_number(line) for line in column_dict.keys()]
+    missing_columns = set(all_line_numbers) - (
+        set(federal_df.columns).union(set(state_df.columns))
+    )
+    missing_columns = list(missing_columns)
+    missing_columns.sort()
+    pd.Series(missing_columns).to_excel(writer, sheet_name=sheet_name)
+
+    writer.close()
+
 
 if __name__ == "__main__":
     # Load column dictionary for 196 instructions
