@@ -173,8 +173,57 @@ def get_tanf_files(directory: str) -> list[str]:
     return files
 
 
+def add_us_total(df: pd.DataFrame) -> pd.DataFrame:
+    """Add U.S. total row
+
+    Args:
+        df (pd.DataFrame): Data frame to add total row to
+
+    Returns:
+        pd.DataFrame: Data frame with total row
+    """
+    us_total = df.groupby("year").sum().reset_index()
+    us_total.index = ["U.S. TOTAL" for i in range(us_total.shape[0])]
+    df = pd.concat([df, us_total])
+
+    return df
+
+
+def update_index(df: pd.DataFrame) -> pd.DataFrame:
+    """Update the index of the data frame
+
+    Args:
+        df (pd.DataFrame): Data frame to update index of.
+
+    Returns:
+        pd.DataFrame: Data frame with updated index.
+    """
+    # Add year to index
+    df.set_index("year", append=True, inplace=True)
+    index_list = df.index.to_list()
+
+    # Rearrange indices
+    new_index = []
+    position = {}
+    for i, index in enumerate(index_list):
+        if index[0] == "ALABAMA":
+            position[index[1]] = i
+        elif index[0] == "U.S. TOTAL":
+            new_index.insert(position[index[1]], index)
+            continue
+
+        new_index.append(index)
+
+    # Reindex
+    new_index = pd.MultiIndex.from_tuples(new_index, names=["STATE", "year"])
+    assert len(new_index) == df.shape[0]
+    df = df.reindex(new_index)
+
+    return df
+
+
 def main():
-    """Entry point for appending years 2006-2009"""
+    """Entry point for appending years 1997-2009"""
 
     # Select directories
     tanf_dirs = list(range(1997, 2010))
@@ -195,10 +244,16 @@ def main():
 
     # Concatenate all years
     federal_df = pd.concat(federal)
-    federal_df.set_index("year", append=True, inplace=True)
+    if "U.S. TOTAL" not in federal_df.index:
+        federal_df = add_us_total(federal_df)
+
+    federal_df = update_index(federal_df)
 
     state_df = pd.concat(state)
-    state_df.set_index("year", append=True, inplace=True)
+    if "U.S. TOTAL" not in state_df.index:
+        state_df = add_us_total(state_df)
+
+    state_df = update_index(state_df)
 
     for df in [federal_df, state_df]:
         validate_data_frame(df)
@@ -212,4 +267,5 @@ if __name__ == "__main__":
     # Load column dictionary for 196 instructions
     with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
         column_dict = json.load(file)
+
     main()
