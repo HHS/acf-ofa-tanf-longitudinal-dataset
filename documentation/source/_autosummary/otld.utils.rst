@@ -12,4 +12,6 @@ otld.utils
    :recursive:
 
    openpyxl_utils
+   pandas_utils
    string_utils
+   validate_data_frame
