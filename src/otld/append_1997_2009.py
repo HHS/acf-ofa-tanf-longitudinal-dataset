@@ -174,7 +174,7 @@ def get_tanf_files(directory: str) -> list[str]:
 
 
 def add_us_total(df: pd.DataFrame) -> pd.DataFrame:
-    """Add U.S. total row
+    """Add U.S. total row.
 
     Args:
         df (pd.DataFrame): Data frame to add total row to
@@ -222,8 +222,19 @@ def update_index(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def main():
-    """Entry point for appending years 1997-2009"""
+def main(export: bool = False) -> tuple[pd.DataFrame]:
+    """Entry point for appending years 1997-2009
+
+    Args:
+        export (bool): Export csv versions of the data frames.
+
+    Returns:
+        tuple[pd.DataFrame]: Federal and state appended data frames for 1997-2009
+    """
+
+    # Load column dictionary for 196 instructions
+    with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
+        column_dict = json.load(file)  # noqa
 
     # Select directories
     tanf_dirs = list(range(1997, 2010))
@@ -259,13 +270,13 @@ def main():
         validate_data_frame(df)
 
     # Export
-    federal_df.to_csv(os.path.join(inter_dir, "federal_1997_2009.csv"))
-    state_df.to_csv(os.path.join(inter_dir, "state_1997_2009.csv"))
+    if export:
+        federal_df.to_csv(os.path.join(inter_dir, "federal_1997_2009.csv"))
+        state_df.to_csv(os.path.join(inter_dir, "state_1997_2009.csv"))
+        return None
+
+    return federal_df, state_df
 
 
 if __name__ == "__main__":
-    # Load column dictionary for 196 instructions
-    with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
-        column_dict = json.load(file)
-
-    main()
+    main(export=True)

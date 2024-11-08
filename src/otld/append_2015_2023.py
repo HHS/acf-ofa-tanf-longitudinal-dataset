@@ -18,16 +18,17 @@ from otld.utils import (
 )
 
 
-def rename_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Rename columns of dataframe
+def rename_columns(df: pd.DataFrame, column_dict: dict) -> pd.DataFrame:
+    """Rename columns of dataframe.
 
     Rename columns of dataframe to line numbers.
 
     Args:
-        df (pd.DataFrame): Dataframe to rename columns of
+        df (pd.DataFrame): Dataframe to rename columns of.
+        column_dict (dict): Dictionary mapping line numbers to field names.
 
     Returns:
-        pd.DataFrame: Dataframe with renamed columns
+        pd.DataFrame: Dataframe with renamed columns.
     """
 
     columns = df.columns.tolist()
@@ -72,13 +73,16 @@ def rename_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def get_tanf_df(tanf_path: str | os.PathLike, sheet: str, year: int) -> pd.DataFrame:
+def get_tanf_df(
+    tanf_path: str | os.PathLike, sheet: str, year: int, column_dict: dict
+) -> pd.DataFrame:
     """Extract TANF data from Excel file
 
     Args:
         tanf_path (str | os.PathLike): Path to TANF Excel file
         sheet (str): Sheet name to extract data from
         year (int): Year of data
+        column_dict (dict): Dictionary mapping line numbers to field names.
 
     Returns:
         pd.DataFrame: Extracted TANF data
@@ -95,7 +99,7 @@ def get_tanf_df(tanf_path: str | os.PathLike, sheet: str, year: int) -> pd.DataF
 
     # Rename columns and add year
     tanf_df.columns = columns
-    tanf_df = rename_columns(tanf_df)
+    tanf_df = rename_columns(tanf_df, column_dict)
 
     # Set state as index
     tanf_df.dropna(subset=["STATE"], inplace=True)
@@ -112,8 +116,20 @@ def get_tanf_df(tanf_path: str | os.PathLike, sheet: str, year: int) -> pd.DataF
     return tanf_df
 
 
-def main():
-    """Entry point for appending 2015-2023"""
+def main(export: bool = False) -> tuple[pd.DataFrame]:
+    """Entry point for appending 2015-2023
+
+    Args:
+        export (bool): Export csv versions of the data frames.
+
+    Returns:
+        tuple[pd.DataFrame]: Federal and state appended data frames for 1997-2009
+
+    """
+
+    # Load column dictionary for 196 revised instructions
+    with open(os.path.join(input_dir, "column_dict_196_r.json"), "r") as file:
+        column_dict = json.load(file)  # noqa
 
     # Select TANF files from 2015-2023
     tanf_path = os.path.join(input_dir, "2010_2023")
@@ -128,8 +144,12 @@ def main():
         if year < 2015:
             continue
 
-        federal.append(get_tanf_df(file.path, "C.1 Federal Expenditures", year))
-        state.append(get_tanf_df(file.path, "C.2 State Expenditures", year))
+        federal.append(
+            get_tanf_df(file.path, "C.1 Federal Expenditures", year, column_dict)
+        )
+        state.append(
+            get_tanf_df(file.path, "C.2 State Expenditures", year, column_dict)
+        )
 
     # Concatenate all years
     federal_df = pd.concat(federal)
@@ -142,12 +162,13 @@ def main():
         validate_data_frame(df)
 
     # Export
-    federal_df.to_csv(os.path.join(inter_dir, "federal_2015_2023.csv"))
-    state_df.to_csv(os.path.join(inter_dir, "state_2015_2023.csv"))
+    if export:
+        federal_df.to_csv(os.path.join(inter_dir, "federal_2015_2023.csv"))
+        state_df.to_csv(os.path.join(inter_dir, "state_2015_2023.csv"))
+        return None
+
+    return federal_df, state_df
 
 
 if __name__ == "__main__":
-    # Load column dictionary for 196 revised instructions
-    with open(os.path.join(input_dir, "column_dict_196_r.json"), "r") as file:
-        column_dict = json.load(file)
-    main()
+    main(export=True)

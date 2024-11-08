@@ -66,7 +66,7 @@ def rename_columns(df: pd.DataFrame, sheet: str, column_dict: dict) -> pd.DataFr
 
 
 def get_tanf_df(
-    tanf_path: str | os.PathLike, sheets: list[str], year: int
+    tanf_path: str | os.PathLike, sheets: list[str], year: int, column_dict: dict
 ) -> pd.DataFrame:
     """Get data from TANF Financial files
 
@@ -74,6 +74,7 @@ def get_tanf_df(
         tanf_path (str | os.PathLike): Path to TANF file.
         sheets (list[str]): List of sheets to extract.
         year (int): The year associated with the Excel workbook.
+        column_dict (dict): A dictionary mapping line numbers to field names.
 
     Returns:
         pd.DataFrame: Appended workbooks as data frames.
@@ -112,8 +113,19 @@ def get_tanf_df(
     return tanf_df
 
 
-def main():
-    """Entry point for appending 2010-2014"""
+def main(export: bool = False) -> tuple[pd.DataFrame]:
+    """Entry point for appending 2010-2014
+
+    Args:
+        export (bool): Export csv versions of the data frames.
+
+    Returns:
+        tuple[pd.DataFrame]: Federal and state appended data frames for 1997-2009
+    """
+
+    # Load column dictionary for 196 instructions
+    with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
+        column_dict = json.load(file)
 
     # Select tanf files
     tanf_path = os.path.join(input_dir, "2010_2023")
@@ -133,8 +145,8 @@ def main():
         if year >= 2015:
             continue
 
-        federal_df = get_tanf_df(file.path, fed_sheets, year)
-        state_df = get_tanf_df(file.path, state_sheets, year)
+        federal_df = get_tanf_df(file.path, fed_sheets, year, column_dict)
+        state_df = get_tanf_df(file.path, state_sheets, year, column_dict)
 
         federal.append(federal_df)
         state.append(state_df)
@@ -150,29 +162,33 @@ def main():
         validate_data_frame(df)
 
     # Export
-    federal_df.to_csv(os.path.join(inter_dir, "federal_2010_2014.csv"))
-    state_df.to_csv(os.path.join(inter_dir, "state_2010_2014.csv"))
+    if export:
+        federal_df.to_csv(os.path.join(inter_dir, "federal_2010_2014.csv"))
+        state_df.to_csv(os.path.join(inter_dir, "state_2010_2014.csv"))
 
-    # Output list of lines missing from appended file
-    instruction_file = os.path.join(input_dir, "Instruction Crosswalk.xlsx")
-    sheet_name = "Missing Lines 2010-2014"
-    writer = pd.ExcelWriter(
-        instruction_file, engine="openpyxl", mode="a", if_sheet_exists="replace"
-    )
+        # Output list of lines missing from appended file
+        instruction_file = os.path.join(input_dir, "Instruction Crosswalk.xlsx")
+        sheet_name = "Missing Lines 2010-2014"
+        writer = pd.ExcelWriter(
+            instruction_file, engine="openpyxl", mode="a", if_sheet_exists="replace"
+        )
 
-    all_line_numbers = [standardize_line_number(line) for line in column_dict.keys()]
-    missing_columns = set(all_line_numbers) - (
-        set(federal_df.columns).union(set(state_df.columns))
-    )
-    missing_columns = list(missing_columns)
-    missing_columns.sort()
-    pd.Series(missing_columns).to_excel(writer, sheet_name=sheet_name)
+        all_line_numbers = [
+            standardize_line_number(line) for line in column_dict.keys()
+        ]
+        missing_columns = set(all_line_numbers) - (
+            set(federal_df.columns).union(set(state_df.columns))
+        )
+        missing_columns = list(missing_columns)
+        missing_columns.sort()
+        pd.Series(missing_columns).to_excel(writer, sheet_name=sheet_name)
 
-    writer.close()
+        writer.close()
+
+        return None
+
+    return federal_df, state_df
 
 
 if __name__ == "__main__":
-    # Load column dictionary for 196 instructions
-    with open(os.path.join(input_dir, "column_dict_196.json"), "r") as file:
-        column_dict = json.load(file)
-    main()
+    main(export=True)
