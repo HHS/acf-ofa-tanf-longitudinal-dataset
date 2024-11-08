@@ -1,3 +1,8 @@
+"""Format appended files
+
+This module formats appended TANF financial data.
+"""
+
 import os
 
 import openpyxl
@@ -12,22 +17,45 @@ from otld import append_1997_2009
 
 
 def format_pd_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Format pandas data frame columns.
+
+    Apply transformations to column values.
+
+    Args:
+        df (pd.DataFrame): Data frame to format.
+
+    Returns:
+        pd.DataFrame: Formatted data frame.
+    """
     df = df.map(lambda x: f"{x:,.0f}")
 
     return df
 
 
 def add_table(ws: Worksheet, displayName: str, ref: str):
-    # Add table
+    """Add an Excel table to a worksheet.
+
+    Args:
+        ws (Worksheet): Worksheet to add table to.
+        displayName (str): Name of the table.
+        ref (str): Range of cells to convert to a table.
+    """
     tab = Table(displayName=displayName, ref=ref)
+
     style = TableStyleInfo(
         name="TableStyleMedium9", showRowStripes=True, showColumnStripes=True
     )
     tab.tableStyleInfo = style
+
     ws.add_table(tab)
 
 
 def format_openpyxl_worksheet(ws: Worksheet):
+    """Format openpyxl worksheet.
+
+    Args:
+        ws (Worksheet): Worksheet to format.
+    """
     # Adjust columns
     for column in range(ws.max_column):
         column += 1
@@ -46,6 +74,8 @@ def format_openpyxl_worksheet(ws: Worksheet):
 
 
 def main():
+    """Entry point for script to format appended files"""
+
     federal, state = append_1997_2009.main()
 
     # Load csv into workbook
