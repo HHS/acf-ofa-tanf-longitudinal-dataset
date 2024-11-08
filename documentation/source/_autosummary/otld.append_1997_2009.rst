@@ -9,8 +9,10 @@ otld.append\_1997\_2009
    .. autosummary::
       :toctree:
    
+      add_us_total
       get_tanf_df
       get_tanf_files
       main
       rename_columns
+      update_index
    
