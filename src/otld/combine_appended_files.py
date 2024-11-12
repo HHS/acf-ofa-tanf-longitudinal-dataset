@@ -32,6 +32,8 @@ def main():
     # Map columns across 2014/2015 disjunction
     # Append pre and post-2015
 
+    return federal, state
+
 
 if __name__ == "__main__":
     main()
