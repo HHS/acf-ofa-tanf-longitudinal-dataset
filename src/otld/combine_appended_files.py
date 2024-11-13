@@ -26,8 +26,8 @@ def main():
     state = pd.concat(state)
     federal = pd.concat(federal)
 
-    print(state)
-    print(federal)
+    # print(state)
+    # print(federal)
 
     # Map columns across 2014/2015 disjunction
     # Append pre and post-2015
