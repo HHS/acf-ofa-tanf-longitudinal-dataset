@@ -117,10 +117,6 @@ class LongitudinalVisualizations:
     def within_year_within_state_treemap(self):
         df = self.df.copy()
 
-        if self.column:
-            self.column = ["year", "STATE"] + self.column
-            df = df[self.column]
-
         df = df.melt(id_vars=["year", "STATE"])
         df = df.fillna(0)
         df = df[(df["year"] == self.year) & (df["STATE"] == self.state)]
