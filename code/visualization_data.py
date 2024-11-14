@@ -19,11 +19,13 @@ states = [{"label": state.title(), "value": state} for state in states]
 
 # State components
 state_checkboxes = dcc.Checklist(
-    id="state-checkbox",
+    id={"type": "data", "id": "state-checkbox"},
     options=states,
     value=["U.S. TOTAL"],
 )
-state_dropdown = dcc.Dropdown(id="state-dropdown", options=states, value="U.S. TOTAL")
+state_dropdown = dcc.Dropdown(
+    id={"type": "data", "id": "state-dropdown"}, options=states, value="U.S. TOTAL"
+)
 
 # List of columns
 columns = (
@@ -35,12 +37,18 @@ columns.sort()
 columns = [{"label": crosswalk[column], "value": column} for column in columns]
 
 # Column components
-column_checkboxes = dcc.Checklist(id="column-checkbox", options=columns, value=["1"])
-column_dropdown = dcc.Dropdown(id="column-dropdown", options=columns, value="1")
+column_checkboxes = dcc.Checklist(
+    id={"type": "data", "id": "column-checkbox"}, options=columns, value=["1"]
+)
+column_dropdown = dcc.Dropdown(
+    id={"type": "data", "id": "column-dropdown"}, options=columns, value="1"
+)
 
 # Dataset component
 df_dropdown = dcc.Dropdown(
-    id="df-dropdown", options=["Federal", "State"], value="Federal"
+    id={"type": "data", "id": "df-dropdown"},
+    options=["Federal", "State"],
+    value="Federal",
 )
 
 # List of years
@@ -49,4 +57,6 @@ years = list(set(years))
 years.sort()
 
 # Year component
-year_dropdown = dcc.Dropdown(id="year-dropdown", options=years, value=2009)
+year_dropdown = dcc.Dropdown(
+    id={"type": "data", "id": "year-dropdown"}, options=years, value=2009
+)
