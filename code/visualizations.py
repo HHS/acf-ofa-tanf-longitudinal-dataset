@@ -1,4 +1,4 @@
-from dash import Dash, Input, Output, callback, dcc, html
+from dash import ALL, Dash, Input, Output, callback, dcc, html
 from LongitudinalVisualizations import LongitudinalVisualizations
 from visualization_data import (
     column_checkboxes,
@@ -53,35 +53,35 @@ def render_tab(tab):
         content = html.Div(
             [
                 html.Div([df_dropdown, state_checkboxes, column_dropdown]),
-                dcc.Graph(id="cross_state_longitudinal_line_plot_plot"),
+                dcc.Graph(id="plot"),
             ]
         )
     elif tab == "within_state_within_year_bar_chart":
         content = html.Div(
             [
                 html.Div([df_dropdown, state_dropdown, year_dropdown]),
-                dcc.Graph(id="within_state_within_year_bar_chart_plot"),
+                dcc.Graph(id="plot"),
             ]
         )
     elif tab == "within_state_longitudinal_line_plot":
         content = html.Div(
             [
                 html.Div([df_dropdown, state_dropdown, column_checkboxes]),
-                dcc.Graph(id="within_state_longitudinal_line_plot_plot"),
+                dcc.Graph(id="plot"),
             ]
         )
     elif tab == "within_year_within_state_treemap":
         content = html.Div(
             [
                 html.Div([df_dropdown, state_dropdown, year_dropdown]),
-                dcc.Graph(id="within_year_within_state_treemap_plot"),
+                dcc.Graph(id="plot"),
             ]
         )
     elif tab == "cross_state_within_year_treemap":
         content = html.Div(
             [
                 html.Div([df_dropdown, year_dropdown, column_dropdown]),
-                dcc.Graph(id="cross_state_within_year_treemap_plot"),
+                dcc.Graph(id="plot"),
             ]
         )
     else:
@@ -93,41 +93,27 @@ def render_tab(tab):
 @callback(
     Output("plot", "figure"),
     Input("visualizations", "value"),
-    Input("content-container", "children"),
+    Input({"type": "data", "id": ALL}, "value"),
 )
-def render_figure(tab, children):
-    selectors = children["props"]["children"][0]["props"]["children"]
-    for item in selectors:
-        if not isinstance(item, dict):
-            continue
-        elif not item.get("props"):
-            continue
-
-        props = item.get("props")
-        ident = props.get("id")
-        if ident not in [
-            "df-dropdown",
-            "state-dropdown",
-            "state-checkbox",
-            "column-dropdown",
-            "column-checkbox",
-            "year-dropdown",
-        ]:
-            continue
-
-        value = props.get("value")
-        if ident == "df-dropdown":
-            df = value.lower()
-            df = get_data(df).copy()
-            visualizer.df = df
-        elif ident.startswith("state"):
-            visualizer.state = value
-        elif ident.startswith("column"):
-            visualizer.column = value
-        elif ident.startswith("year"):
-            visualizer.year = value
-
-        # Return the appropriate figure from visualizer
+def update_figure(tab, values):
+    df = values[0].lower()
+    df = get_data(df).copy()
+    visualizer.df = df
+    if tab in [
+        "cross_state_longitudinal_line_plot",
+        "within_state_longitudinal_line_plot",
+    ]:
+        visualizer.state = values[1]
+        visualizer.column = values[2]
+    elif tab in [
+        "within_state_within_year_bar_chart",
+        "within_year_within_state_treemap",
+    ]:
+        visualizer.state = values[1]
+        visualizer.year = values[2]
+    elif tab == "cross_state_within_year_treemap":
+        visualizer.year = values[1]
+        visualizer.column = values[2]
     func = visualizer.__getattribute__(tab)
 
     return func()
