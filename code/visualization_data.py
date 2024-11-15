@@ -15,6 +15,9 @@ federal, state = combine_appended_files.main()
 states = federal["STATE"].tolist() + state["STATE"].tolist()
 states = list(set(states))
 states.sort()
+# Move U.S. TOTAL to the beginning
+states.pop(states.index("U.S. TOTAL"))
+states = ["U.S. TOTAL"] + states
 states = [{"label": state.title(), "value": state} for state in states]
 
 # State components
@@ -22,6 +25,7 @@ state_checkboxes = dcc.Checklist(
     id={"type": "data", "id": "state-checkbox"},
     options=states,
     value=["U.S. TOTAL"],
+    inline=True,
 )
 state_dropdown = dcc.Dropdown(
     id={"type": "data", "id": "state-dropdown"}, options=states, value="U.S. TOTAL"
@@ -38,7 +42,10 @@ columns = [{"label": crosswalk[column], "value": column} for column in columns]
 
 # Column components
 column_checkboxes = dcc.Checklist(
-    id={"type": "data", "id": "column-checkbox"}, options=columns, value=["1"]
+    id={"type": "data", "id": "column-checkbox"},
+    options=columns,
+    value=["1"],
+    inline=True,
 )
 column_dropdown = dcc.Dropdown(
     id={"type": "data", "id": "column-dropdown"}, options=columns, value="1"
