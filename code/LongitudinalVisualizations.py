@@ -50,6 +50,7 @@ class LongitudinalVisualizations:
             df = df[df["STATE"].isin(self.state)]
 
         df.loc[:, "STATE"] = df.loc[:, "STATE"].map(lambda x: x.title())
+        column_name = crosswalk[self.column]
 
         fig = px.line(
             df,
@@ -58,10 +59,10 @@ class LongitudinalVisualizations:
             color="STATE",
             labels={
                 "year": "Year",
-                self.column: crosswalk[self.column],
+                self.column: column_name,
                 "STATE": "State",
             },
-            range_x=[],
+            title=f"Longitudinal Comparison of {column_name}",
         )
 
         fig.update_layout(xaxis={"dtick": 1})
@@ -92,7 +93,7 @@ class LongitudinalVisualizations:
             "variable",
             "value",
             labels={"value": "$Amount", "variable": "Line"},
-            title=f"Line Values for {self.state.title()} in {self.year}",
+            title=f"Expenditure Categories for {self.state.title()} in {self.year}",
         )
 
         return fig
@@ -125,6 +126,7 @@ class LongitudinalVisualizations:
             "value",
             color="variable",
             labels={"year": "Year", "value": "$Amount", "variable": "Line"},
+            title=f"Longitudinal Comparison of Expenditure Categories within {self.state.title()}",
         )
 
         return fig
@@ -143,7 +145,12 @@ class LongitudinalVisualizations:
         df["variable"] = df.variable.map(crosswalk)
         df = df.sort_values(by=["variable"])
 
-        fig = px.treemap(df, path=["year", "STATE", "variable"], values="value")
+        fig = px.treemap(
+            df,
+            path=["year", "STATE", "variable"],
+            values="value",
+            title=f"Expenditure Categories for {self.state.title()} in {self.year}",
+        )
         fig.data[0].customdata = df.value.tolist()
         fig.data[0].texttemplate = "%{label}<br>Amount: $%{customdata:,}"
 
@@ -161,6 +168,7 @@ class LongitudinalVisualizations:
         df = df[["year", "STATE", self.column]]
         df = df.fillna(0)
         df = df.sort_values(by=["STATE"])
+        df["STATE"] = df["STATE"].map(lambda x: x.title())
 
         fig = px.treemap(
             df,
