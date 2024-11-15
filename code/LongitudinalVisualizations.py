@@ -3,11 +3,13 @@ import os
 
 import plotly.express as px
 from pandas import DataFrame
+from plotly.graph_objs._figure import Figure
 
 from otld import combine_appended_files
 from otld.paths import input_dir
 from otld.utils.string_utils import standardize_line_number
 
+# Line number to field name crosswalk
 crosswalk = json.load(open(os.path.join(input_dir, "column_dict_196.json")))
 crosswalk = {standardize_line_number(key): value for key, value in crosswalk.items()}
 crosswalk.update({"5b": "Assistance: Child Care", "6b": "Non-assistance: Child Care"})
@@ -21,21 +23,24 @@ class LongitudinalVisualizations:
         year: int = None,
         column: str | list[str] = None,
     ):
+        """Instantiate LongitudinalVisualizations class
+
+        Args:
+            df (DataFrame, optional): Data to use for visualizations. Defaults to None.
+            state (str | list[str], optional): Single state or list of states. Defaults to None.
+            year (int, optional): Year. Defaults to None.
+            column (str | list[str], optional): Single line number or list of line numbers. Defaults to None.
+        """
         self.df = df
         self.state = state
         self.year = year
         self.column = column
 
-    def cross_state_longitudinal_line_plot(self):
-        """Line graphs of a single variable longitudinally, by self.state
-
-        Args:
-            df (str): _description_
-            self.state (str | list[str]): _description_
-            self.column (str): _description_
+    def cross_state_longitudinal_line_plot(self) -> Figure:
+        """Longitudinal line chart across state for select column
 
         Returns:
-            _type_: _description_
+            Figure: Line chart
         """
         df = self.df.copy()
 
@@ -65,7 +70,12 @@ class LongitudinalVisualizations:
 
         return fig
 
-    def within_state_within_year_bar_chart(self):
+    def within_state_within_year_bar_chart(self) -> Figure:
+        """Bar chart within state and year of all columns
+
+        Returns:
+            Figure: Bar chart
+        """
         df = self.df.copy()
 
         df = df[(df["STATE"] == self.state) & (df["year"] == self.year)]
@@ -87,7 +97,12 @@ class LongitudinalVisualizations:
 
         return fig
 
-    def within_state_longitudinal_line_plot(self):
+    def within_state_longitudinal_line_plot(self) -> Figure:
+        """Longitudinal line chart within state of select columns
+
+        Returns:
+            Figure: Line chart
+        """
         df = self.df.copy()
 
         df = df[df["STATE"] == self.state]
@@ -114,7 +129,12 @@ class LongitudinalVisualizations:
 
         return fig
 
-    def within_year_within_state_treemap(self):
+    def within_year_within_state_treemap(self) -> Figure:
+        """Treemap within state and year of all columns
+
+        Returns:
+            Figure: Treemap
+        """
         df = self.df.copy()
 
         df = df.melt(id_vars=["year", "STATE"])
@@ -129,7 +149,12 @@ class LongitudinalVisualizations:
 
         return fig
 
-    def cross_state_within_year_treemap(self):
+    def cross_state_within_year_treemap(self) -> Figure:
+        """Treemap across state and within year of select columns
+
+        Returns:
+            Figure: Treemap
+        """
         df = self.df.copy()
 
         df = df[df["year"] == self.year]

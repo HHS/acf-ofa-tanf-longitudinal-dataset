@@ -15,7 +15,7 @@ visualizer = LongitudinalVisualizations()
 
 app.layout = html.Div(
     [
-        dcc.Markdown("# Example Visualizations"),
+        dcc.Markdown("# Example Visualizations of TANF Longitudinal Data"),
         dcc.Tabs(
             id="visualizations",
             value="visualizations",
@@ -49,6 +49,14 @@ app.layout = html.Div(
 
 @callback(Output("content-container", "children"), Input("visualizations", "value"))
 def render_tab(tab):
+    """Render the dropdown menu and figure div for a given tab
+
+    Args:
+        tab (_type_): The tab currently displayed for the user
+
+    Returns:
+        dash.html.Div: HTML div with desired content (or no content if no tab is selected)
+    """
     if tab == "cross_state_longitudinal_line_plot":
         content = html.Div(
             [
@@ -95,11 +103,22 @@ def render_tab(tab):
     Input("visualizations", "value"),
     Input({"type": "data", "id": ALL}, "value"),
 )
-def update_figure(tab, values):
+def update_figure(tab: str, values: list):
+    """Update the plot div
+
+    Args:
+        tab (str): The user's current tab
+        values (list): The values of the dropdown/checkbox widgets
+
+    Returns:
+        plotly.graph_objs._figure.Figure: Plotly figure
+    """
+    # Get the appropriate dataset
     df = values[0].lower()
     df = get_data(df).copy()
     visualizer.df = df
 
+    # Determine which values to update and update them
     if tab in [
         "cross_state_longitudinal_line_plot",
         "within_state_longitudinal_line_plot",
@@ -117,9 +136,11 @@ def update_figure(tab, values):
         visualizer.year = values[1]
         visualizer.column = values[2]
 
+    # Get the function to run based on tab and generate the figure
     func = visualizer.__getattribute__(tab)
     fig = func()
 
+    # Reset data
     visualizer.state = visualizer.year = visualizer.column = None
 
     return fig
