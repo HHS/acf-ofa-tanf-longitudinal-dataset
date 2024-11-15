@@ -99,6 +99,7 @@ def update_figure(tab, values):
     df = values[0].lower()
     df = get_data(df).copy()
     visualizer.df = df
+
     if tab in [
         "cross_state_longitudinal_line_plot",
         "within_state_longitudinal_line_plot",
@@ -111,12 +112,17 @@ def update_figure(tab, values):
     ]:
         visualizer.state = values[1]
         visualizer.year = values[2]
+        visualizer.column = None
     elif tab == "cross_state_within_year_treemap":
         visualizer.year = values[1]
         visualizer.column = values[2]
-    func = visualizer.__getattribute__(tab)
 
-    return func()
+    func = visualizer.__getattribute__(tab)
+    fig = func()
+
+    visualizer.state = visualizer.year = visualizer.column = None
+
+    return fig
 
 
 if __name__ == "__main__":
