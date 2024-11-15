@@ -13,8 +13,6 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.worksheet.worksheet import Worksheet
 
-from otld import append_1997_2009
-
 
 def format_pd_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Format pandas data frame columns.
@@ -43,7 +41,7 @@ def add_table(ws: Worksheet, displayName: str, ref: str):
     tab = Table(displayName=displayName, ref=ref)
 
     style = TableStyleInfo(
-        name="TableStyleMedium9", showRowStripes=True, showColumnStripes=True
+        name="TableStyleLight8", showRowStripes=True, showColumnStripes=True
     )
     tab.tableStyleInfo = style
 
@@ -76,7 +74,12 @@ def format_openpyxl_worksheet(ws: Worksheet):
 def main():
     """Entry point for script to format appended files"""
 
-    federal, state = append_1997_2009.main()
+    federal = pd.read_csv(
+        os.path.join(inter_dir, "federal_1997_2009.csv"), index_col=["STATE", "year"]
+    )
+    state = pd.read_csv(
+        os.path.join(inter_dir, "state_1997_2009.csv"), index_col=["STATE", "year"]
+    )
 
     # Load csv into workbook
     # Adapted from https://stackoverflow.com/questions/12976378/openpyxl-convert-csv-to-excel
@@ -110,6 +113,6 @@ def main():
 
 
 if __name__ == "__main__":
-    from otld.paths import scrap_dir
+    from otld.paths import inter_dir, scrap_dir
 
     main()
