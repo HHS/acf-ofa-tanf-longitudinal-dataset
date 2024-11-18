@@ -3,6 +3,7 @@ from LongitudinalVisualizations import LongitudinalVisualizations
 from visualization_data import (
     column_checkboxes,
     column_dropdown,
+    data,
     df_dropdown,
     get_data,
     state_checkboxes,
@@ -60,35 +61,45 @@ def render_tab(tab):
     if tab == "cross_state_longitudinal_line_plot":
         content = html.Div(
             [
-                html.Div([df_dropdown, state_checkboxes, column_dropdown]),
+                html.Div(
+                    [df_dropdown, state_checkboxes, column_dropdown], id="selector-div"
+                ),
                 dcc.Graph(id="plot"),
             ]
         )
     elif tab == "within_state_within_year_bar_chart":
         content = html.Div(
             [
-                html.Div([df_dropdown, state_dropdown, year_dropdown]),
+                html.Div(
+                    [df_dropdown, state_dropdown, year_dropdown], id="selector-div"
+                ),
                 dcc.Graph(id="plot"),
             ]
         )
     elif tab == "within_state_longitudinal_line_plot":
         content = html.Div(
             [
-                html.Div([df_dropdown, state_dropdown, column_checkboxes]),
+                html.Div(
+                    [df_dropdown, state_dropdown, column_checkboxes], id="selector-div"
+                ),
                 dcc.Graph(id="plot"),
             ]
         )
     elif tab == "within_year_within_state_treemap":
         content = html.Div(
             [
-                html.Div([df_dropdown, state_dropdown, year_dropdown]),
+                html.Div(
+                    [df_dropdown, state_dropdown, year_dropdown], id="selector-div"
+                ),
                 dcc.Graph(id="plot"),
             ]
         )
     elif tab == "cross_state_within_year_treemap":
         content = html.Div(
             [
-                html.Div([df_dropdown, year_dropdown, column_dropdown]),
+                html.Div(
+                    [df_dropdown, year_dropdown, column_dropdown], id="selector-div"
+                ),
                 dcc.Graph(id="plot"),
             ]
         )
@@ -144,6 +155,32 @@ def update_figure(tab: str, values: list):
     visualizer.state = visualizer.year = visualizer.column = None
 
     return fig
+
+
+@callback(
+    Output("selector-div", "children"),
+    Input({"type": "data", "id": "df-dropdown"}, "value"),
+    Input("selector-div", "children"),
+)
+def update_selectors(level: str, children):
+    level = level.lower()
+    for child in children:
+        if not isinstance(child, dict) or not child.get("props"):
+            continue
+        elif not isinstance(child["props"]["id"], dict):
+            continue
+
+        ident = child["props"]["id"]["id"]
+        if ident == "df-dropdown":
+            continue
+        elif ident.startswith("state"):
+            child["props"]["options"] = data["states"][level]
+        elif ident.startswith("column"):
+            child["props"]["options"] = data["columns"][level]
+        elif ident.startswith("year"):
+            child["props"]["options"] = data["years"][level]
+
+    return children
 
 
 if __name__ == "__main__":

@@ -12,43 +12,62 @@ def get_data(level: str) -> DataFrame:
 federal, state = combine_appended_files.main()
 
 # List of states
-states = federal["STATE"].tolist() + state["STATE"].tolist()
-states = list(set(states))
-states.sort()
-# Move U.S. TOTAL to the beginning
-states.pop(states.index("U.S. TOTAL"))
-states = ["U.S. TOTAL"] + states
-states = [{"label": state.title(), "value": state} for state in states]
+data = {}
+data["states"] = {}
+data["states"]["federal"] = federal["STATE"].unique().tolist()
+data["states"]["state"] = state["STATE"].unique().tolist()
+
+for state_list in data["states"].values():
+    state_list.sort()
+    state_list.insert(0, state_list.pop(state_list.index("U.S. TOTAL")))
+
+data["states"]["federal"] = [
+    {"label": state.title(), "value": state} for state in data["states"]["federal"]
+]
+data["states"]["state"] = [
+    {"label": state.title(), "value": state} for state in data["states"]["state"]
+]
 
 # State components
 state_checkboxes = dcc.Checklist(
     id={"type": "data", "id": "state-checkbox"},
-    options=states,
+    options=data["states"]["federal"],
     value=["U.S. TOTAL"],
     inline=True,
 )
 state_dropdown = dcc.Dropdown(
-    id={"type": "data", "id": "state-dropdown"}, options=states, value="U.S. TOTAL"
+    id={"type": "data", "id": "state-dropdown"},
+    options=data["states"]["federal"],
+    value="U.S. TOTAL",
 )
 
 # List of columns
-columns = (
-    federal.drop(["STATE", "year"], axis=1).columns.tolist()
-    + state.drop(["STATE", "year"], axis=1).columns.tolist()
-)
-columns = list(set(columns))
-columns.sort()
-columns = [{"label": crosswalk[column], "value": column} for column in columns]
+data["columns"] = {}
+data["columns"]["federal"] = federal.drop(["STATE", "year"], axis=1).columns.tolist()
+data["columns"]["state"] = state.drop(["STATE", "year"], axis=1).columns.tolist()
+
+for columns in data["columns"].values():
+    columns.sort()
+
+data["columns"]["federal"] = [
+    {"label": crosswalk[column], "value": column}
+    for column in data["columns"]["federal"]
+]
+data["columns"]["state"] = [
+    {"label": crosswalk[column], "value": column} for column in data["columns"]["state"]
+]
 
 # Column components
 column_checkboxes = dcc.Checklist(
     id={"type": "data", "id": "column-checkbox"},
-    options=columns,
-    value=["1"],
+    options=data["columns"]["federal"],
+    value=[],
     inline=True,
 )
 column_dropdown = dcc.Dropdown(
-    id={"type": "data", "id": "column-dropdown"}, options=columns, value="1"
+    id={"type": "data", "id": "column-dropdown"},
+    options=data["columns"]["federal"],
+    value="",
 )
 
 # Dataset component
@@ -59,11 +78,16 @@ df_dropdown = dcc.Dropdown(
 )
 
 # List of years
-years = federal["year"].tolist() + state["year"].tolist()
-years = list(set(years))
-years.sort()
+data["years"] = {}
+data["years"]["federal"] = federal["year"].unique().tolist()
+data["years"]["state"] = state["year"].unique().tolist()
+
+data["years"]["federal"].sort()
+data["years"]["state"].sort()
 
 # Year component
 year_dropdown = dcc.Dropdown(
-    id={"type": "data", "id": "year-dropdown"}, options=years, value=2009
+    id={"type": "data", "id": "year-dropdown"},
+    options=data["years"]["federal"],
+    value=2009,
 )
