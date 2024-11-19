@@ -34,12 +34,24 @@ def rename_columns(df: pd.DataFrame, sheet: str, column_dict: dict) -> pd.DataFr
         pd.DataFrame: _description_
     """
     # Select the line number for the relevant sheet
-    if sheet.endswith("Non-Assistance"):
+    if sheet == "Fed & State Assistance":
+        df = df.iloc[:, [0, 4, 5]]
+        df.columns = ["STATE", "10", "7"]
+        return df
+    elif sheet == "Fed & State Non-Assistance":
+        df = df.iloc[:, [0, 2, 4, 5, 13]]
+        df.columns = ["STATE", "9", "10", "12", "8"]
+        return df
+    elif sheet.endswith("Non-Assistance"):
         number = 6
     elif sheet.endswith("Assistance"):
         number = 5
     elif sheet.endswith("Non-A Subcategories"):
         number = 6
+    elif sheet.startswith("Summary"):
+        df = df.iloc[:, [0, 1, 4, 5]]
+        df.columns = ["STATE", "1", "2", "3"]
+        return df
     else:
         raise ValueError("Invalid sheet")
 
@@ -101,6 +113,7 @@ def get_tanf_df(
 
     # Concatenate and remove duplicated columns
     tanf_df = pd.concat(data, axis=1)
+    tanf_df["10"] = tanf_df["10"].sum(axis=1)  # 10 is the sum of two columns
     tanf_df = tanf_df.loc[:, ~tanf_df.columns.duplicated()]
 
     # Convert columns to int
@@ -134,9 +147,20 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
     state = []
 
     # Select sheets
-    sheets = ["Assistance", "Non-Assistance", "Non-A Subcategories"]
+    sheets = [
+        "Assistance",
+        "Non-Assistance",
+        "Non-A Subcategories",
+    ]
+    common_sheets = [
+        "Summary Federal Funds",
+        "Fed & State Assistance",
+        "Fed & State Non-Assistance",
+    ]
     fed_sheets = [f"Federal {sheet}" for sheet in sheets]
     state_sheets = [f"State {sheet}" for sheet in sheets]
+    fed_sheets += common_sheets
+    state_sheets += common_sheets
 
     for file in tanf_files:
         # Extract year from file name
