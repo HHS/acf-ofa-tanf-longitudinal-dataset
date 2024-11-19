@@ -75,7 +75,7 @@ def get_column_names(worksheet: openpyxl.worksheet.worksheet.Worksheet) -> list[
 
         if columns:
             columns = [
-                column + " " + get_merged_value(worksheet, row[j])
+                (column + " " + get_merged_value(worksheet, row[j])).strip()
                 for j, column in enumerate(columns)
             ]
         else:
