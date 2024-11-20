@@ -42,6 +42,12 @@ def rename_columns(df: pd.DataFrame, sheet: str, column_dict: dict) -> pd.DataFr
         df = df.iloc[:, [0, 2, 4, 5, 13]]
         df.columns = ["STATE", "9", "10", "12", "8"]
         return df
+    elif sheet == "SFAG Summary":
+        df = df.iloc[:, [0, 1, 2]].copy()
+        df["4"] = df.iloc[:, [1, 2]].sum(axis=1)
+        df = df.iloc[:, [0, 3]]
+        df.columns = ["STATE", "4"]
+        return df
     elif sheet.endswith("Non-Assistance"):
         number = 6
     elif sheet.endswith("Assistance"):
@@ -156,6 +162,7 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
         "Summary Federal Funds",
         "Fed & State Assistance",
         "Fed & State Non-Assistance",
+        "SFAG Summary",
     ]
     fed_sheets = [f"Federal {sheet}" for sheet in sheets]
     state_sheets = [f"State {sheet}" for sheet in sheets]
