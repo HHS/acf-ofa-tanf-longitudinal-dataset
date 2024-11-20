@@ -13,6 +13,8 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.worksheet.worksheet import Worksheet
 
+from otld import combine_appended_files
+
 
 def format_pd_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Format pandas data frame columns.
@@ -74,12 +76,7 @@ def format_openpyxl_worksheet(ws: Worksheet):
 def main():
     """Entry point for script to format appended files"""
 
-    federal = pd.read_csv(
-        os.path.join(inter_dir, "federal_1997_2009.csv"), index_col=["STATE", "year"]
-    )
-    state = pd.read_csv(
-        os.path.join(inter_dir, "state_1997_2009.csv"), index_col=["STATE", "year"]
-    )
+    federal, state = combine_appended_files.main()
 
     # Load csv into workbook
     # Adapted from https://stackoverflow.com/questions/12976378/openpyxl-convert-csv-to-excel
@@ -109,10 +106,10 @@ def main():
         format_openpyxl_worksheet(ws)
 
     # Export
-    wb.save(os.path.join(scrap_dir, "styling.xlsx"))
+    wb.save(os.path.join(out_dir, "Combined Data.xlsx"))
 
 
 if __name__ == "__main__":
-    from otld.paths import inter_dir, scrap_dir
+    from otld.paths import out_dir
 
     main()
