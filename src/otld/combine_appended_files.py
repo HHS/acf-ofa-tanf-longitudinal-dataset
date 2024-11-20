@@ -1,4 +1,5 @@
 import os
+import re
 
 import pandas as pd
 
@@ -18,14 +19,27 @@ def get_column_list(crosswalk: pd.DataFrame, column: str | int):
 def map_columns(df: pd.DataFrame, crosswalk_dict: dict):
     new_df = pd.DataFrame()
     for revised, original in crosswalk_dict.items():
-        if not original:
+        try:
+            if not original:
+                continue
+            elif isinstance(original, str):
+                new_df[revised] = df[original]
+            elif isinstance(original, list):
+                new_df[revised] = df[original].sum(axis=1)
+        except:
             continue
-        elif isinstance(original, str):
-            new_df[revised] = df[original]
-        elif isinstance(original, list):
-            new_df[revised] = df[original].sum(axis=1)
 
     return new_df
+
+
+def reorder_alpha_numeric(values: list | pd.Series) -> list:
+    values = [re.search(r"(\d+)(\w*)", value).groups() for value in values]
+    values = [(int(value[0]), value[1]) for value in values]
+    values.sort()
+    values = [(str(value[0]), value[1]) for value in values]
+    values = ["".join(value) for value in values]
+
+    return values
 
 
 def main():
@@ -51,28 +65,28 @@ def main():
     files = os.listdir(inter_dir)
     federal = []
     state = []
-    post_2015 = {}
 
-    # Combine files before 2015
+    # Append files to relevant lists
     for file in files:
         df = pd.read_csv(os.path.join(inter_dir, file), index_col=["STATE", "year"])
         level = "state" if file.startswith("state") else "federal"
 
         if file.find("2015_2023") > -1:
-            post_2015[level] = df.filter(columns_196_r)
-        elif level == "federal":
-            federal.append(df.filter(columns_196))
+            df = df.filter(columns_196_r)
+        else:
+            df = df.filter(columns_196)
+            df = map_columns(df, crosswalk_dict)
+
+        if level == "federal":
+            federal.append(df)
         elif level == "state":
-            state.append(df.filter(columns_196))
+            state.append(df)
 
+    # Append data frames and reorder columns
     state = pd.concat(state)
+    state = state[reorder_alpha_numeric(state.columns)]
     federal = pd.concat(federal)
-
-    # print(state)
-    # print(federal)
-
-    # Map columns across 2014/2015 disjunction
-    # Append pre and post-2015
+    federal = federal[reorder_alpha_numeric(federal.columns)]
 
     return federal, state
 
