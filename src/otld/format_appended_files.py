@@ -67,6 +67,8 @@ def format_openpyxl_worksheet(ws: Worksheet):
         # Align right
     for i, row in enumerate(ws.rows):
         if i == 0:
+            for cell in row:
+                cell.alignment = Alignment(vertical="top", wrap_text=True)
             continue
 
         for cell in row[2:]:
