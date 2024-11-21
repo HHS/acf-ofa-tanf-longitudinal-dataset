@@ -29,7 +29,7 @@ def rename_columns(name: str) -> str:
     if name == "STATE":
         pass
     else:
-        name = re.search(r"Line\s*(.+)", name).group(1)
+        name = re.search(r"Line\s*(.+)", name, re.IGNORECASE).group(1)
         name = standardize_line_number(name)
 
     return name
@@ -71,7 +71,7 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
                 )
 
             tanf_df.columns = tanf_df.iloc[i]
-            tanf_df = tanf_df.iloc[i + 1 :]
+            tanf_df = tanf_df.iloc[i + 1 :, :].copy()
 
             # Drop if column is fully NA
             tanf_df.dropna(axis=1, how="all", inplace=True)
@@ -94,7 +94,7 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
             # Remove NAs and set index to state
             tanf_df["STATE"] = tanf_df["STATE"].apply(lambda x: x.strip())
             tanf_df.set_index("STATE", inplace=True)
-            tanf_df = tanf_df.filter(regex="^\s*Line")
+            tanf_df = tanf_df.filter(regex="^\s*L[iI][nN][eE]")
             tanf_df = tanf_df.dropna(axis=0, how="all")
 
             # Rename columns
