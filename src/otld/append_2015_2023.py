@@ -8,7 +8,7 @@ import openpyxl
 import pandas as pd
 from fuzzywuzzy import fuzz, process
 
-from otld.paths import input_dir, inter_dir
+from otld.paths import diagnostics_dir, input_dir, inter_dir
 from otld.utils import (
     convert_to_numeric,
     delete_empty_columns,
@@ -16,9 +16,12 @@ from otld.utils import (
     standardize_line_number,
     validate_data_frame,
 )
+from otld.utils.LineTracker import LineTracker
+
+line_tracker = LineTracker()
 
 
-def rename_columns(df: pd.DataFrame, column_dict: dict) -> pd.DataFrame:
+def rename_columns(df: pd.DataFrame, column_dict: dict, tracker: dict) -> pd.DataFrame:
     """Rename columns of dataframe.
 
     Rename columns of dataframe to line numbers.
@@ -26,12 +29,14 @@ def rename_columns(df: pd.DataFrame, column_dict: dict) -> pd.DataFrame:
     Args:
         df (pd.DataFrame): Dataframe to rename columns of.
         column_dict (dict): Dictionary mapping line numbers to field names.
+        tracker (dict): Dictionary tracking column names before and after renaming.
 
     Returns:
         pd.DataFrame: Dataframe with renamed columns.
     """
 
     columns = df.columns.tolist()
+    tracker["BaseColumns"] = columns.copy()
 
     # Remove state
     columns.pop(0)
@@ -69,12 +74,13 @@ def rename_columns(df: pd.DataFrame, column_dict: dict) -> pd.DataFrame:
 
     df.rename(columns=renamer, inplace=True)
     df.columns = df.columns.map(standardize_line_number)
+    tracker["RenamedColumns"] = df.columns.to_list()
 
     return df
 
 
 def get_tanf_df(
-    tanf_path: str | os.PathLike, sheet: str, year: int, column_dict: dict
+    tanf_path: str | os.PathLike, sheet: str, year: int, column_dict: dict, level: str
 ) -> pd.DataFrame:
     """Extract TANF data from Excel file
 
@@ -83,10 +89,13 @@ def get_tanf_df(
         sheet (str): Sheet name to extract data from
         year (int): Year of data
         column_dict (dict): Dictionary mapping line numbers to field names.
+        level (str): Level of data: "State" or "Federal".
 
     Returns:
         pd.DataFrame: Extracted TANF data
     """
+    path_stem = os.path.split(tanf_path)[1]
+    tracker = {"FileName": path_stem, "SheetName": sheet, "Level": level}
 
     # Load data and delete columns with no data
     tanf_excel_file = openpyxl.load_workbook(tanf_path)
@@ -99,7 +108,8 @@ def get_tanf_df(
 
     # Rename columns and add year
     tanf_df.columns = columns
-    tanf_df = rename_columns(tanf_df, column_dict)
+    tanf_df = rename_columns(tanf_df, column_dict, tracker)
+    assert len(tracker["BaseColumns"]) == len(tracker["RenamedColumns"])
 
     # Set state as index
     tanf_df.dropna(subset=["STATE"], inplace=True)
@@ -112,6 +122,8 @@ def get_tanf_df(
 
     # Add year column
     tanf_df["year"] = year
+
+    line_tracker.sources[year].append(tracker)
 
     return tanf_df
 
@@ -144,12 +156,17 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
         if year < 2015:
             continue
 
+        line_tracker.sources[year] = []
         federal.append(
-            get_tanf_df(file.path, "C.1 Federal Expenditures", year, column_dict)
+            get_tanf_df(
+                file.path, "C.1 Federal Expenditures", year, column_dict, "Federal"
+            )
         )
         state.append(
-            get_tanf_df(file.path, "C.2 State Expenditures", year, column_dict)
+            get_tanf_df(file.path, "C.2 State Expenditures", year, column_dict, "State")
         )
+
+    line_tracker.export(os.path.join(diagnostics_dir, "LineSources.xlsx"))
 
     # Concatenate all years
     federal_df = pd.concat(federal)
