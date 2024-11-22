@@ -317,6 +317,20 @@ def update_index(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def gen_carryover(df: pd.DataFrame):
+    def carryover(row: pd.Series):
+        index = (row.name[0], row.name[1] - 1)
+        try:
+            carryover = df.loc[index, ["9", "10"]].sum()
+        except KeyError:
+            carryover = 0
+
+        return carryover
+
+    df["Carryover"] = df.apply(lambda row: carryover(row), axis=1)
+    return df
+
+
 def main(export: bool = False) -> tuple[pd.DataFrame]:
     """Entry point for appending years 1997-2009
 
@@ -348,14 +362,13 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
         federal.append(federal_df)
         state.append(state_df)
 
-    line_tracker.export(os.path.join(diagnostics_dir, "LineSources.xlsx"))
-
     # Concatenate all years
     federal_df = pd.concat(federal)
     if "U.S. TOTAL" not in federal_df.index:
         federal_df = add_us_total(federal_df)
 
     federal_df = update_index(federal_df)
+    federal_df = gen_carryover(federal_df)
 
     state_df = pd.concat(state)
     if "U.S. TOTAL" not in state_df.index:
@@ -367,6 +380,7 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
         validate_data_frame(df)
 
     # Export
+    line_tracker.export(os.path.join(diagnostics_dir, "LineSources.xlsx"))
     if export:
         federal_df.to_csv(os.path.join(inter_dir, "federal_1997_2009.csv"))
         state_df.to_csv(os.path.join(inter_dir, "state_1997_2009.csv"))
