@@ -6,13 +6,17 @@ import re
 
 import pandas as pd
 
-from otld.paths import input_dir, inter_dir
+from otld.paths import diagnostics_dir, input_dir, inter_dir
 from otld.utils import (
     convert_to_numeric,
     standardize_file_name,
     standardize_line_number,
     validate_data_frame,
 )
+from otld.utils.LineTracker import LineTracker
+
+# Instantiate a LineTracker object to track what files lines came from.
+line_tracker = LineTracker()
 
 
 def rename_columns(name: str) -> str:
@@ -35,6 +39,35 @@ def rename_columns(name: str) -> str:
     return name
 
 
+def get_relevant_columns(book: str, sheet: str) -> list[str]:
+    """Select the relevant columns given a path and sheet
+
+    Args:
+        book (str): Excel workbook name.
+        sheet (str): Excel worksheet name.
+
+    Returns:
+        list[str]: Returns a list of relevant columns. Returns None if
+        all columns should be kept.
+    """
+    sheet = sheet.replace(" ", "").lower()
+
+    if book.startswith("table_a_combined") and (
+        sheet == "a-1" or sheet == "spendingfromfedltanfgrantinfy"
+    ):
+        columns = ["5", "6", "7", "9", "10"]
+    elif re.match(r"\d{4}", sheet) or sheet == "spendingfromfedltanfgrantinfy":
+        columns = ["1", "2", "3", "4"]
+    elif book.startswith("table_a1") and sheet == "a1-1":
+        columns = ["1", "2", "3", "4"]
+    elif sheet == "combinedspend":
+        columns = ["5", "6", "7", "9", "10"]
+    else:
+        return None
+
+    return columns
+
+
 def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
     """Get data from TANF Financial files
 
@@ -46,15 +79,41 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
        tuple[pd.DataFrame]: Appended workbooks as data frames.
     """
     state = []
+    federal = []
 
     for path in paths:
+        # Extract stem from path
+        path_stem = os.path.split(path)[1]
+        path_stem_std = standardize_file_name(path_stem)
+
         # Load file and get sheets
         tanf_excel_file = pd.ExcelFile(path)
         sheets = tanf_excel_file.sheet_names
         data = []
+
+        # Get level that this path applies to
+        level = (
+            "State"
+            if re.search(r"table\s*[bc]\s?(latest)?", path, re.IGNORECASE)
+            else "Federal"
+        )
+
+        # Add year to sources dictionary
+        if year not in line_tracker.sources:
+            line_tracker.sources[year] = []
+
         for sheet in sheets:
             if sheet.startswith("Footnotes"):
                 continue
+            elif re.match(r"\d{4}", path_stem_std) and not sheet.endswith("spend"):
+                continue
+            elif re.match(r"table_a1_", path_stem_std) and not (
+                sheet.startswith("Spending") or sheet.startswith("A1-1")
+            ):
+                continue
+
+            # Begin building tracker dictionary
+            tracker = {"FileName": path_stem, "SheetName": sheet, "Level": level}
 
             # Load data
             tanf_df = pd.read_excel(tanf_excel_file, sheet_name=sheet, header=None)
@@ -70,6 +129,7 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
                     lambda x: re.search(r"^\s*Line", x) if type(x) is str else None
                 )
 
+            # Rename columns and keep only rows after column row
             tanf_df.columns = tanf_df.iloc[i]
             tanf_df = tanf_df.iloc[i + 1 :, :].copy()
 
@@ -94,18 +154,40 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
             # Remove NAs and set index to state
             tanf_df["STATE"] = tanf_df["STATE"].apply(lambda x: x.strip())
             tanf_df.set_index("STATE", inplace=True)
-            tanf_df = tanf_df.filter(regex="^\s*L[iI][nN][eE]")
+            tanf_df = tanf_df.filter(regex=r"^\s*L[iI][nN][eE]")
             tanf_df = tanf_df.dropna(axis=0, how="all")
 
             # Rename columns
+            tracker["BaseColumns"] = tanf_df.columns.to_list()
             tanf_df = tanf_df.rename(rename_columns, axis=1)
+            tracker["RenamedColumns"] = tanf_df.columns.to_list()
 
+            assert len(tracker["BaseColumns"]) == len(tracker["RenamedColumns"])
+            tracker["Columns"] = {
+                renamed: base
+                for renamed, base in zip(
+                    tracker["RenamedColumns"], tracker["BaseColumns"]
+                )
+            }
             # Convert columns to integer
             tanf_df = tanf_df.map(
                 lambda x: 0 if type(x) is str and x.strip() == "-" else x
             )
             tanf_df = tanf_df.apply(convert_to_numeric)
             tanf_df.fillna(0, inplace=True)
+
+            # Select columns
+            columns = get_relevant_columns(path_stem_std, sheet)
+            if columns:
+                tanf_df = tanf_df[columns]
+            else:
+                columns = tanf_df.columns.to_list()
+
+            tracker["BaseColumns"] = [tracker["Columns"][column] for column in columns]
+            tracker["RenamedColumns"] = columns
+            del tracker["Columns"]
+
+            line_tracker.sources[year].append(tracker)
 
             data.append(tanf_df)
 
@@ -114,13 +196,16 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
         tanf_df = tanf_df.loc[:, ~tanf_df.columns.duplicated()]
 
         # Determine whether the data frame is state or federal
-        if re.search(r"table\s*[bc]\s?(latest)?", path, re.IGNORECASE):
+        if level == "State":
             state.append(tanf_df)
         else:
-            federal = tanf_df
+            federal.append(tanf_df)
 
     # Add state MOE files
     state = state[0].add(state[1], level=0)
+
+    # Concatenate federal files
+    federal = pd.concat(federal, axis=1)
 
     # Add year column
     state["year"] = year
@@ -129,11 +214,12 @@ def get_tanf_df(paths: list[str], year: int) -> tuple[pd.DataFrame]:
     return federal, state
 
 
-def get_tanf_files(directory: str) -> list[str]:
+def get_tanf_files(directory: str, year: int) -> list[str]:
     """Choose the workbooks to extract data from.
 
     Args:
         directory (str): The directory to search for Excel workbooks.
+        year (int): The year the directory contains data for.
 
     Returns:
         list[str]: A list of paths to Excel workbooks.
@@ -144,19 +230,27 @@ def get_tanf_files(directory: str) -> list[str]:
     tanf_files = next(tanf_file_generator)
     while not tanf_files[2]:
         tanf_files = next(tanf_file_generator)
+
     files = []
 
     # Identify the relevant workbooks
     for file in tanf_files[2]:
         clean_file = standardize_file_name(file)
+
         table_a_condition = re.search(
-            r"table_a.*_combined.*_in_fy_\d+(_through_the_fourth_quarter)?.xls",
+            r"table_a1_.*_in_fy_\d+(_through_the_fourth_quarter)?.xls",
             clean_file,
         )
+
         table_b_c_condition = (
             clean_file.find("table_b") > -1 or clean_file.find("table_c") > -1
         )
-        combined_table_condition = clean_file.startswith("combined")
+        combined_table_condition = (
+            clean_file.find("a_combined") > -1 or clean_file.startswith("combined")
+        ) and not clean_file.endswith("arra.xls")
+
+        year_latest_condition = clean_file.startswith(f"{year}")
+
         latest_table_condition = re.search(r"table[abc]latest", clean_file)
 
         if (
@@ -164,12 +258,13 @@ def get_tanf_files(directory: str) -> list[str]:
             or table_b_c_condition
             or combined_table_condition
             or latest_table_condition
+            or year_latest_condition
         ):
             files.append(os.path.join(tanf_files[0], file))
         else:
             continue
 
-    assert len(files) == 3, "Incorrect number of files"
+    assert len(files) == 4, "Incorrect number of files"
     return files
 
 
@@ -247,11 +342,13 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
         year = re.search(r"(\d{4})$", directory).group(1)
         year = int(year)
 
-        files = get_tanf_files(directory)
+        files = get_tanf_files(directory, year)
         federal_df, state_df = get_tanf_df(files, year)
 
         federal.append(federal_df)
         state.append(state_df)
+
+    line_tracker.export(os.path.join(diagnostics_dir, "LineSources.xlsx"))
 
     # Concatenate all years
     federal_df = pd.concat(federal)
