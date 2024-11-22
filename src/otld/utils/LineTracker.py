@@ -41,7 +41,17 @@ class LineTracker:
             if year_str in workbook.sheetnames:
                 del workbook[year_str]
 
-            workbook.create_sheet(year_str)
+            # Place sheet at the correct location
+            if year == 1997:
+                index = 0
+            else:
+                sheets = [int(name) for name in workbook.sheetnames]
+                nearest = year
+                while nearest not in sheets:
+                    nearest -= 1
+                index = sheets.index(nearest) + 1
+
+            workbook.create_sheet(year_str, index=index)
             worksheet = workbook[year_str]
 
             # Adapted from https://stackoverflow.com/questions/17326973/is-there-a-way-to-auto-adjust-excel-column-widths-with-pandas-excelwriter
@@ -49,6 +59,7 @@ class LineTracker:
                 max(df[column].astype(str).map(len).max(), len(column)) for column in df
             ]
 
+            # Add data to worksheet and set column widths
             df = dataframe_to_rows(df, index=False)
 
             for row in df:
