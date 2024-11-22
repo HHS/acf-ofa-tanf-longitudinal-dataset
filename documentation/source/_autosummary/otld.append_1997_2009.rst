@@ -10,6 +10,7 @@ otld.append\_1997\_2009
       :toctree:
    
       add_us_total
+      get_relevant_columns
       get_tanf_df
       get_tanf_files
       main
