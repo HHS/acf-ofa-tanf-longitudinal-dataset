@@ -11,6 +11,9 @@ otld.utils
    :template: custom-module-template.rst
    :recursive:
 
+   LineTracker
+   crosswalk_2014_2015
+   missingness
    openpyxl_utils
    pandas_utils
    string_utils
