@@ -1,16 +1,17 @@
+"""Check combined workbook for missing columns"""
+
 import os
 
 import pandas as pd
 
-from otld.paths import out_dir, scrap_dir
+from otld.paths import diagnostics_dir
 from otld.utils.crosswalk_2014_2015 import crosswalk_dict
 
 
-def main():
-    excel_file = os.path.join(out_dir, "Combined Data.xlsx")
-    excel_file = pd.ExcelFile(excel_file)
+def main(frames: tuple[pd.DataFrame]):
+    frame_dict = {"Federal": frames[0], "State": frames[1]}
 
-    excel_writer = os.path.join(scrap_dir, "missingness.xlsx")
+    excel_writer = os.path.join(diagnostics_dir, "missingness.xlsx")
     if not os.path.exists(excel_writer):
         pd.DataFrame().to_excel(excel_writer, sheet_name="Federal")
 
@@ -19,8 +20,7 @@ def main():
     )
 
     for level in ["Federal", "State"]:
-        df = pd.read_excel(excel_file, level)
-        df = df.set_index(["STATE", "year"])
+        df = frame_dict[level]
 
         df_missing = df.groupby(["year"]).count()
         column_has_missing = df_missing.apply(lambda x: (x <= 1).any()).tolist()
@@ -28,7 +28,7 @@ def main():
 
         missing_columns = df_missing.columns
         missing_columns = [
-            column for column in missing_columns if crosswalk_dict[column]
+            column for column in missing_columns if crosswalk_dict[column][196]
         ]
         df_missing[missing_columns].to_excel(excel_writer, sheet_name=level, index=True)
 
