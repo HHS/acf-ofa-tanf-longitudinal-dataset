@@ -31,6 +31,7 @@ def rename_columns(
         df (pd.DataFrame): Dataframe in which to rename columns.
         sheet (str): Sheet the data came from.
         column_dict (dict): Dictionary to use to convert column name to line number.
+        tracker (dict): Dictionary tracking column names before and after renaming.
 
     Raises:
         ValueError: _description_
@@ -103,7 +104,6 @@ def get_tanf_df(
     data = []
     tanf_excel_file = openpyxl.load_workbook(tanf_path)
 
-    line_tracker.sources[year] = []
     path_stem = os.path.split(tanf_path)[1]
 
     for sheet in sheets:
@@ -186,6 +186,7 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
         if year >= 2015:
             continue
 
+        line_tracker.sources[year] = []
         federal_df = get_tanf_df(file.path, fed_sheets, year, column_dict, "Federal")
         state_df = get_tanf_df(file.path, state_sheets, year, column_dict, "State")
 
