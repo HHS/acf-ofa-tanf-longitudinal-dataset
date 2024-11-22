@@ -3,19 +3,21 @@
 __all__ = ["delete_empty_columns", "get_merged_value", "get_column_names"]
 
 import openpyxl
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.worksheet import Worksheet
 
 
 # Appropriated from Gemini code sample
 def delete_empty_columns(
-    worksheet: openpyxl.worksheet.worksheet.Worksheet,
-) -> openpyxl.worksheet.worksheet.Worksheet:
+    worksheet: Worksheet,
+) -> Worksheet:
     """Delete columns with all NA/empty values
 
     Args:
-        worksheet (openpyxl.worksheet.worksheet.Worksheet): Worksheet to delete columns from.
+        worksheet (Worksheet): Worksheet to delete columns from.
 
     Returns:
-        openpyxl.worksheet.worksheet.Worksheet: Worksheet with empty columns removed
+        Worksheet: Worksheet with empty columns removed
     """
     # Iterate over columns in reverse order to avoid index issues when deleting
     for column in range(worksheet.max_column, 0, -1):
@@ -30,13 +32,11 @@ def delete_empty_columns(
             worksheet.delete_cols(column)
 
 
-def get_merged_value(
-    worksheet: openpyxl.worksheet.worksheet.Worksheet, cell: openpyxl.cell.cell.Cell
-) -> str:
+def get_merged_value(worksheet: Worksheet, cell: openpyxl.cell.cell.Cell) -> str:
     """Return the value in the first cell of a range of merged cells
 
     Args:
-        worksheet (openpyxl.worksheet.worksheet.Worksheet): The worksheet to search in for merged cells.
+        worksheet (Worksheet): The worksheet to search in for merged cells.
         cell (openpyxl.cell.cell.Cell): The cell to check for in the merged cells.
 
     Returns:
@@ -52,14 +52,14 @@ def get_merged_value(
     return cell.value if cell.value else ""
 
 
-def get_column_names(worksheet: openpyxl.worksheet.worksheet.Worksheet) -> list[str]:
+def get_column_names(worksheet: Worksheet) -> list[str]:
     """Get the column names of an Excel worksheet
 
     This function iterates through the rows in an Excel worksheet until all columns
     have a non-empty value and then returns these as candidate column names.
 
     Args:
-        worksheet (openpyxl.worksheet.worksheet.Worksheet): An Excel worksheet.
+        worksheet (Worksheet): An Excel worksheet.
 
     Returns:
         list[str]: A list of potential column names
@@ -87,3 +87,25 @@ def get_column_names(worksheet: openpyxl.worksheet.worksheet.Worksheet) -> list[
     columns = [column.strip() for column in columns]
     columns = [column for column in columns if column]
     return columns, i
+
+
+def set_column_widths(worksheet: Worksheet, column_width: int | list[int]) -> Worksheet:
+    """Set the column widths for an Excel worksheet.
+
+    Args:
+        worksheet (Worksheet): An openpyxl worksheet.
+        column_width (int | list[int]): Integer, or list of integers specifying column
+        width(s)
+
+    Returns:
+        Worksheet: Updated worksheet
+    """
+    for index in range(worksheet.max_column):
+        width = column_width if isinstance(column_width, int) else column_width[index]
+        index += 1
+        column_letter = get_column_letter(index)
+        dimensions = worksheet.column_dimensions[column_letter]
+        # Adjust width
+        dimensions.width = width
+
+    return worksheet

@@ -3,6 +3,10 @@
 import os
 
 import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+
+from otld.utils.openpyxl_utils import set_column_widths
 
 
 class LineTracker:
@@ -19,24 +23,37 @@ class LineTracker:
             path (str): Path to an existing Excel workbook/Excel workbook to be created.
         """
         if not os.path.exists(path):
-            pd.DataFrame().to_excel(path, sheet_name=list(self.sources.keys())[0])
+            sheet_name = list(self.sources.keys())[0]
+            sheet_name = str(sheet_name)
+            pd.DataFrame().to_excel(path, sheet_name=sheet_name)
 
-        excel_writer = pd.ExcelWriter(path, engine="xlsxwriter")
+        workbook = load_workbook(path)
 
         for year in self.sources:
+            year_str = str(year)
             df = (
                 pd.DataFrame()
                 .from_dict(self.sources[year], orient="columns")
                 .explode(["BaseColumns", "RenamedColumns"])
             )
-            df.to_excel(excel_writer, sheet_name=str(year), index=False)
+            if workbook.active.title == year_str:
+                worksheet = workbook.active
+            elif year_str in workbook.sheetnames:
+                worksheet = workbook[year_str]
+            else:
+                workbook.create_sheet(year_str)
+                worksheet = workbook[year_str]
 
             # Adapted from https://stackoverflow.com/questions/17326973/is-there-a-way-to-auto-adjust-excel-column-widths-with-pandas-excelwriter
-            for column in df:
-                column_length = max(df[column].astype(str).map(len).max(), len(column))
-                col_idx = df.columns.get_loc(column)
-                excel_writer.sheets[str(year)].set_column(
-                    col_idx, col_idx, column_length
-                )
+            column_widths = [
+                max(df[column].astype(str).map(len).max(), len(column)) for column in df
+            ]
 
-        excel_writer.close()
+            df = dataframe_to_rows(df, index=False)
+
+            for row in df:
+                worksheet.append(row)
+
+            worksheet = set_column_widths(worksheet, column_widths)
+
+        workbook.save(path)
