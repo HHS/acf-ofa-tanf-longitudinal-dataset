@@ -31,18 +31,18 @@ class LineTracker:
 
         for year in self.sources:
             year_str = str(year)
+
             df = (
                 pd.DataFrame()
                 .from_dict(self.sources[year], orient="columns")
                 .explode(["BaseColumns", "RenamedColumns"])
             )
-            if workbook.active.title == year_str:
-                worksheet = workbook.active
-            elif year_str in workbook.sheetnames:
-                worksheet = workbook[year_str]
-            else:
-                workbook.create_sheet(year_str)
-                worksheet = workbook[year_str]
+
+            if year_str in workbook.sheetnames:
+                del workbook[year_str]
+
+            workbook.create_sheet(year_str)
+            worksheet = workbook[year_str]
 
             # Adapted from https://stackoverflow.com/questions/17326973/is-there-a-way-to-auto-adjust-excel-column-widths-with-pandas-excelwriter
             column_widths = [
