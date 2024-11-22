@@ -13,7 +13,7 @@ imagesize==1.4.1
 Jinja2==3.1.4
 MarkupSafe==3.0.2
 numpy==2.1.2
--e git+https://github.com/HHS/acf-ofa-tanf-longitudinal-dataset.git@254abd01529023931660dd1c70c3e3aa1ffa449d#egg=ofa_tanf_longitudinal_dataset
+-e git+https://github.com/HHS/acf-ofa-tanf-longitudinal-dataset.git@612abc480773c3f6e475e70a8db4ef7fd4ac35e8#egg=ofa_tanf_longitudinal_dataset
 openpyxl==3.1.5
 packaging==24.1
 pandas==2.2.3
@@ -35,3 +35,4 @@ sphinxcontrib-serializinghtml==2.0.0
 tzdata==2024.2
 urllib3==2.2.3
 xlrd==2.0.1
+XlsxWriter==3.2.0

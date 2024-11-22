@@ -5,7 +5,8 @@ description = "OFA TANF Longitudinal Dataset"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "pandas", "openpyxl", "fuzzywuzzy", "pdfminer.six", "sphinx"
+    "pandas", "openpyxl", "fuzzywuzzy", 
+    "pdfminer.six", "sphinx", "xlsxwriter"
 ]
 
 [project.optional-dependencies]
