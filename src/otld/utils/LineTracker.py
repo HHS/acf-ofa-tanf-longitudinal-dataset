@@ -1,13 +1,23 @@
+"""Class to handle tracking the sources of line numbers"""
+
 import os
 
 import pandas as pd
 
 
 class LineTracker:
+    """Class to handle tracking the sources of line numbers"""
+
     def __init__(self):
+        """Initiate sources dictionary"""
         self.sources = {}
 
     def export(self, path: str):
+        """Export sources dictionary to an Excel workbook
+
+        Args:
+            path (str): Path to an existing Excel workbook/Excel workbook to be created.
+        """
         if not os.path.exists(path):
             pd.DataFrame().to_excel(path, sheet_name=list(self.sources.keys())[0])
 
