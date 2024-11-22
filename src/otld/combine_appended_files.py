@@ -4,6 +4,7 @@ import re
 import pandas as pd
 
 from otld.paths import inter_dir
+from otld.utils import missingness
 from otld.utils.crosswalk_2014_2015 import crosswalk, crosswalk_dict
 
 
@@ -19,15 +20,16 @@ def get_column_list(crosswalk: pd.DataFrame, column: str | int):
 
 def map_columns(df: pd.DataFrame, crosswalk_dict: dict):
     new_df = pd.DataFrame()
-    for revised, original in crosswalk_dict.items():
+    for key, value in crosswalk_dict.items():
+        value_196 = value[196]
         try:
-            if not original:
+            if not value_196:
                 continue
-            elif isinstance(original, str):
-                new_df[revised] = df[original]
-            elif isinstance(original, list):
-                new_df[revised] = df[original].sum(axis=1)
-        except:
+            elif isinstance(value_196, str):
+                new_df[key] = df[value_196]
+            elif isinstance(value_196, list):
+                new_df[key] = df[value_196].sum(axis=1)
+        except KeyError:
             continue
 
     return new_df
@@ -68,10 +70,19 @@ def main():
             state.append(df)
 
     # Append data frames and reorder columns
+    rename_dict = {key: value["name"] for key, value in crosswalk_dict.items()}
+
     state = pd.concat(state)
     state = state[reorder_alpha_numeric(state.columns)]
+    state.drop(["1", "2", "3", "4", "5", "7", "8", "24"], inplace=True, axis=1)
+
     federal = pd.concat(federal)
     federal = federal[reorder_alpha_numeric(federal.columns)]
+
+    missingness.main((federal, state))
+
+    state.rename(columns=rename_dict, inplace=True)
+    federal.rename(columns=rename_dict, inplace=True)
 
     return federal, state
 
