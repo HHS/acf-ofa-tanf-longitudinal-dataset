@@ -78,6 +78,12 @@ def format_openpyxl_worksheet(ws: Worksheet):
 
 
 def export_workbook(frames: dict, path: str):
+    """Export a dictionary of data frames as an Excel Workbook.
+
+    Args:
+        frames (dict): A dictionary of pandas DataFrames.
+        path (str): The path at which to output the Excel workbook.
+    """
     # Load csv into workbook
     # Adapted from https://stackoverflow.com/questions/12976378/openpyxl-convert-csv-to-excel
     wb = openpyxl.Workbook()
