@@ -25,4 +25,5 @@ try:
         else:
             crosswalk_dict[key][196] = value_196
 except FileNotFoundError:
-    pass
+    crosswalk = pd.DataFrame()
+    crosswalk_dict = {}
