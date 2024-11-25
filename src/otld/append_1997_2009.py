@@ -9,6 +9,7 @@ import pandas as pd
 from otld.paths import diagnostics_dir, input_dir, inter_dir
 from otld.utils import (
     convert_to_numeric,
+    reindex_state_year,
     standardize_file_name,
     standardize_line_number,
     validate_data_frame,
@@ -284,39 +285,6 @@ def add_us_total(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def update_index(df: pd.DataFrame) -> pd.DataFrame:
-    """Update the index of the data frame
-
-    Args:
-        df (pd.DataFrame): Data frame to update index of.
-
-    Returns:
-        pd.DataFrame: Data frame with updated index.
-    """
-    # Add year to index
-    df.set_index("year", append=True, inplace=True)
-    index_list = df.index.to_list()
-
-    # Rearrange indices
-    new_index = []
-    position = {}
-    for i, index in enumerate(index_list):
-        if index[0] == "ALABAMA":
-            position[index[1]] = i
-        elif index[0] == "U.S. TOTAL":
-            new_index.insert(position[index[1]], index)
-            continue
-
-        new_index.append(index)
-
-    # Reindex
-    new_index = pd.MultiIndex.from_tuples(new_index, names=["STATE", "year"])
-    assert len(new_index) == df.shape[0]
-    df = df.reindex(new_index)
-
-    return df
-
-
 def gen_carryover(df: pd.DataFrame):
     def carryover(row: pd.Series):
         index = (row.name[0], row.name[1] - 1)
@@ -367,14 +335,16 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
     if "U.S. TOTAL" not in federal_df.index:
         federal_df = add_us_total(federal_df)
 
-    federal_df = update_index(federal_df)
+    federal_df.set_index("year", append=True, inplace=True)
+    federal_df = reindex_state_year(federal_df)
     federal_df = gen_carryover(federal_df)
 
     state_df = pd.concat(state)
     if "U.S. TOTAL" not in state_df.index:
         state_df = add_us_total(state_df)
 
-    state_df = update_index(state_df)
+    state_df.set_index("year", append=True, inplace=True)
+    state_df = reindex_state_year(state_df)
 
     for df in [federal_df, state_df]:
         validate_data_frame(df)
