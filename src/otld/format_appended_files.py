@@ -5,6 +5,7 @@ This module formats appended TANF financial data.
 
 import os
 
+import numpy as np
 import openpyxl
 import pandas as pd
 from openpyxl.styles.alignment import Alignment
@@ -27,7 +28,8 @@ def format_pd_columns(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Formatted data frame.
     """
-    df = df.map(lambda x: f"{x:,.0f}")
+    numeric = df.select_dtypes(include=[np.number]).columns
+    df[numeric] = df[numeric].map(lambda x: f"{x:,.0f}")
 
     return df
 
@@ -64,7 +66,7 @@ def format_openpyxl_worksheet(ws: Worksheet):
         # Adjust width
         column.width = 25.0
 
-        # Align right
+    # Align right
     for i, row in enumerate(ws.rows):
         if i == 0:
             for cell in row:
@@ -75,11 +77,7 @@ def format_openpyxl_worksheet(ws: Worksheet):
             cell.alignment = Alignment(horizontal="right")
 
 
-def main():
-    """Entry point for script to format appended files"""
-
-    frames = combine_appended_files.main()
-
+def export_workbook(frames: dict, path: str):
     # Load csv into workbook
     # Adapted from https://stackoverflow.com/questions/12976378/openpyxl-convert-csv-to-excel
     wb = openpyxl.Workbook()
@@ -107,7 +105,21 @@ def main():
         format_openpyxl_worksheet(ws)
 
     # Export
-    wb.save(os.path.join(out_dir, "Combined Data.xlsx"))
+    wb.save(path)
+
+
+def main():
+    """Entry point for script to format appended files"""
+
+    frames = combine_appended_files.main()
+    export_workbook(frames, os.path.join(out_dir, "FinancialDataWide.xlsx"))
+
+    for frame in frames:
+        frames[frame] = frames[frame].melt(
+            var_name="FieldName", value_name="Value", ignore_index=False
+        )
+
+    export_workbook(frames, os.path.join(out_dir, "FinancialDataLong.xlsx"))
 
 
 if __name__ == "__main__":
