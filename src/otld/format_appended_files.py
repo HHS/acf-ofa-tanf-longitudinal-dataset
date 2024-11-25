@@ -78,7 +78,7 @@ def format_openpyxl_worksheet(ws: Worksheet):
 def main():
     """Entry point for script to format appended files"""
 
-    federal, state = combine_appended_files.main()
+    frames = combine_appended_files.main()
 
     # Load csv into workbook
     # Adapted from https://stackoverflow.com/questions/12976378/openpyxl-convert-csv-to-excel
@@ -86,25 +86,24 @@ def main():
     ws = wb.active
 
     i = 0
-    for df in [federal, state]:
+    for frame in frames:
         if i == 0:
-            sheet = "Federal"
             ws = wb.active
-            ws.title = "Federal"
+            ws.title = frame
         else:
-            sheet = "State"
-            wb.create_sheet(sheet)
-            ws = wb[sheet]
+            wb.create_sheet(frame)
+            ws = wb[frame]
 
         i += 1
 
+        df = frames[frame]
         df = format_pd_columns(df)
         df = dataframe_to_rows(df.reset_index(), index=False)
 
         for row in df:
             ws.append(row)
 
-        add_table(ws, sheet, ws.dimensions)
+        add_table(ws, frame, ws.dimensions)
         format_openpyxl_worksheet(ws)
 
     # Export

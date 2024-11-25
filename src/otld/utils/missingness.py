@@ -8,9 +8,7 @@ from otld.paths import diagnostics_dir
 from otld.utils.crosswalk_2014_2015 import crosswalk_dict
 
 
-def main(frames: tuple[pd.DataFrame]):
-    frame_dict = {"Federal": frames[0], "State": frames[1]}
-
+def main(frames: dict):
     excel_writer = os.path.join(diagnostics_dir, "missingness.xlsx")
     if not os.path.exists(excel_writer):
         pd.DataFrame().to_excel(excel_writer, sheet_name="Federal")
@@ -20,7 +18,7 @@ def main(frames: tuple[pd.DataFrame]):
     )
 
     for level in ["Federal", "State"]:
-        df = frame_dict[level]
+        df = frames[level]
 
         df_missing = df.groupby(["year"]).count()
         column_has_missing = df_missing.apply(lambda x: (x <= 1).any()).tolist()

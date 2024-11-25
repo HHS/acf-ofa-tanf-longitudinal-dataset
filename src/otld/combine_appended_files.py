@@ -1,10 +1,12 @@
+"""This module combines appended files across the 2014-2015 disjunction."""
+
 import os
 import re
 
 import pandas as pd
 
 from otld.paths import inter_dir
-from otld.utils import missingness
+from otld.utils import missingness, reindex_state_year
 from otld.utils.crosswalk_2014_2015 import crosswalk, crosswalk_dict
 
 
@@ -78,13 +80,25 @@ def main():
 
     federal = pd.concat(federal)
     federal = federal[reorder_alpha_numeric(federal.columns)]
+    for df in [federal, state]:
+        df.fillna(0, inplace=True)
 
-    missingness.main((federal, state))
+    frames = {"Federal": federal, "State": state}
 
-    state.rename(columns=rename_dict, inplace=True)
-    federal.rename(columns=rename_dict, inplace=True)
+    missingness.main(frames)
 
-    return federal, state
+    total = federal.add(state, fill_value=0)
+    total.sort_index(level=["year", "STATE"], inplace=True)
+    total = reindex_state_year(total)
+    total = total[reorder_alpha_numeric(total.columns)]
+
+    for df in [total, federal, state]:
+        df.rename(columns=rename_dict, inplace=True)
+        df.index.rename(["State", "Year"], inplace=True)
+
+    frames.update({"Total": total})
+
+    return frames
 
 
 if __name__ == "__main__":
