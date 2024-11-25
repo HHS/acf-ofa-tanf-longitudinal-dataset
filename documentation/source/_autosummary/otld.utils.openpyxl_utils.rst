@@ -12,4 +12,5 @@ otld.utils.openpyxl\_utils
       delete_empty_columns
       get_column_names
       get_merged_value
+      set_column_widths
    

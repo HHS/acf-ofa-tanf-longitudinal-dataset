@@ -10,4 +10,5 @@ otld.utils.pandas\_utils
       :toctree:
    
       convert_to_numeric
+      reindex_state_year
    
