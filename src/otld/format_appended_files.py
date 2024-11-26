@@ -8,6 +8,7 @@ import os
 import numpy as np
 import openpyxl
 import pandas as pd
+from openpyxl.styles import numbers
 from openpyxl.styles.alignment import Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -76,6 +77,15 @@ def format_openpyxl_worksheet(ws: Worksheet):
         for cell in row[2:]:
             cell.alignment = Alignment(horizontal="right")
 
+            # Check if the value is a number and, if so, format as currency.
+            # No need to worry about years being formatted as currencies since they
+            # appear in the first 2 columns of each row and therefore are excluded.
+            try:
+                float(cell.value)
+                cell.number_format = numbers.FORMAT_CURRENCY_USD
+            except ValueError:
+                pass
+
 
 def export_workbook(frames: dict, path: str):
     """Export a dictionary of data frames as an Excel Workbook.
@@ -101,7 +111,6 @@ def export_workbook(frames: dict, path: str):
         i += 1
 
         df = frames[frame]
-        df = format_pd_columns(df)
         df = dataframe_to_rows(df.reset_index(), index=False)
 
         for row in df:
