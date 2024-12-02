@@ -12,6 +12,7 @@
     // environment variables stored in .env at the root of the directory will automatically be injected 
     // into all Python files at runtime when run through VS Code.
     "python.envFile": "${workspaceFolder}/.env",
+    "notebook.formatOnSave.enabled": true,
     // these are files that you don't feel like seeing in your file explorer
     "files.exclude": {
         "**/.git": true,

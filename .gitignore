@@ -76,6 +76,7 @@ celerybeat.pid
 # Environments
 **/*.env
 .venv
+.graphics
 env/
 venv/
 ENV/

@@ -1,3 +1,5 @@
+"""Paths to TANF files"""
+
 import getpass
 
 user = getpass.getuser()
@@ -5,3 +7,5 @@ root = f"C:\\Users\\{getpass.getuser()}\\OneDrive - HHS Office of the Secretary\
 input_dir = f"{root}\\input"
 inter_dir = f"{root}\\intermediate"
 out_dir = f"{root}\\output"
+scrap_dir = f"{root}\\scrap"
+diagnostics_dir = f"{root}\\diagnostics"
