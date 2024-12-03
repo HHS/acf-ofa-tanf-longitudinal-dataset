@@ -1,3 +1,5 @@
+"""Class to manage appending TANF caseload and financial data"""
+
 import os
 import re
 import time

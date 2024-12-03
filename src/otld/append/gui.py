@@ -1,3 +1,5 @@
+"""Gui for updating appended files"""
+
 import tkinter as tk
 from tkinter import Tk, ttk
 from tkinter.filedialog import askdirectory, askopenfilename
@@ -17,10 +19,12 @@ def browse_file(entry: ttk.Entry):
     return
 
 
-def append_clicked(root: Tk, appended_path: str, to_append_path: str):
-    data = TANFData(appended_path, to_append_path)
+def append_clicked(root: Tk, type: str, appended_path: str, to_append_path: str):
+    print(type, appended_path, to_append_path)
+    tanf_data = TANFData(type, appended_path, to_append_path)
+    if 1 != 1:
+        tanf_data.append()
     root.destroy()
-    return data
 
 
 def main():
@@ -35,7 +39,16 @@ def main():
     # Set string variables for workbook to append and appended workbook
     to_append = tk.StringVar()
     appended = tk.StringVar()
-    destination = tk.StringVar()
+    current_type = tk.StringVar()
+
+    # Select type
+    type_label = ttk.Label(file_select, text="What type of data are you appending?")
+    type_label.pack()
+
+    type_dropdown = ttk.OptionMenu(
+        file_select, current_type, "Financial", "Financial", "Caseload"
+    )
+    type_dropdown.pack(fill="x")
 
     # Select appended data
     appended_label = ttk.Label(
@@ -47,7 +60,7 @@ def main():
     appended_entry.pack(fill="x", expand=True)
 
     appended_browse = ttk.Button(
-        file_select, text="Browse", command=lambda: browse_file(to_append_entry)
+        file_select, text="Browse", command=lambda: browse_file(appended_entry)
     )
     appended_browse.pack(expand=True)
 
@@ -55,7 +68,7 @@ def main():
     to_append_label = ttk.Label(
         file_select, text="Select file to append to existing appended data."
     )
-    to_append_label.pack()
+    to_append_label.pack(pady=(10, 0))
 
     to_append_entry = ttk.Entry(file_select, textvariable=to_append)
     to_append_entry.pack(fill="x", expand=True)
@@ -65,23 +78,13 @@ def main():
     )
     to_append_browse.pack(expand=True)
 
-    # Select destination
-    destination_label = ttk.Label(
-        file_select, text="Where would you like to save the new file?"
-    )
-    destination_label.pack()
-
-    destination_entry = ttk.Entry(file_select, textvariable=destination)
-    destination_entry.pack(fill="x", expand=True)
-
-    destination_browse = ttk.Button(
-        file_select, text="Browse", command=lambda: browse_dir(destination_entry)
-    )
-    destination_browse.pack(expand=True)
-
     # Append button
     append_button = ttk.Button(
-        file_select, text="Append Files", command=lambda: append_clicked(root)
+        file_select,
+        text="Append Files",
+        command=lambda: append_clicked(
+            root, current_type.get(), appended.get(), to_append.get()
+        ),
     )
     append_button.pack(fill="x", expand=True, pady=10)
 
