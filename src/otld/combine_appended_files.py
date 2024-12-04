@@ -79,7 +79,22 @@ def reorder_alpha_numeric(values: list | pd.Series) -> list:
     return values
 
 
-def main():
+def format_state_index(value: tuple) -> tuple:
+    """Adjust the formatting of the state index.
+
+    Args:
+        value (tuple): Index tuple.
+
+    Returns:
+        tuple: Index tuple with state adjusted.
+    """
+    state_name = value[0].title()
+    state_name = "Dist. Of Columbia" if state_name == "Dist.Of Columbia" else state_name
+
+    return state_name, value[1]
+
+
+def main() -> dict[pd.DataFrame]:
     """Entry point for combine_appended_files.py"""
 
     columns_196 = get_column_list(crosswalk, 196)
@@ -127,8 +142,12 @@ def main():
     total = total[reorder_alpha_numeric(total.columns)]
 
     for df in [total, federal, state]:
+        # Title case the state names
+        df.index = pd.MultiIndex.from_tuples(
+            df.index.map(format_state_index), names=["State", "Year"]
+        )
         df.rename(columns=rename_dict, inplace=True)
-        df.index.rename(["State", "Year"], inplace=True)
+        df.drop(index="Puerto Rico", level=0, inplace=True)
 
     frames.update({"Total": total})
 
