@@ -129,10 +129,20 @@ def main():
     frames = combine_appended_files.main()
     export_workbook(frames, os.path.join(out_dir, "FinancialDataWide.xlsx"))
 
+    frames["FinancialData"] = []
     for frame in frames:
+        if frame == "FinancialData":
+            continue
         frames[frame] = frames[frame].melt(
-            var_name="FieldName", value_name="Value", ignore_index=False
+            var_name="Category", value_name="Amount", ignore_index=False
         )
+        frames[frame]["Level"] = frame
+        frames["FinancialData"].append(frames[frame])
+
+    frames["FinancialData"] = pd.concat(frames["FinancialData"])
+    for frame in list(frames.keys()):
+        if frame != "FinancialData":
+            del frames[frame]
 
     export_workbook(frames, os.path.join(out_dir, "FinancialDataLong.xlsx"))
 

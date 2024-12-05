@@ -89,7 +89,9 @@ def format_state_index(value: tuple) -> tuple:
         tuple: Index tuple with state adjusted.
     """
     state_name = value[0].title()
-    state_name = "Dist. Of Columbia" if state_name == "Dist.Of Columbia" else state_name
+    state_name = (
+        "District of Columbia" if state_name.startswith("Dist.") else state_name
+    )
 
     return state_name, value[1]
 
@@ -121,7 +123,9 @@ def main() -> dict[pd.DataFrame]:
             state.append(df)
 
     # Append data frames and reorder columns
-    rename_dict = {key: value["name"] for key, value in crosswalk_dict.items()}
+    rename_dict = {
+        key: f"{key}. {value["name"]}" for key, value in crosswalk_dict.items()
+    }
 
     state = pd.concat(state)
     state = state[reorder_alpha_numeric(state.columns)]
