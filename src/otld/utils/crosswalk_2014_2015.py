@@ -1,15 +1,20 @@
 """Create crosswalk for mapping across 2014-2015 disjunction"""
 
 import os
+import sys
 
 import pandas as pd
 
 from otld.paths import input_dir
 
 try:
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        input_dir = os.path.join(os.path.dirname(__file__), "..", "..")
+
     crosswalk = pd.read_excel(
         os.path.join(input_dir, "Instruction Crosswalk.xlsx"), sheet_name="crosswalk"
     )
+
     crosswalk.fillna("", inplace=True)
     crosswalk = crosswalk.astype(str)
 
