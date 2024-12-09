@@ -161,10 +161,22 @@ class TANFData:
             self._out_dir,
             f"FinancialDataLong_{time.strftime("%Y%m%d", time.gmtime())}.xlsx",
         )
+
+        self._frames["FinancialData"] = []
         for frame in self._frames:
-            self._frames[frame] = self._frames[frame].melt(
-                var_name="FieldName", value_name="Value", ignore_index=False
-            )
+            if frame == "FinancialData":
+                continue
+        self._frames[frame] = self._frames[frame].melt(
+            var_name="Category", value_name="Amount", ignore_index=False
+        )
+        self._frames[frame]["Level"] = frame
+        self._frames["FinancialData"].append(self._frames[frame])
+
+        self._frames["FinancialData"] = pd.concat(self._frames["FinancialData"])
+        for frame in list(self._frames.keys()):
+            if frame != "FinancialData":
+                del self._frames[frame]
+
         export_workbook(self._frames, path)
 
 
