@@ -8,10 +8,10 @@ import openpyxl
 import pandas as pd
 from openpyxl.worksheet.worksheet import Worksheet
 
-from otld.format_appended_files import export_workbook
 from otld.utils import (
     convert_to_numeric,
     delete_empty_columns,
+    export_workbook,
     get_column_names,
     standardize_line_number,
 )
@@ -166,11 +166,11 @@ class TANFData:
         for frame in self._frames:
             if frame == "FinancialData":
                 continue
-        self._frames[frame] = self._frames[frame].melt(
-            var_name="Category", value_name="Amount", ignore_index=False
-        )
-        self._frames[frame]["Level"] = frame
-        self._frames["FinancialData"].append(self._frames[frame])
+            self._frames[frame] = self._frames[frame].melt(
+                var_name="Category", value_name="Amount", ignore_index=False
+            )
+            self._frames[frame]["Level"] = frame
+            self._frames["FinancialData"].append(self._frames[frame])
 
         self._frames["FinancialData"] = pd.concat(self._frames["FinancialData"])
         for frame in list(self._frames.keys()):

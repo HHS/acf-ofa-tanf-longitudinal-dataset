@@ -71,8 +71,7 @@ def append_clicked(root: Tk, type: str, appended_path: str, to_append_path: str)
 
     tanf_data = TANFData(type, appended_path, to_append_path, root=root)
 
-    if False:
-        tanf_data.append()
+    tanf_data.append()
 
     root.destroy()
 
