@@ -68,9 +68,24 @@ def main():
     for data_type, division in TAB_NAMES.items():
         print(f"\nValidating {data_type} data...")
         
+        # Map the division names to actual filenames
+        filename_map = {
+            'TANF': 'tanf',
+            'SSP-MOE': 'ssp',
+            'TANF and SSP': 'tanssp'
+        }
+        
+        # Get the correct filename suffix
+        file_suffix = filename_map.get(division, division.lower())
+        filename = f"fy2023_{file_suffix}_caseload.xlsx"
+        filepath = os.path.join(args.data_dir, filename)
+        
+        if not os.path.exists(filepath):
+            print(f"File not found: {filepath}")
+            continue
+            
         # Process raw data using existing function
-        raw_df = process_workbook(os.path.join(args.data_dir, f"fy2023_{division.lower().replace(' ', '')}_caseload.xlsx"), 
-                                data_type)
+        raw_df = process_workbook(filepath, data_type)
         if raw_df is None:
             continue
             
