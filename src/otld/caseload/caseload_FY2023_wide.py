@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 from typing import List, Optional
-from caseload_FYutils_refactor import (
+from caseload_utils import (
     process_sheet,
     clean_dataset,
     merge_datasets,
@@ -49,15 +49,15 @@ DATA_CONFIGS = {
 }
 
 FILES = {
-    "Federal": "caseload/data/fy2023_tanf_caseload.xlsx",
-    "State": "caseload/data/fy2023_ssp_caseload.xlsx",
-    "Total": "caseload/data/fy2023_tanssp_caseload.xlsx",
+    "Federal": "src/otld/caseload/original_data/fy2023_tanf_caseload.xlsx",
+    "State":  "src/otld/caseload/original_data/fy2023_ssp_caseload.xlsx",
+    "Total": "src/otld/caseload/original_data/fy2023_tanssp_caseload.xlsx",
 }
 
 TAB_NAMES = {
     "Federal": "TANF",
     "State": "SSP-MOE",
-    "Total": "TANF & SSP"
+    "Total": "TANF and SSP"
 }
 
 OUTPUT_COLUMNS = [
@@ -140,7 +140,7 @@ def main():
 
     # Save results with renamed tabs
     if results:
-        output_file = "caseload/CaseloadDataWide_refactor.xlsx"
+        output_file = "src/otld/caseload/appended_data/CaseloadDataWide.xlsx"
         with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
             for data_type, data in results.items():
                 tab_name = TAB_NAMES[data_type]
