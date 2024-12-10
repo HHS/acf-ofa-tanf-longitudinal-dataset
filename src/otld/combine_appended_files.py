@@ -124,7 +124,7 @@ def main() -> dict[pd.DataFrame]:
 
     # Append data frames and reorder columns
     rename_dict = {
-        key: f"{key}. {value["name"]}" for key, value in crosswalk_dict.items()
+        key: f"{key}. " + value["name"] for key, value in crosswalk_dict.items()
     }
 
     state = pd.concat(state)

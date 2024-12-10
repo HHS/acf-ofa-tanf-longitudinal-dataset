@@ -150,16 +150,17 @@ class TANFData:
         """Export data to Excel workbook"""
 
         # Export wide data
+        current_date = time.strftime("%Y%m%d", time.gmtime())
         path = os.path.join(
             self._out_dir,
-            f"FinancialDataWide_{time.strftime("%Y%m%d", time.gmtime())}.xlsx",
+            f"FinancialDataWide_{current_date}.xlsx",
         )
         export_workbook(self._frames, path)
 
         # Reshape and export long data
         path = path = os.path.join(
             self._out_dir,
-            f"FinancialDataLong_{time.strftime("%Y%m%d", time.gmtime())}.xlsx",
+            f"FinancialDataLong_{current_date}.xlsx",
         )
 
         self._frames["FinancialData"] = []
