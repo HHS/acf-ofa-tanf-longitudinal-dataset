@@ -9,6 +9,7 @@ otld.combine\_appended\_files
    .. autosummary::
       :toctree:
    
+      format_state_index
       get_column_list
       main
       map_columns
