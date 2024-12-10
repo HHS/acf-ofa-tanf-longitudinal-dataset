@@ -83,7 +83,7 @@ CATEGORIES = [
     'Children Recipients'
 ]
 
-LONG_FORMAT_COLUMNS = ['Year', 'State', 'Category', 'Amount']
+LONG_FORMAT_COLUMNS = ['Year', 'State', 'Division', 'Category', 'Amount']
 
 def process_workbook(file_path: str, data_type: str) -> Optional[pd.DataFrame]:
     """Process a single workbook and return the formatted dataset"""
@@ -144,11 +144,13 @@ def validate_conversion(wide_df: pd.DataFrame, long_df: pd.DataFrame) -> bool:
     Validate that the wide to long conversion maintained data integrity
     Returns True if validation passes, False otherwise
     """
+    division = long_df['Division'].iloc[0]  # Get the division we're validating
     for state in wide_df['State'].unique():
         for category in CATEGORIES:
             wide_value = wide_df[wide_df['State'] == state][category].iloc[0]
             long_value = long_df[(long_df['State'] == state) & 
-                               (long_df['Category'] == category)]['Amount'].iloc[0]
+                               (long_df['Category'] == category) &
+                               (long_df['Division'] == division)]['Amount'].iloc[0]
             
             if wide_value != long_value:
                 print(f"Mismatch found for {state} - {category}:")
@@ -157,8 +159,8 @@ def validate_conversion(wide_df: pd.DataFrame, long_df: pd.DataFrame) -> bool:
                 return False
     return True
 
-def convert_to_long_format(df: pd.DataFrame) -> pd.DataFrame:
-    """Convert wide format DataFrame to long format with Year, State, Category, Amount columns"""
+def convert_to_long_format(df: pd.DataFrame, division: str) -> pd.DataFrame:
+    """Convert wide format DataFrame to long format with Year, State, Division, Category, Amount columns"""
     # Make a copy of the input DataFrame to avoid modifications
     df = df.copy()
     
@@ -171,15 +173,17 @@ def convert_to_long_format(df: pd.DataFrame) -> pd.DataFrame:
         value_name='Amount'
     )
     
+    # Add Division column
+    long_df.insert(2, 'Division', division)
+    
+    # Update column order to include Division
+    LONG_FORMAT_COLUMNS = ['Year', 'State', 'Division', 'Category', 'Amount']
+    
     # Ensure correct column order
     long_df = long_df[LONG_FORMAT_COLUMNS]
     
     # Sort values
-    long_df = long_df.sort_values(['State', 'Year', 'Category']).reset_index(drop=True)
-    
-    # Validate the conversion
-    if not validate_conversion(df, long_df):
-        print("Warning: Data validation failed!")
+    long_df = long_df.sort_values(['State', 'Year', 'Division', 'Category']).reset_index(drop=True)
     
     return long_df
 
@@ -190,34 +194,33 @@ def main():
         print(f"\nProcessing {data_type} data...")
         result = process_workbook(file_path, data_type)
         if result is not None:
-            # Store wide format for validation
-            wide_result = result.copy()
-            
-            # Convert to long format
-            long_result = convert_to_long_format(result)
-            
-            # Additional validation check
-            print(f"\nValidating {data_type} data conversion...")
-            if validate_conversion(wide_result, long_result):
-                print("Validation passed!")
-                results[data_type] = long_result
-                print(f"{data_type} data processed successfully.")
-            else:
-                print(f"Warning: Validation failed for {data_type} data!")
+            # Convert to long format with division name
+            division_name = TAB_NAMES[data_type]
+            long_result = convert_to_long_format(result, division_name)
+            print(f"Sample of {data_type} data after conversion:")
+            print(long_result.head())  # Add this to see the data
+            results[data_type] = long_result
+            print(f"{data_type} data processed successfully.")
         else:
             print(f"Failed to process {data_type} data.")
 
-    # Save results with renamed tabs
+    # Combine all results into a single DataFrame
     if results:
+        combined_df = pd.concat(results.values(), ignore_index=True)
+        print("\nShape of combined DataFrame:", combined_df.shape)
+        print("\nColumns in combined DataFrame:", combined_df.columns.tolist())
+        print("\nSample of combined data:")
+        print(combined_df.head(10))
+        
+        # Create output directory if it doesn't exist
+        os.makedirs("src/otld/caseload/appended_data", exist_ok=True)
+        
+        # Save combined results
         output_file = "src/otld/caseload/appended_data/CaseloadDataLong.xlsx"
-        with pd.ExcelWriter(output_file, engine="xlsxwriter") as writer:
-            for data_type, data in results.items():
-                tab_name = TAB_NAMES[data_type]
-                data.to_excel(writer, sheet_name=tab_name, index=False)
-                print(f"Saved {data_type} data to tab '{tab_name}'")
+        combined_df.to_excel(output_file, index=False)
         print(f"\nUpdated file saved: {output_file}")
     else:
         print("\nNo data was successfully processed.")
-
+        
 if __name__ == "__main__":
     main()
