@@ -17,6 +17,22 @@ def main():
     crosswalk = crosswalk[["Category", "description"]]
 
     financial_data = financial_data.merge(crosswalk, how="left", on="Category")
+    awarded = financial_data[financial_data["Category"] == "1. Awarded"].rename(
+        columns={"Amount": "Total"}
+    )
+    financial_data = financial_data.merge(
+        awarded[["State", "Year", "Level", "Total"]],
+        how="left",
+        on=["State", "Year", "Level"],
+    )
+    financial_data["pct_of_total"] = (
+        round(financial_data["Amount"] / financial_data["Total"], 4) * 100
+    )
+    financial_data.loc[financial_data["Category"] == "1. Awarded", "pct_of_total"] = (
+        None
+    )
+    financial_data.drop("Total", inplace=True, axis=1)
+
     financial_data.to_excel(
         os.path.join(tableau_dir, "data", "FinancialDataLong.xlsx"),
         index=False,
