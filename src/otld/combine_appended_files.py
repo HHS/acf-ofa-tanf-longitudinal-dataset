@@ -129,7 +129,7 @@ def main() -> dict[pd.DataFrame]:
 
     state = pd.concat(state)
     state = state[reorder_alpha_numeric(state.columns)]
-    state.drop(["1", "2", "3", "4", "5", "7", "8", "24"], inplace=True, axis=1)
+    state.drop(["1", "2", "3", "4", "5", "7", "8"], inplace=True, axis=1)
 
     federal = pd.concat(federal)
     federal = federal[reorder_alpha_numeric(federal.columns)]
