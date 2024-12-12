@@ -47,11 +47,16 @@ def rename_columns(
     elif sheet.endswith("Non-A Subcategories"):
         number = 6
     elif sheet.startswith("Summary"):
-        df = df.iloc[:, [0, 1, 2, 4, 5, 7, 8, 9]].copy()
+        df = df.iloc[:, [0, 1, 2, 4, 5, 6, 7, 8, 9]].copy()
         tracker["BaseColumns"] = df.columns.to_list()
-        df.columns = ["STATE", "1", "Carryover", "2", "3", "7", "9", "10"]
+        df.columns = ["STATE", "1", "Carryover", "2", "3", "4", "7", "9", "10"]
         tracker["RenamedColumns"] = df.columns.to_list()
-        df["4"] = df["1"] - df["2"] - df["3"]
+        return df
+    elif sheet.startswith("Total"):
+        df = df.iloc[:, [0, 1]].copy()
+        tracker["BaseColumns"] = df.columns.to_list()
+        df.columns = ["STATE", "7"]
+        tracker["RenamedColumns"] = df.columns.to_list()
         return df
     else:
         raise ValueError("Invalid sheet")
@@ -172,12 +177,10 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
         "Non-Assistance",
         "Non-A Subcategories",
     ]
-    common_sheets = [
-        "Summary Federal Funds",
-    ]
     fed_sheets = [f"Federal {sheet}" for sheet in sheets]
+    fed_sheets += ["Summary Federal Funds"]
     state_sheets = [f"State {sheet}" for sheet in sheets]
-    fed_sheets += common_sheets
+    state_sheets += ["Total State Expenditure Summary"]
 
     for file in tanf_files:
         # Extract year from file name
