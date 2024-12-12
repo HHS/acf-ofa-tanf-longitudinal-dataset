@@ -172,12 +172,13 @@ def format_openpyxl_worksheet(ws: Worksheet):
                 pass
 
 
-def export_workbook(frames: dict, path: str):
+def export_workbook(frames: dict, path: str, drop: list[str] = []):
     """Export a dictionary of data frames as an Excel Workbook.
 
     Args:
         frames (dict): A dictionary of pandas DataFrames.
         path (str): The path at which to output the Excel workbook.
+        drop (list[str], optional): List of columns to drop from the data frames. Defaults to [].
     """
     # Load csv into workbook
     # Adapted from https://stackoverflow.com/questions/12976378/openpyxl-convert-csv-to-excel
@@ -195,7 +196,10 @@ def export_workbook(frames: dict, path: str):
 
         i += 1
 
-        df = frames[frame]
+        df = frames[frame].copy()
+        if drop:
+            df.drop(drop, inplace=True, axis=1)
+
         df = dataframe_to_rows(df.reset_index(), index=False)
 
         for row in df:
