@@ -5,43 +5,30 @@ def process_sheet(file_path: str, sheet_name: str, skiprows: int,
                  column_names: List[str]) -> Optional[pd.DataFrame]:
     """Read and process a single Excel sheet"""
     try:
-        is_federal = "TANF" in file_path
-        
-        if is_federal:
-            df = pd.read_excel(
-                file_path,
-                sheet_name=sheet_name,
-                skiprows=skiprows,
-                na_values=['--'],
-                keep_default_na=False,
-                thousands=',',
-                dtype={'State': str}
-            )
-            
-            for col in df.columns:
-                if col != 'State':
-                    df[col] = df[col].replace({'-': '0', '': '0', ' ': '0'})
-                    df[col] = df[col].astype(str).str.replace(',', '').astype(float)
+        # Determine the correct number of rows to skip based on the sheet name
+        if "FYCY" in sheet_name or "Avg" in sheet_name:
+            actual_skiprows = 5
         else:
-            df = pd.read_excel(
-                file_path,
-                sheet_name=sheet_name,
-                skiprows=skiprows,
-                na_values=['--'],
-                keep_default_na=True,
-                thousands=',',
-                dtype={'State': str}
-            )
+            actual_skiprows = skiprows
         
-        df.columns = [col.replace('\n', ' ').strip() for col in df.columns]
+        # Read the data with predefined column names
+        df = pd.read_excel(
+            file_path,
+            sheet_name=sheet_name,
+            skiprows=actual_skiprows,
+            names=column_names,
+            na_values=['--'],
+            keep_default_na=False,
+            thousands=',',
+            dtype={'State': str}
+        )
         
-        if len(df.columns) != len(column_names):
-            return None
-        
-        df.columns = column_names
         return df
         
     except Exception as e:
+        print(f"Error processing sheet {sheet_name}: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
         return None
 
 def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
@@ -75,10 +62,11 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def merge_datasets(families_df: pd.DataFrame, 
-                  recipients_df: pd.DataFrame) -> pd.DataFrame:
+                  recipients_df: pd.DataFrame,
+                  year: str) -> pd.DataFrame:
     """Merge families and recipients datasets"""
     merged = pd.merge(families_df, recipients_df, on='State', how='outer').copy()
-    merged.insert(0, 'Year', '2023')
+    merged.insert(0, 'Year', year)
     return merged
 
 def format_column_names(df: pd.DataFrame) -> pd.DataFrame:
