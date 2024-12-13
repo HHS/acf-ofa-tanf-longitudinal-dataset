@@ -2,11 +2,13 @@ import os
 
 import pandas as pd
 
-from otld.paths import input_dir, out_dir, tableau_dir
+from otld.paths import input_dir, tableau_dir
 
 
 def main():
-    financial_data = pd.read_excel(os.path.join(out_dir, "FinancialDataLong.xlsx"))
+    financial_data = pd.read_excel(
+        os.path.join(tableau_dir, "data", "FinancialDataLongRaw.xlsx")
+    )
     crosswalk = pd.read_excel(
         os.path.join(input_dir, "Instruction Crosswalk.xlsx"), sheet_name="crosswalk"
     )
@@ -17,19 +19,28 @@ def main():
     crosswalk = crosswalk[["Category", "description"]]
 
     financial_data = financial_data.merge(crosswalk, how="left", on="Category")
-    awarded = financial_data[financial_data["Category"] == "1. Awarded"].rename(
-        columns={"Amount": "Total"}
+    awarded = (
+        financial_data[
+            financial_data["Category"].map(
+                lambda x: x
+                in [
+                    "24. Total Expenditures",
+                    "2. Transfers to Child Care and Development Fund (CCDF) Discretionary",
+                    "3. Transfers to Social Services Block Grant (SSBG)",
+                ]
+            )
+        ]
+        .groupby(["State", "Year", "Level"])
+        .sum(["Amount"])
+        .rename(columns={"Amount": "Total"})
     )
     financial_data = financial_data.merge(
-        awarded[["State", "Year", "Level", "Total"]],
+        awarded,
         how="left",
         on=["State", "Year", "Level"],
     )
     financial_data["pct_of_total"] = (
         round(financial_data["Amount"] / financial_data["Total"], 4) * 100
-    )
-    financial_data.loc[financial_data["Category"] == "1. Awarded", "pct_of_total"] = (
-        None
     )
     financial_data.drop("Total", inplace=True, axis=1)
 
