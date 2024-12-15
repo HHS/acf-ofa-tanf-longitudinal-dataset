@@ -55,21 +55,39 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     df['State'] = df['State'].str.replace(r'\*+', '', regex=True)  # Remove asterisks
     df['State'] = df['State'].str.replace('"', '')
     
-    # Filter out unwanted rows
+    # Filter out unwanted rows - expanded patterns for notes
     unwanted_patterns = [
         'U.S. Totals',
         'data inapplicable',
         'Fiscal year average',
         r'\d{4}-\d{2}-\d{2}',
         '^\s*$',
-        '^-'
+        '^-',
+        'As of \d{2}/\d{2}/\d{4}',    # Matches "As of MM/DD/YYYY"
+        'Calendar year average',        # Matches calendar year notes
+        'Note[s]?:',                    # Matches both "Note:" and "Notes:"
+        'Source:',                      # Matches source citations
+        'Data as of',                   # Matches date stamps
+        'footnote',                     # Matches footnote references
+        '^\d+\.',                       # Matches numbered notes (e.g., "1.")
+        'See note',                     # Matches note references
+        'Revised',                      # Matches revision notes
+        'Updated'                       # Matches update notes
     ]
     
     pattern = '|'.join(unwanted_patterns)
     df = df[~df['State'].str.contains(pattern, regex=True, na=False)].copy()
     
-    # Clean numeric columns
+    # Additional filtering for state names
+    df = df[df['State'].str.len() <= 50]  # Filter out long text that might be notes
+    df = df[~df['State'].str.contains(r'\d{4}')]  # Filter out anything with years in it
+    
+    # Filter out rows where all numeric columns are 0
     numeric_cols = df.columns.difference(['State'])
+    all_zeros = df[numeric_cols].apply(lambda x: pd.to_numeric(x, errors='coerce')).fillna(0).eq(0).all(axis=1)
+    df = df[~(all_zeros & df['State'].str.lower().str.contains('note|source|data|see|revised|updated'))]
+    
+    # Clean numeric columns
     for col in numeric_cols:
         if df[col].dtype == 'object':
             temp_series = (df[col].astype(str)

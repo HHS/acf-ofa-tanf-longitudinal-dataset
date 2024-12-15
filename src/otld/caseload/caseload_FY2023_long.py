@@ -250,9 +250,12 @@ def convert_to_long_format(df: pd.DataFrame, division: str) -> pd.DataFrame:
     return long_df
 
 def main():
-    # List to collect all results (both wide and long format)
-    all_wide_results = []
-    all_long_results = []
+    # List to collect all results for each tab
+    all_results = {
+        "TANF": [],
+        "SSP-MOE": [],
+        "TANF and SSP": []
+    }
     
     # Process each file
     for data_type, file_list in FILES.items():
@@ -267,13 +270,8 @@ def main():
             
             result = process_workbook(file_path, data_type, is_old_format)
             if result is not None:
-                # Save wide format result
-                all_wide_results.append(result)
-                
-                # Convert to long format
-                long_result = convert_to_long_format(result, division_name)
-                all_long_results.append(long_result)
-                
+                # Add to the appropriate tab's results
+                all_results[division_name].append(result)
                 print(f"{data_type} data for {year} processed successfully.")
             else:
                 print(f"Failed to process {data_type} data for {year}.")
@@ -281,28 +279,39 @@ def main():
     # Create output directory if it doesn't exist
     os.makedirs("src/otld/caseload/appended_data", exist_ok=True)
 
-    # Combine and save wide format results
-    if all_wide_results:
-        combined_wide_df = pd.concat(all_wide_results, ignore_index=True)
-        combined_wide_df = combined_wide_df.sort_values(['Year', 'State']).reset_index(drop=True)
+    # Combine and save results with proper tabs
+    if any(all_results.values()):
+        with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx", engine="xlsxwriter") as writer:
+            for tab_name, results in all_results.items():
+                if results:
+                    # Combine all results for this tab
+                    combined_df = pd.concat(results, ignore_index=True)
+                    # Sort by Year and State
+                    combined_df = combined_df.sort_values(['Year', 'State']).reset_index(drop=True)
+                    # Save to the appropriate tab
+                    combined_df.to_excel(writer, sheet_name=tab_name, index=False)
+                    print(f"\nSaved {tab_name} tab with shape: {combined_df.shape}")
         
-        # Save wide format
-        wide_output_file = "src/otld/caseload/appended_data/CaseloadWide.xlsx"
-        combined_wide_df.to_excel(wide_output_file, index=False)
-        print(f"\nWide format file saved: {wide_output_file}")
-
-    # Combine and save long format results
-    if all_long_results:
-        combined_long_df = pd.concat(all_long_results, ignore_index=True)
-        combined_long_df = combined_long_df.sort_values(['Year', 'State', 'Division', 'Category']).reset_index(drop=True)
+        print("\nWide format file saved: src/otld/caseload/appended_data/CaseloadWide.xlsx")
         
-        # Save long format
-        long_output_file = "src/otld/caseload/appended_data/CaseloadLong.xlsx"
-        combined_long_df.to_excel(long_output_file, index=False)
-        print(f"\nLong format file saved: {long_output_file}")
+        # Now process and save long format
+        all_long_results = []
+        for division_name, results in all_results.items():
+            if results:
+                for df in results:
+                    long_result = convert_to_long_format(df, division_name)
+                    all_long_results.append(long_result)
+        
+        if all_long_results:
+            combined_long_df = pd.concat(all_long_results, ignore_index=True)
+            combined_long_df = combined_long_df.sort_values(['Year', 'State', 'Division', 'Category']).reset_index(drop=True)
+            
+            long_output_file = "src/otld/caseload/appended_data/CaseloadLong.xlsx"
+            combined_long_df.to_excel(long_output_file, index=False)
+            print(f"\nLong format file saved: {long_output_file}")
     
     else:
         print("\nNo data was successfully processed.")
-        
+
 if __name__ == "__main__":
     main()
