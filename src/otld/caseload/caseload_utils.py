@@ -2,26 +2,41 @@ import pandas as pd
 from typing import List, Optional
 
 def process_sheet(file_path: str, sheet_name: str, skiprows: int, 
-                 column_names: List[str]) -> Optional[pd.DataFrame]:
+                 column_names: List[str], is_old_format: bool) -> Optional[pd.DataFrame]:
     """Read and process a single Excel sheet"""
     try:
-        # Determine the correct number of rows to skip based on the sheet name
-        if "FYCY" in sheet_name or "Avg" in sheet_name:
-            actual_skiprows = 5
+        if is_old_format:
+            # For 2016-2020 data, we need to handle fiscal year columns specifically
+            df = pd.read_excel(
+                file_path,
+                sheet_name=sheet_name,
+                skiprows=6,  # Skip 6 rows for old format
+                header=None,  # Don't use first row as header
+                thousands=',',
+                dtype={'State': str}
+            )
+            
+            # Extract only the fiscal year columns (first set of data columns)
+            if 'Families' in sheet_name:
+                df = df[[0, 1, 2, 3, 4]]  # State + 4 family columns
+                df.columns = ['State', 'Total Families', 'Two Parent Families',
+                            'One Parent Families', 'No Parent Families']
+            else:  # Recipients sheet
+                df = df[[0, 1, 2, 3]]  # State + 3 recipient columns
+                df.columns = ['State', 'Total Recipients', 'Adult Recipients',
+                            'Children Recipients']
         else:
-            actual_skiprows = skiprows
-        
-        # Read the data with predefined column names
-        df = pd.read_excel(
-            file_path,
-            sheet_name=sheet_name,
-            skiprows=actual_skiprows,
-            names=column_names,
-            na_values=['--'],
-            keep_default_na=False,
-            thousands=',',
-            dtype={'State': str}
-        )
+            # For 2021+ data, use the standard format
+            df = pd.read_excel(
+                file_path,
+                sheet_name=sheet_name,
+                skiprows=skiprows,
+                names=column_names,
+                na_values=['--'],
+                keep_default_na=False,
+                thousands=',',
+                dtype={'State': str}
+            )
         
         return df
         
@@ -34,8 +49,13 @@ def process_sheet(file_path: str, sheet_name: str, skiprows: int,
 def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     """Clean a dataset by handling state names and numeric columns"""
     df = df.copy()
-    df.loc[:, 'State'] = df['State'].str.strip().str.replace('"', '')
     
+    # Clean state names
+    df['State'] = df['State'].astype(str).str.strip()
+    df['State'] = df['State'].str.replace(r'\*+', '', regex=True)  # Remove asterisks
+    df['State'] = df['State'].str.replace('"', '')
+    
+    # Filter out unwanted rows
     unwanted_patterns = [
         'U.S. Totals',
         'data inapplicable',
@@ -46,8 +66,9 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     ]
     
     pattern = '|'.join(unwanted_patterns)
-    df = df[~df['State'].str.contains(pattern, regex=True, na=True)].copy()
+    df = df[~df['State'].str.contains(pattern, regex=True, na=False)].copy()
     
+    # Clean numeric columns
     numeric_cols = df.columns.difference(['State'])
     for col in numeric_cols:
         if df[col].dtype == 'object':
@@ -56,8 +77,9 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
                          .str.replace(',', '')
                          .str.replace('"', '')
                          .str.replace('***', '')
-                         .str.replace('-', '0'))
-            df.loc[:, col] = pd.to_numeric(temp_series, errors='coerce').fillna(0)
+                         .str.replace('-', '0')
+                         .str.replace(r'\*+', '', regex=True))  # Remove asterisks
+            df[col] = pd.to_numeric(temp_series, errors='coerce').fillna(0)
     
     return df
 
