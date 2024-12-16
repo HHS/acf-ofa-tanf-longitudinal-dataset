@@ -156,8 +156,8 @@ def main() -> dict[pd.DataFrame]:
 
     federal = pd.concat(federal)
     federal = federal[reorder_alpha_numeric(federal.columns)]
-    for df in [federal, state]:
-        df.fillna(0, inplace=True)
+    # for df in [federal, state]:
+    #     df.fillna(0, inplace=True)
 
     frames = {"Federal": federal, "State": state}
 
