@@ -59,7 +59,13 @@ FILES = {
         "src/otld/caseload/original_data/fy2019_tanf_caseload.xlsx",
         "src/otld/caseload/original_data/fy2018_tanf_caseload.xlsx",
         "src/otld/caseload/original_data/fy2017_tanf_caseload.xlsx",
-        "src/otld/caseload/original_data/fy2016_tanf_caseload.xls"
+        "src/otld/caseload/original_data/fy2016_tanf_caseload.xls",
+        "src/otld/caseload/original_data/fy2015_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2014_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2013_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2012_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2011_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2010_tan_caseload.xls"
     ],
     "State": [
         "src/otld/caseload/original_data/fy2023_ssp_caseload.xlsx",
@@ -69,7 +75,13 @@ FILES = {
         "src/otld/caseload/original_data/fy2019_ssp_caseload.xlsx",
         "src/otld/caseload/original_data/fy2018_ssp_caseload.xlsx",
         "src/otld/caseload/original_data/fy2017_ssp_caseload.xlsx",
-        "src/otld/caseload/original_data/fy2016_ssp_caseload.xls"
+        "src/otld/caseload/original_data/fy2016_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2015_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2014_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2013_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2012_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2011_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2010_ssp_caseload.xls"
     ],
     "Total": [
         "src/otld/caseload/original_data/fy2023_tanssp_caseload.xlsx",
@@ -79,7 +91,13 @@ FILES = {
         "src/otld/caseload/original_data/fy2019_tanfssp_caseload.xlsx",
         "src/otld/caseload/original_data/fy2018_tanssp_caseload.xlsx",
         "src/otld/caseload/original_data/fy2017_tanssp_caseload.xlsx",
-        "src/otld/caseload/original_data/fy2016_tanssp_caseload.xls"
+        "src/otld/caseload/original_data/fy2016_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2015_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2014_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2013_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2012_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2011_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2010_tanssp_caseload.xls"
     ]
 }
 
@@ -113,8 +131,12 @@ CATEGORIES = [
 
 LONG_FORMAT_COLUMNS = ['Year', 'State', 'Division', 'Category', 'Amount']
 
+# for years 1997-2023
 def find_matching_sheet(sheet_names: List[str], pattern: str, file_path: str) -> Optional[str]:
     """Find first sheet name that matches pattern, handling special cases"""
+    
+    # Get the year from the file path
+    year = file_path.split('fy')[1][:4]
     
     # Special case for 2023 State data
     if "2023_ssp" in file_path:
@@ -123,11 +145,14 @@ def find_matching_sheet(sheet_names: List[str], pattern: str, file_path: str) ->
         if "Recipients" in pattern:
             return next((s for s in sheet_names if "Avg Mo. Num Recipient" in s), None)
     
-    # Handle 2016's spaced pattern
-    if "2016" in file_path and "Recipients" in pattern:
-        return next((s for s in sheet_names if "FYCY2016 - Recipients" in s), None)
+    # For years 2010-2020, look for FYCY pattern
+    if int(year) <= 2020:
+        if "Families" in pattern:
+            return next((s for s in sheet_names if "FYCY" in s and "Families" in s), None)
+        if "Recipients" in pattern:
+            return next((s for s in sheet_names if "FYCY" in s and "Recipients" in s), None)
     
-    # Standard pattern matching
+    # Standard pattern matching for 2021+
     return next((s for s in sheet_names 
                 if pattern in s.replace(" ", "")), None)
 

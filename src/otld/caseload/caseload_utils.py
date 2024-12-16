@@ -1,12 +1,13 @@
 import pandas as pd
 from typing import List, Optional
 
+
 def process_sheet(file_path: str, sheet_name: str, skiprows: int, 
                  column_names: List[str], is_old_format: bool) -> Optional[pd.DataFrame]:
     """Read and process a single Excel sheet"""
     try:
         if is_old_format:
-            # For 2016-2020 data, we need to handle fiscal year columns specifically
+            # For 2010-2020 data, we need to handle fiscal year columns specifically
             df = pd.read_excel(
                 file_path,
                 sheet_name=sheet_name,
