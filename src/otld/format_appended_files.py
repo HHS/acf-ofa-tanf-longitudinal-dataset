@@ -62,7 +62,7 @@ def main():
         frames[frame] = frames[frame].melt(
             var_name="Category", value_name="Amount", ignore_index=False
         )
-        frames[frame]["Level"] = frame
+        frames[frame]["Funding"] = frame
         frames["FinancialData"].append(frames[frame])
 
     frames["FinancialData"] = pd.concat(frames["FinancialData"])

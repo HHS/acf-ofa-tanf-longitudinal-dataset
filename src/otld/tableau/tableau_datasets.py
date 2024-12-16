@@ -32,14 +32,14 @@ def main():
                 ]
             )
         ]
-        .groupby(["State", "Year", "Level"])
+        .groupby(["State", "Year", "Funding"])
         .sum(["Amount"])
         .rename(columns={"Amount": "Total"})
     )
     financial_data = financial_data.merge(
         awarded,
         how="left",
-        on=["State", "Year", "Level"],
+        on=["State", "Year", "Funding"],
     )
     financial_data["pct_of_tanf"] = (
         round(financial_data["Amount"] / financial_data["Total"], 4) * 100
@@ -48,7 +48,7 @@ def main():
 
     # Percentage of total
     total = financial_data.loc[
-        financial_data["Level"] == "Total",
+        financial_data["Funding"] == "Total",
         ["State", "Year", "Category", "Amount"],
     ].rename(columns={"Amount": "Total"})
     financial_data = financial_data.merge(
