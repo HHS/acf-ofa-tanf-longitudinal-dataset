@@ -7,7 +7,7 @@ def process_sheet(file_path: str, sheet_name: str, skiprows: int,
     """Read and process a single Excel sheet"""
     try:
         if is_old_format:
-            # For 2010-2020 data, we need to handle fiscal year columns specifically
+            # For 2001-2020 data, we need to handle fiscal year columns specifically
             df = pd.read_excel(
                 file_path,
                 sheet_name=sheet_name,
@@ -18,7 +18,7 @@ def process_sheet(file_path: str, sheet_name: str, skiprows: int,
             )
             
             # Extract only the fiscal year columns (first set of data columns)
-            if 'Families' in sheet_name:
+            if 'families' in sheet_name.lower():
                 df = df[[0, 1, 2, 3, 4]]  # State + 4 family columns
                 df.columns = ['State', 'Total Families', 'Two Parent Families',
                             'One Parent Families', 'No Parent Families']

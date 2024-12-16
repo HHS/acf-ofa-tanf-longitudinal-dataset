@@ -65,7 +65,16 @@ FILES = {
         "src/otld/caseload/original_data/fy2013_tan_caseload.xls",
         "src/otld/caseload/original_data/fy2012_tan_caseload.xls",
         "src/otld/caseload/original_data/fy2011_tan_caseload.xls",
-        "src/otld/caseload/original_data/fy2010_tan_caseload.xls"
+        "src/otld/caseload/original_data/fy2010_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2009_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2008_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2007_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2006_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2005_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2004_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2003_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2002_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2001_tan_caseload.xls"
     ],
     "State": [
         "src/otld/caseload/original_data/fy2023_ssp_caseload.xlsx",
@@ -81,7 +90,16 @@ FILES = {
         "src/otld/caseload/original_data/fy2013_ssp_caseload.xls",
         "src/otld/caseload/original_data/fy2012_ssp_caseload.xls",
         "src/otld/caseload/original_data/fy2011_ssp_caseload.xls",
-        "src/otld/caseload/original_data/fy2010_ssp_caseload.xls"
+        "src/otld/caseload/original_data/fy2010_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2009_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2008_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2007_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2006_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2005_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2004_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2003_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2002_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2001_ssp_caseload.xls"
     ],
     "Total": [
         "src/otld/caseload/original_data/fy2023_tanssp_caseload.xlsx",
@@ -97,7 +115,16 @@ FILES = {
         "src/otld/caseload/original_data/fy2013_tanssp_caseload.xls",
         "src/otld/caseload/original_data/fy2012_tanssp_caseload.xls",
         "src/otld/caseload/original_data/fy2011_tanssp_caseload.xls",
-        "src/otld/caseload/original_data/fy2010_tanssp_caseload.xls"
+        "src/otld/caseload/original_data/fy2010_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2009_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2008_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2007_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2006_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2005_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2004_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2003_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2002_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2001_tanssp_caseload.xls"
     ]
 }
 
@@ -145,16 +172,50 @@ def find_matching_sheet(sheet_names: List[str], pattern: str, file_path: str) ->
         if "Recipients" in pattern:
             return next((s for s in sheet_names if "Avg Mo. Num Recipient" in s), None)
     
-    # For years 2010-2020, look for FYCY pattern
+    # For years 2001-2020, use case-insensitive and flexible pattern matching
     if int(year) <= 2020:
         if "Families" in pattern:
-            return next((s for s in sheet_names if "FYCY" in s and "Families" in s), None)
+            # Try all variations for Families sheets
+            possible_families = [
+                f"FYCY{year}-Families",     # Standard format uppercase
+                f"FYCY{year}Families",      # No hyphen uppercase
+                f"fycy{year}-families",     # Standard format lowercase
+                f"fycy{year}families"       # No hyphen lowercase
+            ]
+            
+            # Try each pattern with case-insensitive matching
+            for family_pattern in possible_families:
+                sheet = next((s for s in sheet_names 
+                            if family_pattern.lower() in s.lower().replace(" ", "")), None)
+                if sheet:
+                    return sheet
+                
         if "Recipients" in pattern:
-            return next((s for s in sheet_names if "FYCY" in s and "Recipients" in s), None)
+            # Try all variations for Recipients sheets
+            possible_recipients = [
+                f"FYCY{year}-Recipients",       # Standard format uppercase
+                f"FYCY{year} - Recipients",     # Spaced format uppercase
+                f"FYCY{year}- Recipients",      # Mixed format uppercase
+                f"fycy{year}-recipients",       # Standard format lowercase
+                f"fycy{year} - recipients",     # Spaced format lowercase
+                f"fycy{year}- recipients"       # Mixed format lowercase
+            ]
+            
+            # Try each pattern with case-insensitive matching
+            for recipient_pattern in possible_recipients:
+                sheet = next((s for s in sheet_names 
+                            if recipient_pattern.lower() in s.lower()), None)
+                if sheet:
+                    return sheet
+                    
+            # If still not found, try more flexible matching
+            return next((s for s in sheet_names 
+                        if f"fycy{year}".lower() in s.lower() and "recipient" in s.lower()), None)
     
     # Standard pattern matching for 2021+
     return next((s for s in sheet_names 
                 if pattern in s.replace(" ", "")), None)
+
 
 def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Optional[pd.DataFrame]:
     """Process a single workbook and return the formatted dataset"""
@@ -184,7 +245,7 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Opt
         
         if not families_tab or not recipients_tab:
             return None
-        
+
         families_data = process_sheet(
             file_path=file_path,
             sheet_name=families_tab,
@@ -211,9 +272,8 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Opt
         
         print(f"Cleaned data shapes - Families: {families_data.shape}, Recipients: {recipients_data.shape}")
         
-        # Pass the year to merge_datasets
+        # Pass the extracted year to merge_datasets
         merged_data = merge_datasets(families_data, recipients_data, year)
-        
         final_data = format_final_dataset(merged_data, OUTPUT_COLUMNS)
         
         print(f"Final data shape: {final_data.shape}")
@@ -225,7 +285,6 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Opt
         import traceback
         print(traceback.format_exc())
         return None
-    
 def validate_conversion(wide_df: pd.DataFrame, long_df: pd.DataFrame) -> bool:
     """
     Validate that the wide to long conversion maintained data integrity
@@ -290,7 +349,7 @@ def main():
             year = file_path.split('fy')[1][:4]
             print(f"\nProcessing {data_type} data for {year}...")
             
-            # Determine if this is old format (2016-2020)
+            # Determine if this is old format (2001-2020)
             is_old_format = int(year) <= 2020
             
             result = process_workbook(file_path, data_type, is_old_format)
