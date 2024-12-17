@@ -56,7 +56,7 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     df['State'] = df['State'].str.replace(r'\*+', '', regex=True)  # Remove asterisks
     df['State'] = df['State'].str.replace('"', '')
     
-    # Filter out unwanted rows - expanded patterns for notes
+    # Filter out unwanted rows - expanded patterns for notes and dates
     unwanted_patterns = [
         'U.S. Totals',
         'data inapplicable',
@@ -64,29 +64,38 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
         r'\d{4}-\d{2}-\d{2}',
         '^\s*$',
         '^-',
-        'As of \d{2}/\d{2}/\d{4}',    # Matches "As of MM/DD/YYYY"
-        'Calendar year average',        # Matches calendar year notes
-        'Note[s]?:',                    # Matches both "Note:" and "Notes:"
-        'Source:',                      # Matches source citations
-        'Data as of',                   # Matches date stamps
-        'footnote',                     # Matches footnote references
-        '^\d+\.',                       # Matches numbered notes (e.g., "1.")
-        'See note',                     # Matches note references
-        'Revised',                      # Matches revision notes
-        'Updated'                       # Matches update notes
+        'As of \d{2}/\d{2}/\d{4}',     # Matches "As of MM/DD/YYYY"
+        'As of \d{2}/\d{2}/\d{2}',      # Matches "As of MM/DD/YY"
+        'As of.*',                       # Matches any "As of" text with following content
+        'Calendar year average',         # Matches calendar year notes
+        'Note[s]?:',                     # Matches both "Note:" and "Notes:"
+        'Source:',                       # Matches source citations
+        'Data as of',                    # Matches date stamps
+        'footnote',                      # Matches footnote references
+        '^\d+\.',                        # Matches numbered notes
+        'See note',                      # Matches note references
+        'Revised',                       # Matches revision notes
+        'Updated',                       # Matches update notes
+        r'\d{2}/\d{2}/\d{2,4}',         # Matches any date format
+        r'^\d{4}$',                      # Matches year-only entries
+        '^As of$',                       # Matches standalone "As of"
     ]
     
     pattern = '|'.join(unwanted_patterns)
-    df = df[~df['State'].str.contains(pattern, regex=True, na=False)].copy()
+    mask = ~df['State'].str.contains(pattern, regex=True, na=False)
+    df = df[mask].copy()
     
     # Additional filtering for state names
     df = df[df['State'].str.len() <= 50]  # Filter out long text that might be notes
     df = df[~df['State'].str.contains(r'\d{4}')]  # Filter out anything with years in it
     
+    # Filter out rows where State column contains any variant of "As of" case-insensitive
+    df = df[~df['State'].str.lower().str.contains('as of')]
+    
     # Filter out rows where all numeric columns are 0
     numeric_cols = df.columns.difference(['State'])
     all_zeros = df[numeric_cols].apply(lambda x: pd.to_numeric(x, errors='coerce')).fillna(0).eq(0).all(axis=1)
-    df = df[~(all_zeros & df['State'].str.lower().str.contains('note|source|data|see|revised|updated'))]
+    df = df[~(all_zeros & df['State'].str.lower().str.contains('note|source|data|see|revised|updated|as of'))]
     
     # Clean numeric columns
     for col in numeric_cols:

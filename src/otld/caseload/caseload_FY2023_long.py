@@ -74,7 +74,8 @@ FILES = {
         "src/otld/caseload/original_data/fy2004_tan_caseload.xls",
         "src/otld/caseload/original_data/fy2003_tan_caseload.xls",
         "src/otld/caseload/original_data/fy2002_tan_caseload.xls",
-        "src/otld/caseload/original_data/fy2001_tan_caseload.xls"
+        "src/otld/caseload/original_data/fy2001_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy2000_tan_caseload.xls"
     ],
     "State": [
         "src/otld/caseload/original_data/fy2023_ssp_caseload.xlsx",
@@ -99,7 +100,8 @@ FILES = {
         "src/otld/caseload/original_data/fy2004_ssp_caseload.xls",
         "src/otld/caseload/original_data/fy2003_ssp_caseload.xls",
         "src/otld/caseload/original_data/fy2002_ssp_caseload.xls",
-        "src/otld/caseload/original_data/fy2001_ssp_caseload.xls"
+        "src/otld/caseload/original_data/fy2001_ssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2000_ssp_caseload.xls"
     ],
     "Total": [
         "src/otld/caseload/original_data/fy2023_tanssp_caseload.xlsx",
@@ -124,7 +126,8 @@ FILES = {
         "src/otld/caseload/original_data/fy2004_tanssp_caseload.xls",
         "src/otld/caseload/original_data/fy2003_tanssp_caseload.xls",
         "src/otld/caseload/original_data/fy2002_tanssp_caseload.xls",
-        "src/otld/caseload/original_data/fy2001_tanssp_caseload.xls"
+        "src/otld/caseload/original_data/fy2001_tanssp_caseload.xls",
+        "src/otld/caseload/original_data/fy2000_tanssp_caseload.xls"
     ]
 }
 
@@ -227,23 +230,23 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Opt
         # Extract year from file path
         year = file_path.split('fy')[1][:4]
         
+        print(f"\nProcessing {data_type} data for {year}...", end='', flush=True)
+
         config = DATA_CONFIGS[data_type]
         xls = pd.ExcelFile(file_path)
         sheet_names = xls.sheet_names
         
-        print(f"\nProcessing {data_type} data for {year}")
-        print("Looking for sheets matching patterns:")
-        print(f"Families pattern: {config['families_pattern']}")
-        print(f"Recipients pattern: {config['recipients_pattern']}")
-        print(f"Available sheets: {sheet_names}")
-        
         families_tab = find_matching_sheet(sheet_names, config["families_pattern"], file_path)
         recipients_tab = find_matching_sheet(sheet_names, config["recipients_pattern"], file_path)
         
-        print(f"Found families tab: {families_tab}")
-        print(f"Found recipients tab: {recipients_tab}")
-        
         if not families_tab or not recipients_tab:
+            print("\nFailed to find required sheets. Debug information:")
+            print("Looking for sheets matching patterns:")
+            print(f"Families pattern: {config['families_pattern']}")
+            print(f"Recipients pattern: {config['recipients_pattern']}")
+            print(f"Available sheets: {sheet_names}")
+            print(f"Found families tab: {families_tab}")
+            print(f"Found recipients tab: {recipients_tab}")
             return None
 
         families_data = process_sheet(
@@ -263,28 +266,50 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Opt
         )
         
         if families_data is None or recipients_data is None:
+            print("\nFailed to process sheets. Debug information:")
+            if families_data is None:
+                print("Failed to process families data")
+            if recipients_data is None:
+                print("Failed to process recipients data")
             return None
 
-        print(f"Initial data shapes - Families: {families_data.shape}, Recipients: {recipients_data.shape}")
-        
+        # Clean datasets
         families_data = clean_dataset(families_data)
         recipients_data = clean_dataset(recipients_data)
+
+        # Only show shapes if processing failed
+        if families_data.empty or recipients_data.empty:
+            print("\nEmpty dataset after cleaning. Debug information:")
+            print(f"Families data shape: {families_data.shape}")
+            print(f"Recipients data shape: {recipients_data.shape}")
+            return None
         
-        print(f"Cleaned data shapes - Families: {families_data.shape}, Recipients: {recipients_data.shape}")
-        
-        # Pass the extracted year to merge_datasets
+        # Merge and format
         merged_data = merge_datasets(families_data, recipients_data, year)
+        
+        if merged_data.empty:
+            print("\nEmpty dataset after merging. Debug information:")
+            print(f"Merged data shape: {merged_data.shape}")
+            return None
+
         final_data = format_final_dataset(merged_data, OUTPUT_COLUMNS)
         
-        print(f"Final data shape: {final_data.shape}")
-        
+        if final_data.empty:
+            print("\nEmpty dataset after final formatting. Debug information:")
+            print(f"Final data shape: {final_data.shape}")
+            return None
+
+        print(" Success!")
         return final_data
 
     except Exception as e:
-        print(f"Error processing {file_path} ({data_type}): {str(e)}")
+        print(f"\nError processing {file_path} ({data_type})")
+        print("Debug information:")
+        print(f"Error: {str(e)}")
         import traceback
-        print(traceback.format_exc())
+        traceback.print_exc()
         return None
+    
 def validate_conversion(wide_df: pd.DataFrame, long_df: pd.DataFrame) -> bool:
     """
     Validate that the wide to long conversion maintained data integrity
@@ -334,65 +359,84 @@ def convert_to_long_format(df: pd.DataFrame, division: str) -> pd.DataFrame:
     return long_df
 
 def main():
-    # List to collect all results for each tab
-    all_results = {
+    # Dictionary to collect results by division
+    results_by_division = {
         "TANF": [],
         "SSP-MOE": [],
         "TANF and SSP": []
     }
     
-    # Process each file
+    print("Starting data processing...")
+    
     for data_type, file_list in FILES.items():
-        division_name = TAB_NAMES[data_type]
+        division_name = TAB_NAMES[data_type]  # Get proper division name
         
         for file_path in file_list:
             year = file_path.split('fy')[1][:4]
-            print(f"\nProcessing {data_type} data for {year}...")
-            
-            # Determine if this is old format (2001-2020)
             is_old_format = int(year) <= 2020
             
             result = process_workbook(file_path, data_type, is_old_format)
             if result is not None:
-                # Add to the appropriate tab's results
-                all_results[division_name].append(result)
-                print(f"{data_type} data for {year} processed successfully.")
+                # Add Division column to wide format
+                result['Division'] = division_name
+                results_by_division[division_name].append(result)
+                print(" Success!")
             else:
-                print(f"Failed to process {data_type} data for {year}.")
+                print(f"Failed to process {data_type} data for {year}")
 
     # Create output directory if it doesn't exist
     os.makedirs("src/otld/caseload/appended_data", exist_ok=True)
 
-    # Combine and save results with proper tabs
-    if any(all_results.values()):
-        with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx", engine="xlsxwriter") as writer:
-            for tab_name, results in all_results.items():
-                if results:
-                    # Combine all results for this tab
-                    combined_df = pd.concat(results, ignore_index=True)
-                    # Sort by Year and State
+    if any(results_by_division.values()):
+        # Process wide format
+        with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx") as writer:
+            for division_name, division_results in results_by_division.items():
+                if division_results:
+                    # Combine all results for this division
+                    combined_df = pd.concat(division_results, ignore_index=True)
+                    # Clean the combined data
+                    combined_df = clean_dataset(combined_df)
+                    # Sort the data
                     combined_df = combined_df.sort_values(['Year', 'State']).reset_index(drop=True)
                     # Save to the appropriate tab
-                    combined_df.to_excel(writer, sheet_name=tab_name, index=False)
-                    print(f"\nSaved {tab_name} tab with shape: {combined_df.shape}")
+                    combined_df.to_excel(writer, sheet_name=division_name, index=False)
+                    print(f"\nSaved {division_name} tab with shape: {combined_df.shape}")
         
-        print("\nWide format file saved: src/otld/caseload/appended_data/CaseloadWide.xlsx")
+        print("\nWide format file saved with separate tabs for each division")
         
-        # Now process and save long format
+        # Process long format
         all_long_results = []
-        for division_name, results in all_results.items():
-            if results:
-                for df in results:
-                    long_result = convert_to_long_format(df, division_name)
-                    all_long_results.append(long_result)
+        
+        for division_name, division_results in results_by_division.items():
+            if division_results:
+                for df in division_results:
+                    # Create long format with proper division
+                    long_df = pd.melt(
+                        df,
+                        id_vars=['Year', 'State', 'Division'],
+                        value_vars=[
+                            'Total Families', 'Two Parent Families',
+                            'One Parent Families', 'No Parent Families',
+                            'Total Recipients', 'Adult Recipients',
+                            'Children Recipients'
+                        ],
+                        var_name='Category',
+                        value_name='Amount'
+                    )
+                    all_long_results.append(long_df)
         
         if all_long_results:
+            # Combine all long format results
             combined_long_df = pd.concat(all_long_results, ignore_index=True)
-            combined_long_df = combined_long_df.sort_values(['Year', 'State', 'Division', 'Category']).reset_index(drop=True)
+            # Sort the data
+            combined_long_df = combined_long_df.sort_values(
+                ['Year', 'State', 'Division', 'Category']
+            ).reset_index(drop=True)
             
+            # Save long format
             long_output_file = "src/otld/caseload/appended_data/CaseloadLong.xlsx"
             combined_long_df.to_excel(long_output_file, index=False)
-            print(f"\nLong format file saved: {long_output_file}")
+            print(f"Long format file saved: {long_output_file}")
     
     else:
         print("\nNo data was successfully processed.")
