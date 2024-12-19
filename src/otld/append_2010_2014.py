@@ -47,9 +47,10 @@ def rename_columns(
     elif sheet.endswith("Non-A Subcategories"):
         number = 6
     elif sheet.startswith("Summary"):
-        df = df.iloc[:, [0, 1, 2, 4, 5, 6, 7, 8, 9]].copy()
+        df = df.iloc[:, [0, 1, 2, 4, 5, 7, 8, 9]].copy()
         tracker["BaseColumns"] = df.columns.to_list()
-        df.columns = ["STATE", "1", "Carryover", "2", "3", "4", "7", "9", "10"]
+        df.columns = ["STATE", "1", "Carryover", "2", "3", "7", "9", "10"]
+        df["4"] = df["1"] - df["2"] - df["3"]
         tracker["RenamedColumns"] = df.columns.to_list()
         return df
     elif sheet.startswith("Total"):
