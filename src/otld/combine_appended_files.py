@@ -177,7 +177,7 @@ def main() -> dict[pd.DataFrame]:
         )
         # Title case the state names
         df.index = pd.MultiIndex.from_tuples(
-            df.index.map(format_state_index), names=["State", "Year"]
+            df.index.map(format_state_index), names=["State", "FiscalYear"]
         )
         df.rename(columns=rename_dict, inplace=True)
         df.drop(index="Puerto Rico", level=0, inplace=True)
