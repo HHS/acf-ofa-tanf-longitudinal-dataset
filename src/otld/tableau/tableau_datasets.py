@@ -1,3 +1,5 @@
+"""Generate Tableau-specific long dataset"""
+
 import os
 
 import numpy as np
@@ -7,6 +9,7 @@ from otld.paths import input_dir, tableau_dir
 
 
 def main():
+    """Generate Tableau-specific long dataset"""
     financial_data = pd.read_excel(
         os.path.join(tableau_dir, "data", "FinancialDataLongRaw.xlsx")
     )
@@ -32,14 +35,14 @@ def main():
                 ]
             )
         ]
-        .groupby(["State", "Year", "Funding"])
+        .groupby(["State", "FiscalYear", "Funding"])
         .sum(["Amount"])
         .rename(columns={"Amount": "Total"})
     )
     financial_data = financial_data.merge(
         awarded,
         how="left",
-        on=["State", "Year", "Funding"],
+        on=["State", "FiscalYear", "Funding"],
     )
     financial_data["pct_of_tanf"] = (
         round(financial_data["Amount"] / financial_data["Total"], 4) * 100
@@ -49,10 +52,10 @@ def main():
     # Percentage of total
     total = financial_data.loc[
         financial_data["Funding"] == "Total",
-        ["State", "Year", "Category", "Amount"],
+        ["State", "FiscalYear", "Category", "Amount"],
     ].rename(columns={"Amount": "Total"})
     financial_data = financial_data.merge(
-        total, how="left", on=["State", "Year", "Category"]
+        total, how="left", on=["State", "FiscalYear", "Category"]
     )
     financial_data["pct_of_total"] = (
         round(financial_data["Amount"] / financial_data["Total"], 4) * 100
