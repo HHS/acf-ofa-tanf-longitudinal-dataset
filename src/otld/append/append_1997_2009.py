@@ -8,6 +8,7 @@ import pandas as pd
 
 from otld.paths import diagnostics_dir, input_dir, inter_dir
 from otld.utils import (
+    ExpenditureDataChecker,
     convert_to_numeric,
     reindex_state_year,
     standardize_file_name,
@@ -359,8 +360,13 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
     state_df.set_index("year", append=True, inplace=True)
     state_df = reindex_state_year(state_df)
 
+    # Validation
     for df in [federal_df, state_df]:
         validate_data_frame(df)
+
+    validator = ExpenditureDataChecker(federal_df, "Federal", "196", "export")
+    validator.check()
+    validator.export(os.path.join(diagnostics_dir, "federal_checks_1997_2009.xlsx"))
 
     # Export
     line_tracker.export(os.path.join(diagnostics_dir, "LineSources.xlsx"))

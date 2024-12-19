@@ -6,7 +6,7 @@ import re
 import pandas as pd
 
 from otld.paths import input_dir, inter_dir
-from otld.utils import missingness, reindex_state_year
+from otld.utils import missingness, reindex_state_year, validate_data_frame
 from otld.utils.crosswalk_2014_2015 import crosswalk, crosswalk_dict, map_columns
 
 
@@ -153,6 +153,8 @@ def main() -> dict[pd.DataFrame]:
         )
         df.rename(columns=rename_dict, inplace=True)
         df.drop(index="Puerto Rico", level=0, inplace=True)
+
+        validate_data_frame(df)
 
     frames.update({"Total": total})
 

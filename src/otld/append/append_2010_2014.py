@@ -9,6 +9,7 @@ import pandas as pd
 
 from otld.paths import diagnostics_dir, input_dir, inter_dir
 from otld.utils import (
+    ExpenditureDataChecker,
     convert_to_numeric,
     delete_empty_columns,
     get_column_names,
@@ -50,8 +51,8 @@ def rename_columns(
         df = df.iloc[:, [0, 1, 2, 4, 5, 7, 8, 9]].copy()
         tracker["BaseColumns"] = df.columns.to_list()
         df.columns = ["STATE", "1", "Carryover", "2", "3", "7", "9", "10"]
-        df["4"] = df["1"] - df["2"] - df["3"]
         tracker["RenamedColumns"] = df.columns.to_list()
+        df["4"] = df["1"] - df["2"] - df["3"]
         return df
     elif sheet.startswith("Total"):
         df = df.iloc[:, [0, 1]].copy()
@@ -208,6 +209,10 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
 
     for df in [state_df, federal_df]:
         validate_data_frame(df)
+
+    validator = ExpenditureDataChecker(federal_df, "Federal", "196", "export")
+    validator.check()
+    validator.export(os.path.join(diagnostics_dir, "federal_checks_2010_2014.xlsx"))
 
     # Export
     if export:
