@@ -6,6 +6,7 @@ import re
 import pandas as pd
 
 from otld.utils.crosswalk_2014_2015 import crosswalk_dict, map_columns
+from otld.utils.openpyxl_utils import export_workbook
 
 
 class ExpenditureDataChecker:
@@ -28,7 +29,7 @@ class ExpenditureDataChecker:
             self._checks = {}
 
         self._kind = kind
-        self.rename_columns()
+        self.names_to_lines()
 
     @property
     def df(self):
@@ -46,7 +47,7 @@ class ExpenditureDataChecker:
     def kind(self):
         return self._kind
 
-    def rename_columns(self):
+    def names_to_lines(self):
         """Rename columns to 196R line numbers"""
         if self._kind == "196":
             self._df = map_columns(self._df, crosswalk_dict)
@@ -56,6 +57,13 @@ class ExpenditureDataChecker:
             self._df.columns = self._df.columns.map(
                 lambda x: re.match(r"\w+", x).group(0)
             )
+
+    def lines_to_names(self, df: pd.DataFrame):
+        def get_name(line: str):
+            entry = crosswalk_dict.get(line)
+            return entry["name"] if entry else line
+
+        return df.columns.map(get_name)
 
     def check(self):
         """Choose which check(s) to perform"""
@@ -82,20 +90,8 @@ class ExpenditureDataChecker:
                 raise (e)
 
             failed = df[~funds_check]
+            failed.columns = self.lines_to_names(failed)
             checks["funds_obligations"] = failed
 
     def export(self, path: str | os.PathLike, sheet_name: str = None) -> None:
-        """Export data in checks dictionary to an Excel workbook
-
-        Args:
-            path (str | os.PathLike): The workbook to export to
-            sheet_name (str, optional): A sheet to export to. This argument can only be
-            provided if only a single check is being conducted. Defaults to None.
-        """
-        if sheet_name is not None:
-            assert len(self._checks.values()) == 1
-        writer = pd.ExcelWriter(path)
-        for check, result in self._checks.items():
-            result.to_excel(writer, sheet_name=sheet_name or check)
-
-        writer.close()
+        export_workbook(self._checks, path)
