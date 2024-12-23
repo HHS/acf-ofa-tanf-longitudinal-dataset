@@ -1,4 +1,5 @@
 alabaster==1.0.0
+altgraph==0.17.4
 babel==2.16.0
 certifi==2024.8.30
 cffi==1.17.1
@@ -10,19 +11,27 @@ et_xmlfile==2.0.0
 fuzzywuzzy==0.18.0
 idna==3.10
 imagesize==1.4.1
+iniconfig==2.0.0
 Jinja2==3.1.4
 MarkupSafe==3.0.2
 numpy==2.1.2
--e git+https://github.com/HHS/acf-ofa-tanf-longitudinal-dataset.git@612abc480773c3f6e475e70a8db4ef7fd4ac35e8#egg=ofa_tanf_longitudinal_dataset
+-e git+https://github.com/HHS/acf-ofa-tanf-longitudinal-dataset.git@b7677fa30383e97f3ad9843f6a32d3453daa23d7#egg=ofa_tanf_longitudinal_dataset
 openpyxl==3.1.5
 packaging==24.1
 pandas==2.2.3
 pdfminer.six==20240706
+pefile==2023.2.7
+pluggy==1.5.0
 pycparser==2.22
 Pygments==2.18.0
+pyinstaller==6.11.1
+pyinstaller-hooks-contrib==2024.10
+pytest==8.3.4
 python-dateutil==2.9.0.post0
 pytz==2024.2
+pywin32-ctypes==0.2.3
 requests==2.32.3
+setuptools==75.6.0
 six==1.16.0
 snowballstemmer==2.2.0
 Sphinx==8.1.3
