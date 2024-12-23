@@ -14,6 +14,7 @@ from otld.utils import (
     export_workbook,
     get_column_names,
     standardize_line_number,
+    validate_data_frame,
 )
 from otld.utils.crosswalk_2014_2015 import crosswalk_dict
 
@@ -89,6 +90,7 @@ class TANFData:
                 ]
             )
             del self._df
+
         self.export_workbook()
 
     def get_df(self, worksheet: Worksheet):
@@ -119,6 +121,7 @@ class TANFData:
 
             self._df = df
             self.rename_columns()
+            validate_data_frame(self._df)
 
     def rename_columns(self):
         """Rename the columns in TANFData._df"""
