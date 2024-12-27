@@ -76,7 +76,10 @@ FILES = {
         "src/otld/caseload/original_data/fy2003_tan_caseload.xls",
         "src/otld/caseload/original_data/fy2002_tan_caseload.xls",
         "src/otld/caseload/original_data/fy2001_tan_caseload.xls",
-        "src/otld/caseload/original_data/fy2000_tan_caseload.xls"
+        "src/otld/caseload/original_data/fy2000_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy1999_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy1998_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy1997_tan_caseload.xls"
     ],
     "State": [
         "src/otld/caseload/original_data/fy2023_ssp_caseload.xlsx",
@@ -102,7 +105,7 @@ FILES = {
         "src/otld/caseload/original_data/fy2003_ssp_caseload.xls",
         "src/otld/caseload/original_data/fy2002_ssp_caseload.xls",
         "src/otld/caseload/original_data/fy2001_ssp_caseload.xls",
-        "src/otld/caseload/original_data/fy2000_ssp_caseload.xls"
+        "src/otld/caseload/original_data/fy2000_ssp_caseload.xls",
     ],
     "Total": [
         "src/otld/caseload/original_data/fy2023_tanssp_caseload.xlsx",
@@ -128,7 +131,8 @@ FILES = {
         "src/otld/caseload/original_data/fy2003_tanssp_caseload.xls",
         "src/otld/caseload/original_data/fy2002_tanssp_caseload.xls",
         "src/otld/caseload/original_data/fy2001_tanssp_caseload.xls",
-        "src/otld/caseload/original_data/fy2000_tanssp_caseload.xls"
+        "src/otld/caseload/original_data/fy2000_tanssp_caseload.xls",
+
     ]
 }
 
@@ -168,6 +172,9 @@ def find_matching_sheet(sheet_names: List[str], pattern: str, file_path: str) ->
     
     # Get the year from the file path
     year = file_path.split('fy')[1][:4]
+
+    if int(year) <= 1999:
+        return f"FY&CY{year[-2:]}"
     
     # Special case for 2023 State data
     if "2023_ssp" in file_path:

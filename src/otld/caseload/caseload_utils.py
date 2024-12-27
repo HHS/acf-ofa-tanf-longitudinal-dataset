@@ -4,8 +4,44 @@ from typing import List, Optional
 
 def process_sheet(file_path: str, sheet_name: str, skiprows: int, 
                  column_names: List[str], is_old_format: bool) -> Optional[pd.DataFrame]:
-    """Read and process a single Excel sheet"""
     try:
+        year = int(file_path.split('fy')[1][:4])
+        
+        if year <= 1999:
+            df = pd.read_excel(
+                file_path,
+                sheet_name=sheet_name,
+                skiprows=8,
+                usecols="A:E",
+            )
+            
+            # Find the row containing state names (should be after headers)
+            state_row_index = df[df.iloc[:, -1].notna()].index[0]
+            
+            # Get state names and corresponding data
+            states = df.iloc[state_row_index:, -1]
+            data = df.iloc[state_row_index:, :4]
+            
+            # Combine into new dataframe
+            new_df = pd.DataFrame({
+                'State': states,
+                'Total Families': data.iloc[:, 0],
+                'Two Parent Families': data.iloc[:, 1],
+                'One Parent Families': data.iloc[:, 2],
+                'Total Recipients': data.iloc[:, 3]
+            })
+            
+            # Clean the data
+            new_df = new_df[new_df['State'].notna()]
+            new_df['State'] = new_df['State'].astype(str)
+            new_df = new_df[~new_df['State'].str.contains('U.S. Total|Total|download', case=False, na=False)]
+            new_df['Fiscal Year'] = year
+            
+            print(f"\nFirst few rows from {year}:")
+            print(new_df.head())
+            
+            return new_df
+        
         if is_old_format:
             # For 2001-2020 data, we need to handle fiscal year columns specifically
             df = pd.read_excel(
