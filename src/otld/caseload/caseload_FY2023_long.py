@@ -360,6 +360,8 @@ def main():
                     df = pd.concat(division_results, ignore_index=True)
                     df = clean_dataset(df)
                     df = df.drop('Division', axis=1)
+                    # Format Fiscal Year without commas
+                    df['Fiscal Year'] = df['Fiscal Year'].map(lambda x: '{:d}'.format(int(x)))
                     df = df.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
                     df.to_excel(writer, sheet_name=division_name, index=False)
         
