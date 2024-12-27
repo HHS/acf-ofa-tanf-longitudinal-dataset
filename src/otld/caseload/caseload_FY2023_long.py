@@ -138,7 +138,7 @@ TAB_NAMES = {
 }
 
 OUTPUT_COLUMNS = [
-    "Year",
+    "Fiscal Year",
     "State",
     "Total Families",
     "Two Parent Families",
@@ -159,7 +159,7 @@ CATEGORIES = [
     'Children Recipients'
 ]
 
-LONG_FORMAT_COLUMNS = ['Year', 'State', 'Division', 'Category', 'Amount']
+LONG_FORMAT_COLUMNS = ['Fiscal Year', 'State', 'Funding', 'Category', 'Number']
 
 # for years 1997-2023
 def find_matching_sheet(sheet_names: List[str], pattern: str, file_path: str) -> Optional[str]:
@@ -359,7 +359,6 @@ def convert_to_long_format(df: pd.DataFrame, division: str) -> pd.DataFrame:
     return long_df
 
 def main():
-    # Dictionary to collect results by division
     results_by_division = {
         "TANF": [],
         "SSP-MOE": [],
@@ -369,7 +368,7 @@ def main():
     print("Starting data processing...")
     
     for data_type, file_list in FILES.items():
-        division_name = TAB_NAMES[data_type]  # Get proper division name
+        division_name = TAB_NAMES[data_type]
         
         for file_path in file_list:
             year = file_path.split('fy')[1][:4]
@@ -377,14 +376,15 @@ def main():
             
             result = process_workbook(file_path, data_type, is_old_format)
             if result is not None:
-                # Add Division column to wide format
+                # Rename Year to Fiscal Year
+                result = result.rename(columns={'Year': 'Fiscal Year'})
+                # Temporarily add Division for long format conversion
                 result['Division'] = division_name
                 results_by_division[division_name].append(result)
                 print(" Success!")
             else:
                 print(f"Failed to process {data_type} data for {year}")
 
-    # Create output directory if it doesn't exist
     os.makedirs("src/otld/caseload/appended_data", exist_ok=True)
 
     if any(results_by_division.values()):
@@ -392,13 +392,11 @@ def main():
         with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx") as writer:
             for division_name, division_results in results_by_division.items():
                 if division_results:
-                    # Combine all results for this division
                     combined_df = pd.concat(division_results, ignore_index=True)
-                    # Clean the combined data
                     combined_df = clean_dataset(combined_df)
-                    # Sort the data
-                    combined_df = combined_df.sort_values(['Year', 'State']).reset_index(drop=True)
-                    # Save to the appropriate tab
+                    # Drop Division column for wide format
+                    combined_df = combined_df.drop('Division', axis=1)
+                    combined_df = combined_df.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
                     combined_df.to_excel(writer, sheet_name=division_name, index=False)
                     print(f"\nSaved {division_name} tab with shape: {combined_df.shape}")
         
@@ -410,32 +408,32 @@ def main():
         for division_name, division_results in results_by_division.items():
             if division_results:
                 for df in division_results:
-                    # Create long format with proper division
                     long_df = pd.melt(
                         df,
-                        id_vars=['Year', 'State', 'Division'],
-                        value_vars=[
-                            'Total Families', 'Two Parent Families',
-                            'One Parent Families', 'No Parent Families',
-                            'Total Recipients', 'Adult Recipients',
-                            'Children Recipients'
-                        ],
+                        id_vars=['Fiscal Year', 'State', 'Division'],
+                        value_vars=CATEGORIES,
                         var_name='Category',
-                        value_name='Amount'
+                        value_name='Number'
                     )
+                    # Rename Division to Funding
+                    long_df = long_df.rename(columns={'Division': 'Funding'})
                     all_long_results.append(long_df)
         
         if all_long_results:
-            # Combine all long format results
             combined_long_df = pd.concat(all_long_results, ignore_index=True)
-            # Sort the data
             combined_long_df = combined_long_df.sort_values(
-                ['Year', 'State', 'Division', 'Category']
+                ['Fiscal Year', 'State', 'Funding', 'Category']
             ).reset_index(drop=True)
             
-            # Save long format
+            # Ensure correct column order
+            combined_long_df = combined_long_df[LONG_FORMAT_COLUMNS]
+            
             long_output_file = "src/otld/caseload/appended_data/CaseloadLong.xlsx"
-            combined_long_df.to_excel(long_output_file, index=False)
+            combined_long_df.to_excel(
+                long_output_file, 
+                sheet_name="1998-2023 TANF Caseloads",
+                index=False
+            )
             print(f"Long format file saved: {long_output_file}")
     
     else:
