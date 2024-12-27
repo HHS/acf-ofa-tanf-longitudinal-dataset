@@ -116,7 +116,7 @@ def merge_datasets(families_df: pd.DataFrame,
                   year: str) -> pd.DataFrame:
     """Merge families and recipients datasets"""
     merged = pd.merge(families_df, recipients_df, on='State', how='outer').copy()
-    merged.insert(0, 'Year', year)
+    merged.insert(0, 'Fiscal Year', year)
     return merged
 
 def format_column_names(df: pd.DataFrame) -> pd.DataFrame:
@@ -135,7 +135,7 @@ def format_final_dataset(df: pd.DataFrame,
     
     df = df[output_columns].copy()
     
-    numeric_cols = df.columns.difference(['Year', 'State'])
+    numeric_cols = df.columns.difference(['Fiscal Year', 'State'])
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', ''), errors='coerce')
         df[col] = df[col].apply(

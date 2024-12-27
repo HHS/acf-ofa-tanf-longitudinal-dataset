@@ -8,6 +8,7 @@ from caseload_utils import (
     merge_datasets,
     format_final_dataset
 )
+import traceback
 
 # Configuration
 DATA_CONFIGS = {
@@ -221,15 +222,12 @@ def find_matching_sheet(sheet_names: List[str], pattern: str, file_path: str) ->
 
 
 def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Optional[pd.DataFrame]:
-    """Process a single workbook and return the formatted dataset"""
     try:
         if not os.path.exists(file_path):
             print(f"File not found: {file_path}")
             return None
 
-        # Extract year from file path
         year = file_path.split('fy')[1][:4]
-        
         print(f"\nProcessing {data_type} data for {year}...", end='', flush=True)
 
         config = DATA_CONFIGS[data_type]
@@ -241,9 +239,6 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Opt
         
         if not families_tab or not recipients_tab:
             print("\nFailed to find required sheets. Debug information:")
-            print("Looking for sheets matching patterns:")
-            print(f"Families pattern: {config['families_pattern']}")
-            print(f"Recipients pattern: {config['recipients_pattern']}")
             print(f"Available sheets: {sheet_names}")
             print(f"Found families tab: {families_tab}")
             print(f"Found recipients tab: {recipients_tab}")
@@ -266,47 +261,28 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Opt
         )
         
         if families_data is None or recipients_data is None:
-            print("\nFailed to process sheets. Debug information:")
-            if families_data is None:
-                print("Failed to process families data")
-            if recipients_data is None:
-                print("Failed to process recipients data")
             return None
 
-        # Clean datasets
         families_data = clean_dataset(families_data)
         recipients_data = clean_dataset(recipients_data)
 
-        # Only show shapes if processing failed
-        if families_data.empty or recipients_data.empty:
-            print("\nEmpty dataset after cleaning. Debug information:")
-            print(f"Families data shape: {families_data.shape}")
-            print(f"Recipients data shape: {recipients_data.shape}")
-            return None
-        
-        # Merge and format
         merged_data = merge_datasets(families_data, recipients_data, year)
-        
         if merged_data.empty:
-            print("\nEmpty dataset after merging. Debug information:")
-            print(f"Merged data shape: {merged_data.shape}")
             return None
 
         final_data = format_final_dataset(merged_data, OUTPUT_COLUMNS)
-        
         if final_data.empty:
-            print("\nEmpty dataset after final formatting. Debug information:")
-            print(f"Final data shape: {final_data.shape}")
             return None
+
+        # Convert Fiscal Year column to integer
+        final_data['Fiscal Year'] = final_data['Fiscal Year'].astype(int)
 
         print(" Success!")
         return final_data
 
     except Exception as e:
         print(f"\nError processing {file_path} ({data_type})")
-        print("Debug information:")
         print(f"Error: {str(e)}")
-        import traceback
         traceback.print_exc()
         return None
     
@@ -365,77 +341,49 @@ def main():
         "TANF and SSP": []
     }
     
-    print("Starting data processing...")
-    
     for data_type, file_list in FILES.items():
         division_name = TAB_NAMES[data_type]
         
         for file_path in file_list:
-            year = file_path.split('fy')[1][:4]
-            is_old_format = int(year) <= 2020
-            
-            result = process_workbook(file_path, data_type, is_old_format)
+            result = process_workbook(file_path, data_type, int(file_path.split('fy')[1][:4]) <= 2020)
             if result is not None:
-                # Rename Year to Fiscal Year
-                result = result.rename(columns={'Year': 'Fiscal Year'})
-                # Temporarily add Division for long format conversion
                 result['Division'] = division_name
+                # Format Fiscal Year without commas
+                result['Fiscal Year'] = result['Fiscal Year'].map(lambda x: '{:d}'.format(int(x)))
                 results_by_division[division_name].append(result)
-                print(" Success!")
-            else:
-                print(f"Failed to process {data_type} data for {year}")
-
-    os.makedirs("src/otld/caseload/appended_data", exist_ok=True)
 
     if any(results_by_division.values()):
         # Process wide format
         with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx") as writer:
             for division_name, division_results in results_by_division.items():
                 if division_results:
-                    combined_df = pd.concat(division_results, ignore_index=True)
-                    combined_df = clean_dataset(combined_df)
-                    # Drop Division column for wide format
-                    combined_df = combined_df.drop('Division', axis=1)
-                    combined_df = combined_df.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
-                    combined_df.to_excel(writer, sheet_name=division_name, index=False)
-                    print(f"\nSaved {division_name} tab with shape: {combined_df.shape}")
-        
-        print("\nWide format file saved with separate tabs for each division")
+                    df = pd.concat(division_results, ignore_index=True)
+                    df = clean_dataset(df)
+                    df = df.drop('Division', axis=1)
+                    df = df.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
+                    df.to_excel(writer, sheet_name=division_name, index=False)
         
         # Process long format
         all_long_results = []
-        
         for division_name, division_results in results_by_division.items():
-            if division_results:
-                for df in division_results:
-                    long_df = pd.melt(
-                        df,
-                        id_vars=['Fiscal Year', 'State', 'Division'],
-                        value_vars=CATEGORIES,
-                        var_name='Category',
-                        value_name='Number'
-                    )
-                    # Rename Division to Funding
-                    long_df = long_df.rename(columns={'Division': 'Funding'})
-                    all_long_results.append(long_df)
-        
-        if all_long_results:
-            combined_long_df = pd.concat(all_long_results, ignore_index=True)
-            combined_long_df = combined_long_df.sort_values(
-                ['Fiscal Year', 'State', 'Funding', 'Category']
-            ).reset_index(drop=True)
-            
-            # Ensure correct column order
-            combined_long_df = combined_long_df[LONG_FORMAT_COLUMNS]
-            
-            long_output_file = "src/otld/caseload/appended_data/CaseloadLong.xlsx"
-            combined_long_df.to_excel(
-                long_output_file, 
-                sheet_name="1998-2023 TANF Caseloads",
-                index=False
-            )
-            print(f"Long format file saved: {long_output_file}")
-    
+            for df in division_results:
+                long_df = pd.melt(
+                    df,
+                    id_vars=['Fiscal Year', 'State', 'Division'],
+                    value_vars=CATEGORIES,
+                    var_name='Category',
+                    value_name='Number'
+                )
+                long_df = long_df.rename(columns={'Division': 'Funding'})
+                all_long_results.append(long_df)
+
+        combined_long_df = pd.concat(all_long_results, ignore_index=True)
+        combined_long_df = combined_long_df.sort_values(['Fiscal Year', 'State', 'Funding', 'Category']).reset_index(drop=True)
+        combined_long_df.to_excel(
+            "src/otld/caseload/appended_data/CaseloadLong.xlsx",
+            sheet_name="1998-2023 TANF Caseloads",
+            index=False
+        )
     else:
         print("\nNo data was successfully processed.")
 
