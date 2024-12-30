@@ -7,7 +7,8 @@ from caseload_utils import (
     clean_dataset,
     merge_datasets,
     format_final_dataset,
-    process_1998_and_1999_data
+    process_1998_and_1999_data,
+    fix_fiscal_year_column
 )
 
 # Configuration
@@ -267,10 +268,12 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool, master
         if merged_data.empty:
             return master_wide, master_long
 
+
         final_data = format_final_dataset(merged_data, OUTPUT_COLUMNS)
         if final_data.empty:
             return master_wide, master_long
 
+        final_data = fix_fiscal_year_column(final_data)  # Ensure Fiscal Year is fixed here
         master_wide = pd.concat([master_wide, final_data], ignore_index=True)
 
         long_data = pd.melt(
@@ -281,11 +284,11 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool, master
             value_name='Number'
         )
         long_data['Funding'] = data_type
-
+        long_data = fix_fiscal_year_column(long_data)  # Fix Fiscal Year for long format
         master_long = pd.concat([master_long, long_data], ignore_index=True)
 
-        print(" Success!")
         return master_wide, master_long
+
 
     except Exception as e:
         print(f"\nError processing {file_path} ({data_type})")
@@ -315,28 +318,31 @@ def main():
 
 
     if any(not df.empty for df in master_wide.values()):
-        with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx") as writer:
+        with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx", engine='xlsxwriter') as writer:
             for tab_name, df in master_wide.items():
                 df = df[df['State'].notna()]
-                # Convert to numeric without thousands separator
-                df['Fiscal Year'] = pd.to_numeric(df['Fiscal Year'].astype(str).str.replace(',', ''))
+                df['Fiscal Year'] = df['Fiscal Year'].astype(str)
                 df = df.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
-                df.to_excel(writer, sheet_name=tab_name, index=False, float_format='%.0f')
+
+                # Write data to Excel and prevent formatting
+                df.to_excel(writer, sheet_name=tab_name, index=False)
+                worksheet = writer.sheets[tab_name]
+                worksheet.set_column('A:A', None, None)  # Disable formatting on the first column
 
     if not master_long.empty:
-        master_long['Fiscal Year'] = pd.to_numeric(master_long['Fiscal Year'].astype(str).str.replace(',', ''))
+        # Ensure Fiscal Year is treated as a string to avoid Excel formatting issues
+        master_long['Fiscal Year'] = master_long['Fiscal Year'].astype(str)  
         master_long['Funding'] = master_long['Funding'].replace({
             'Federal': 'TANF',
             'State': 'SSP-MOE',
             'Total': 'TANF and SSP'
         })
         master_long = master_long.sort_values(['Fiscal Year', 'State', 'Funding', 'Category']).reset_index(drop=True)
-        master_long.to_excel(
-            "src/otld/caseload/appended_data/CaseloadLong.xlsx", 
-            sheet_name="1998-2023 Caseloads",
-            index=False,
-            float_format='%.0f'
-        )
+
+        with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadLong.xlsx", engine='xlsxwriter') as writer:
+            master_long.to_excel(writer, sheet_name="1998-2023 Caseloads", index=False)
+            worksheet = writer.sheets["1998-2023 Caseloads"]
+            worksheet.set_column('A:A', None, None)  # Disable formatting on the first column
 
 if __name__ == "__main__":
     main()

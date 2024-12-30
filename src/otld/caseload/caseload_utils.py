@@ -16,7 +16,9 @@ OUTPUT_COLUMNS = [
 ]
 
 def process_1998_and_1999_data(year: int, df: pd.DataFrame, master_wide: pd.DataFrame, master_long: pd.DataFrame) -> tuple:
-    """Process data for years 1998 and 1999, which have unique formatting."""
+    """
+    Process data for years 1998 and 1999, which have unique formatting.
+    """
     try:
         # Create DataFrame with the right columns directly
         fiscal_data = pd.DataFrame({
@@ -27,31 +29,43 @@ def process_1998_and_1999_data(year: int, df: pd.DataFrame, master_wide: pd.Data
             'One Parent Families': df.iloc[:, 2],
             'Total Recipients': df.iloc[:, 3]
         })
-        
+
+        # Debugging: Print fiscal_data before fixing Fiscal Year
+        print("Before fixing Fiscal Year:\n", fiscal_data[['Fiscal Year', 'State']].head())
+
         # Filter out any NaN states and clean up
         fiscal_data = fiscal_data[fiscal_data['State'].notna()]
-        
+
         # Add missing columns
         fiscal_data['No Parent Families'] = '-'
         fiscal_data['Adult Recipients'] = '-'
         fiscal_data['Children Recipients'] = '-'
-        
+
+        # Fix Fiscal Year format
+        fiscal_data['Fiscal Year'] = fiscal_data['Fiscal Year'].astype(str).str.replace(',', '').str.strip().astype(int)
+
+        # Debugging: Print fiscal_data after fixing Fiscal Year
+        print("After fixing Fiscal Year:\n", fiscal_data[['Fiscal Year', 'State']].head())
+
         # Format numeric columns
         numeric_cols = ['Total Families', 'Two Parent Families', 'One Parent Families', 'Total Recipients']
         for col in numeric_cols:
             fiscal_data[col] = fiscal_data[col].apply(
                 lambda x: "{:,}".format(int(float(x))) if pd.notnull(x) else "-"
             )
-        
+
         # Ensure proper column order
         fiscal_data = fiscal_data[OUTPUT_COLUMNS]
-        
+
         # Sort by state
         fiscal_data = fiscal_data.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
-        
+
+        # Debugging: Check after sorting
+        print("Final Fiscal Year format in Wide:\n", fiscal_data[['Fiscal Year', 'State']].head())
+
         # Add to master wide format
         master_wide = pd.concat([master_wide, fiscal_data], ignore_index=True)
-        
+
         # Create long format
         long_data = pd.melt(
             fiscal_data,
@@ -61,16 +75,24 @@ def process_1998_and_1999_data(year: int, df: pd.DataFrame, master_wide: pd.Data
             value_name='Number'
         )
         long_data['Funding'] = 'TANF'
-        
+
+        # Fix Fiscal Year format for long data
+        long_data['Fiscal Year'] = long_data['Fiscal Year'].astype(str).str.replace(',', '').str.strip().astype(int)
+
+        # Debugging: Check after fixing Fiscal Year in Long
+        print("Final Fiscal Year format in Long:\n", long_data[['Fiscal Year', 'State']].head())
+
         # Add to master long format
         master_long = pd.concat([master_long, long_data], ignore_index=True)
-        
+
         return master_wide, master_long
-        
+
     except Exception as e:
         print(f"Error processing data for {year}: {e}")
+        import traceback
         traceback.print_exc()
         return master_wide, master_long
+
 
 def process_sheet(file_path: str, sheet_name: str, skiprows: int, 
                  column_names: List[str], is_old_format: bool) -> Optional[pd.DataFrame]:
@@ -185,23 +207,34 @@ def format_column_names(df: pd.DataFrame) -> pd.DataFrame:
     df.columns = [col.title() for col in df.columns]
     return df
 
-def format_final_dataset(df: pd.DataFrame, 
-                        output_columns: List[str]) -> pd.DataFrame:
-    """Format the final dataset with specified columns"""
-    df = df.copy()
+def fix_fiscal_year_column(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Fix the Fiscal Year column by removing commas and ensuring integer representation.
+    """
+    if 'Fiscal Year' in df.columns:
+        df['Fiscal Year'] = df['Fiscal Year'].astype(str).str.replace(',', '').astype(int)
+    return df
 
+
+def format_final_dataset(df: pd.DataFrame, output_columns: List[str]) -> pd.DataFrame:
+    df = df.copy()
+    
     for col in output_columns:
         if col not in df.columns:
             df[col] = np.nan
-
+    
     df = df[output_columns].copy()
-
+    
+    # Format Fiscal Year first, without commas
+    if 'Fiscal Year' in df.columns:
+        df['Fiscal Year'] = df['Fiscal Year'].astype(int)
+    
     numeric_cols = df.columns.difference(['Fiscal Year', 'State'])
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', ''), errors='coerce')
         df[col] = df[col].apply(
             lambda x: "{:,}".format(int(x)) if pd.notnull(x) else "-"
         )
-
+    
     df.columns = [col.title() for col in df.columns]
     return df
