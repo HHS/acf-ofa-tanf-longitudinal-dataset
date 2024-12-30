@@ -1,14 +1,14 @@
-# caseload_FY2023.py
 import pandas as pd
+import numpy as np
 import os
 from typing import List, Optional
 from caseload_utils import (
     process_sheet,
     clean_dataset,
     merge_datasets,
-    format_final_dataset
+    format_final_dataset,
+    process_1998_and_1999_data
 )
-import traceback
 
 # Configuration
 DATA_CONFIGS = {
@@ -79,7 +79,6 @@ FILES = {
         "src/otld/caseload/original_data/fy2000_tan_caseload.xls",
         "src/otld/caseload/original_data/fy1999_tan_caseload.xls",
         "src/otld/caseload/original_data/fy1998_tan_caseload.xls",
-        "src/otld/caseload/original_data/fy1997_tan_caseload.xls"
     ],
     "State": [
         "src/otld/caseload/original_data/fy2023_ssp_caseload.xlsx",
@@ -166,90 +165,81 @@ CATEGORIES = [
 
 LONG_FORMAT_COLUMNS = ['Fiscal Year', 'State', 'Funding', 'Category', 'Number']
 
-# for years 1997-2023
 def find_matching_sheet(sheet_names: List[str], pattern: str, file_path: str) -> Optional[str]:
     """Find first sheet name that matches pattern, handling special cases"""
-    
-    # Get the year from the file path
-    year = file_path.split('fy')[1][:4]
+    year = int(file_path.split('fy')[1][:4])
 
-    if int(year) <= 1999:
-        return f"FY&CY{year[-2:]}"
-    
-    # Special case for 2023 State data
+    if year <= 1999:
+        return f"FY&CY{str(year)[-2:]}"
+
     if "2023_ssp" in file_path:
         if "Families" in pattern:
             return next((s for s in sheet_names if "Avg Month Num Fam" in s), None)
         if "Recipients" in pattern:
             return next((s for s in sheet_names if "Avg Mo. Num Recipient" in s), None)
-    
-    # For years 2001-2020, use case-insensitive and flexible pattern matching
-    if int(year) <= 2020:
+
+    if year <= 2020:
         if "Families" in pattern:
-            # Try all variations for Families sheets
             possible_families = [
-                f"FYCY{year}-Families",     # Standard format uppercase
-                f"FYCY{year}Families",      # No hyphen uppercase
-                f"fycy{year}-families",     # Standard format lowercase
-                f"fycy{year}families"       # No hyphen lowercase
+                f"FYCY{year}-Families",
+                f"FYCY{year}Families",
+                f"fycy{year}-families",
+                f"fycy{year}families"
             ]
-            
-            # Try each pattern with case-insensitive matching
             for family_pattern in possible_families:
-                sheet = next((s for s in sheet_names 
-                            if family_pattern.lower() in s.lower().replace(" ", "")), None)
+                sheet = next((s for s in sheet_names if family_pattern.lower() in s.lower().replace(" ", "")), None)
                 if sheet:
                     return sheet
-                
+
         if "Recipients" in pattern:
-            # Try all variations for Recipients sheets
             possible_recipients = [
-                f"FYCY{year}-Recipients",       # Standard format uppercase
-                f"FYCY{year} - Recipients",     # Spaced format uppercase
-                f"FYCY{year}- Recipients",      # Mixed format uppercase
-                f"fycy{year}-recipients",       # Standard format lowercase
-                f"fycy{year} - recipients",     # Spaced format lowercase
-                f"fycy{year}- recipients"       # Mixed format lowercase
+                f"FYCY{year}-Recipients",
+                f"FYCY{year} - Recipients",
+                f"FYCY{year}- Recipients",
+                f"fycy{year}-recipients",
+                f"fycy{year} - recipients",
+                f"fycy{year}- recipients"
             ]
-            
-            # Try each pattern with case-insensitive matching
             for recipient_pattern in possible_recipients:
-                sheet = next((s for s in sheet_names 
-                            if recipient_pattern.lower() in s.lower()), None)
+                sheet = next((s for s in sheet_names if recipient_pattern.lower() in s.lower()), None)
                 if sheet:
                     return sheet
-                    
-            # If still not found, try more flexible matching
-            return next((s for s in sheet_names 
-                        if f"fycy{year}".lower() in s.lower() and "recipient" in s.lower()), None)
-    
-    # Standard pattern matching for 2021+
-    return next((s for s in sheet_names 
-                if pattern in s.replace(" ", "")), None)
 
+            return next((s for s in sheet_names if f"fycy{year}".lower() in s.lower() and "recipient" in s.lower()), None)
 
-def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Optional[pd.DataFrame]:
+    return next((s for s in sheet_names if pattern in s.replace(" ", "")), None)
+
+def process_workbook(file_path: str, data_type: str, is_old_format: bool, master_wide: pd.DataFrame, master_long: pd.DataFrame) -> Optional[tuple]:
     try:
         if not os.path.exists(file_path):
             print(f"File not found: {file_path}")
-            return None
+            return master_wide, master_long
 
-        year = file_path.split('fy')[1][:4]
+        year = int(file_path.split('fy')[1][:4])
         print(f"\nProcessing {data_type} data for {year}...", end='', flush=True)
+
+        # Special handling for 1998 and 1999
+        if year in [1998, 1999]:
+            try:
+                df = pd.read_excel(file_path, skiprows=8, header=None)
+                return process_1998_and_1999_data(year, df, master_wide, master_long)
+            except Exception as e:
+                print(f"\nError reading {year} data: {e}")
+                return master_wide, master_long
 
         config = DATA_CONFIGS[data_type]
         xls = pd.ExcelFile(file_path)
         sheet_names = xls.sheet_names
-        
+
         families_tab = find_matching_sheet(sheet_names, config["families_pattern"], file_path)
         recipients_tab = find_matching_sheet(sheet_names, config["recipients_pattern"], file_path)
-        
+
         if not families_tab or not recipients_tab:
             print("\nFailed to find required sheets. Debug information:")
             print(f"Available sheets: {sheet_names}")
             print(f"Found families tab: {families_tab}")
             print(f"Found recipients tab: {recipients_tab}")
-            return None
+            return master_wide, master_long
 
         families_data = process_sheet(
             file_path=file_path,
@@ -258,7 +248,7 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Opt
             column_names=config["column_mappings"]["families"],
             is_old_format=is_old_format
         )
-        
+
         recipients_data = process_sheet(
             file_path=file_path,
             sheet_name=recipients_tab,
@@ -266,135 +256,87 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool) -> Opt
             column_names=config["column_mappings"]["recipients"],
             is_old_format=is_old_format
         )
-        
+
         if families_data is None or recipients_data is None:
-            return None
+            return master_wide, master_long
 
         families_data = clean_dataset(families_data)
         recipients_data = clean_dataset(recipients_data)
 
         merged_data = merge_datasets(families_data, recipients_data, year)
         if merged_data.empty:
-            return None
+            return master_wide, master_long
 
         final_data = format_final_dataset(merged_data, OUTPUT_COLUMNS)
         if final_data.empty:
-            return None
+            return master_wide, master_long
 
-        # Convert Fiscal Year column to integer
-        final_data['Fiscal Year'] = final_data['Fiscal Year'].astype(int)
+        master_wide = pd.concat([master_wide, final_data], ignore_index=True)
+
+        long_data = pd.melt(
+            final_data,
+            id_vars=['Fiscal Year', 'State'],
+            value_vars=CATEGORIES,
+            var_name='Category',
+            value_name='Number'
+        )
+        long_data['Funding'] = data_type
+
+        master_long = pd.concat([master_long, long_data], ignore_index=True)
 
         print(" Success!")
-        return final_data
+        return master_wide, master_long
 
     except Exception as e:
         print(f"\nError processing {file_path} ({data_type})")
         print(f"Error: {str(e)}")
-        traceback.print_exc()
-        return None
-    
-def validate_conversion(wide_df: pd.DataFrame, long_df: pd.DataFrame) -> bool:
-    """
-    Validate that the wide to long conversion maintained data integrity
-    Returns True if validation passes, False otherwise
-    """
-    division = long_df['Division'].iloc[0]  # Get the division we're validating
-    for state in wide_df['State'].unique():
-        for category in CATEGORIES:
-            wide_value = wide_df[wide_df['State'] == state][category].iloc[0]
-            long_value = long_df[(long_df['State'] == state) & 
-                               (long_df['Category'] == category) &
-                               (long_df['Division'] == division)]['Amount'].iloc[0]
-            
-            if wide_value != long_value:
-                print(f"Mismatch found for {state} - {category}:")
-                print(f"Wide format value: {wide_value}")
-                print(f"Long format value: {long_value}")
-                return False
-    return True
-
-def convert_to_long_format(df: pd.DataFrame, division: str) -> pd.DataFrame:
-    """Convert wide format DataFrame to long format with Year, State, Division, Category, Amount columns"""
-    # Make a copy of the input DataFrame to avoid modifications
-    df = df.copy()
-    
-    # Melt the DataFrame to create long format
-    long_df = pd.melt(
-        df,
-        id_vars=['Year', 'State'],
-        value_vars=CATEGORIES,
-        var_name='Category',
-        value_name='Amount'
-    )
-    
-    # Add Division column
-    long_df.insert(2, 'Division', division)
-    
-    # Update column order to include Division
-    LONG_FORMAT_COLUMNS = ['Year', 'State', 'Division', 'Category', 'Amount']
-    
-    # Ensure correct column order
-    long_df = long_df[LONG_FORMAT_COLUMNS]
-    
-    # Sort values
-    long_df = long_df.sort_values(['State', 'Year', 'Division', 'Category']).reset_index(drop=True)
-    
-    return long_df
+        return master_wide, master_long
 
 def main():
-    results_by_division = {
-        "TANF": [],
-        "SSP-MOE": [],
-        "TANF and SSP": []
+    master_wide = {
+        "TANF": pd.DataFrame(columns=OUTPUT_COLUMNS),
+        "SSP-MOE": pd.DataFrame(columns=OUTPUT_COLUMNS),
+        "TANF and SSP": pd.DataFrame(columns=OUTPUT_COLUMNS)
     }
-    
+    master_long = pd.DataFrame(columns=['Fiscal Year', 'State', 'Funding', 'Category', 'Number'])
+
     for data_type, file_list in FILES.items():
-        division_name = TAB_NAMES[data_type]
-        
         for file_path in file_list:
-            result = process_workbook(file_path, data_type, int(file_path.split('fy')[1][:4]) <= 2020)
-            if result is not None:
-                result['Division'] = division_name
-                # Format Fiscal Year without commas
-                result['Fiscal Year'] = result['Fiscal Year'].map(lambda x: '{:d}'.format(int(x)))
-                results_by_division[division_name].append(result)
+            division_name = TAB_NAMES[data_type]
+            result = process_workbook(
+                file_path, 
+                data_type, 
+                int(file_path.split('fy')[1][:4]) <= 2020, 
+                master_wide[division_name], 
+                master_long
+            )
+            if result:
+                master_wide[division_name], master_long = result
 
-    if any(results_by_division.values()):
-        # Process wide format
+
+    if any(not df.empty for df in master_wide.values()):
         with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx") as writer:
-            for division_name, division_results in results_by_division.items():
-                if division_results:
-                    df = pd.concat(division_results, ignore_index=True)
-                    df = clean_dataset(df)
-                    df = df.drop('Division', axis=1)
-                    # Format Fiscal Year without commas
-                    df['Fiscal Year'] = df['Fiscal Year'].map(lambda x: '{:d}'.format(int(x)))
-                    df = df.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
-                    df.to_excel(writer, sheet_name=division_name, index=False)
-        
-        # Process long format
-        all_long_results = []
-        for division_name, division_results in results_by_division.items():
-            for df in division_results:
-                long_df = pd.melt(
-                    df,
-                    id_vars=['Fiscal Year', 'State', 'Division'],
-                    value_vars=CATEGORIES,
-                    var_name='Category',
-                    value_name='Number'
-                )
-                long_df = long_df.rename(columns={'Division': 'Funding'})
-                all_long_results.append(long_df)
+            for tab_name, df in master_wide.items():
+                df = df[df['State'].notna()]
+                # Convert to numeric without thousands separator
+                df['Fiscal Year'] = pd.to_numeric(df['Fiscal Year'].astype(str).str.replace(',', ''))
+                df = df.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
+                df.to_excel(writer, sheet_name=tab_name, index=False, float_format='%.0f')
 
-        combined_long_df = pd.concat(all_long_results, ignore_index=True)
-        combined_long_df = combined_long_df.sort_values(['Fiscal Year', 'State', 'Funding', 'Category']).reset_index(drop=True)
-        combined_long_df.to_excel(
-            "src/otld/caseload/appended_data/CaseloadLong.xlsx",
-            sheet_name="1998-2023 TANF Caseloads",
-            index=False
+    if not master_long.empty:
+        master_long['Fiscal Year'] = pd.to_numeric(master_long['Fiscal Year'].astype(str).str.replace(',', ''))
+        master_long['Funding'] = master_long['Funding'].replace({
+            'Federal': 'TANF',
+            'State': 'SSP-MOE',
+            'Total': 'TANF and SSP'
+        })
+        master_long = master_long.sort_values(['Fiscal Year', 'State', 'Funding', 'Category']).reset_index(drop=True)
+        master_long.to_excel(
+            "src/otld/caseload/appended_data/CaseloadLong.xlsx", 
+            sheet_name="1998-2023 Caseloads",
+            index=False,
+            float_format='%.0f'
         )
-    else:
-        print("\nNo data was successfully processed.")
 
 if __name__ == "__main__":
     main()

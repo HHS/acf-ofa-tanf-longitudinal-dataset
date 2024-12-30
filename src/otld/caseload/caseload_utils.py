@@ -1,69 +1,128 @@
 import pandas as pd
 from typing import List, Optional
+import numpy as np
+import traceback
 
+OUTPUT_COLUMNS = [
+    "Fiscal Year",
+    "State",
+    "Total Families",
+    "Two Parent Families",
+    "One Parent Families",
+    "No Parent Families",
+    "Total Recipients",
+    "Adult Recipients",
+    "Children Recipients"
+]
+
+def process_1998_and_1999_data(year: int, df: pd.DataFrame, master_wide: pd.DataFrame, master_long: pd.DataFrame) -> tuple:
+    """Process data for years 1998 and 1999, which have unique formatting."""
+    try:
+        # Create DataFrame with the right columns directly
+        fiscal_data = pd.DataFrame({
+            'Fiscal Year': year,
+            'State': df.iloc[:, 4],  # State column
+            'Total Families': df.iloc[:, 0],
+            'Two Parent Families': df.iloc[:, 1],
+            'One Parent Families': df.iloc[:, 2],
+            'Total Recipients': df.iloc[:, 3]
+        })
+        
+        # Filter out any NaN states and clean up
+        fiscal_data = fiscal_data[fiscal_data['State'].notna()]
+        
+        # Add missing columns
+        fiscal_data['No Parent Families'] = '-'
+        fiscal_data['Adult Recipients'] = '-'
+        fiscal_data['Children Recipients'] = '-'
+        
+        # Format numeric columns
+        numeric_cols = ['Total Families', 'Two Parent Families', 'One Parent Families', 'Total Recipients']
+        for col in numeric_cols:
+            fiscal_data[col] = fiscal_data[col].apply(
+                lambda x: "{:,}".format(int(float(x))) if pd.notnull(x) else "-"
+            )
+        
+        # Ensure proper column order
+        fiscal_data = fiscal_data[OUTPUT_COLUMNS]
+        
+        # Sort by state
+        fiscal_data = fiscal_data.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
+        
+        # Add to master wide format
+        master_wide = pd.concat([master_wide, fiscal_data], ignore_index=True)
+        
+        # Create long format
+        long_data = pd.melt(
+            fiscal_data,
+            id_vars=['Fiscal Year', 'State'],
+            value_vars=numeric_cols,
+            var_name='Category',
+            value_name='Number'
+        )
+        long_data['Funding'] = 'TANF'
+        
+        # Add to master long format
+        master_long = pd.concat([master_long, long_data], ignore_index=True)
+        
+        return master_wide, master_long
+        
+    except Exception as e:
+        print(f"Error processing data for {year}: {e}")
+        traceback.print_exc()
+        return master_wide, master_long
 
 def process_sheet(file_path: str, sheet_name: str, skiprows: int, 
                  column_names: List[str], is_old_format: bool) -> Optional[pd.DataFrame]:
     try:
         year = int(file_path.split('fy')[1][:4])
         
-        if year <= 1999:
+        if year in [1998, 1999]:
+            # Special handling for 1998 and 1999 data
             df = pd.read_excel(
                 file_path,
                 sheet_name=sheet_name,
-                skiprows=8,
-                usecols="A:E",
+                skiprows=8,  # Skip rows before the data
+                usecols="A:E",  # Select only relevant columns
             )
-            
-            # Find the row containing state names (should be after headers)
-            state_row_index = df[df.iloc[:, -1].notna()].index[0]
-            
-            # Get state names and corresponding data
-            states = df.iloc[state_row_index:, -1]
-            data = df.iloc[state_row_index:, :4]
-            
-            # Combine into new dataframe
-            new_df = pd.DataFrame({
-                'State': states,
-                'Total Families': data.iloc[:, 0],
-                'Two Parent Families': data.iloc[:, 1],
-                'One Parent Families': data.iloc[:, 2],
-                'Total Recipients': data.iloc[:, 3]
-            })
-            
-            # Clean the data
-            new_df = new_df[new_df['State'].notna()]
-            new_df['State'] = new_df['State'].astype(str)
-            new_df = new_df[~new_df['State'].str.contains('U.S. Total|Total|download', case=False, na=False)]
-            new_df['Fiscal Year'] = year
-            
-            print(f"\nFirst few rows from {year}:")
-            print(new_df.head())
-            
-            return new_df
-        
+
+            # Rename columns
+            df.columns = ['State', 'Total Families', 'Two Parent Families', 'One Parent Families', 'Total Recipients']
+
+            # Clean and format
+            df = df[df['State'].notna()]
+            df['State'] = df['State'].astype(str)
+            df = df[~df['State'].str.contains('U.S. Total|Total|download', case=False, na=False)]
+            df['Fiscal Year'] = year
+
+            # Add missing columns with NaN or hyphen
+            df['No Parent Families'] = np.nan
+            df['Adult Recipients'] = np.nan
+            df['Children Recipients'] = np.nan
+
+            return df
+
         if is_old_format:
-            # For 2001-2020 data, we need to handle fiscal year columns specifically
+            # Handling for older formats (2000-2020)
             df = pd.read_excel(
                 file_path,
                 sheet_name=sheet_name,
-                skiprows=6,  # Skip 6 rows for old format
-                header=None,  # Don't use first row as header
+                skiprows=6,  # Skip rows for old format
+                header=None,
                 thousands=',',
                 dtype={'State': str}
             )
-            
-            # Extract only the fiscal year columns (first set of data columns)
+
             if 'families' in sheet_name.lower():
-                df = df[[0, 1, 2, 3, 4]]  # State + 4 family columns
+                df = df[[0, 1, 2, 3, 4]]  # State + family columns
                 df.columns = ['State', 'Total Families', 'Two Parent Families',
-                            'One Parent Families', 'No Parent Families']
-            else:  # Recipients sheet
-                df = df[[0, 1, 2, 3]]  # State + 3 recipient columns
+                              'One Parent Families', 'No Parent Families']
+            else:
+                df = df[[0, 1, 2, 3]]  # State + recipient columns
                 df.columns = ['State', 'Total Recipients', 'Adult Recipients',
-                            'Children Recipients']
+                              'Children Recipients']
         else:
-            # For 2021+ data, use the standard format
+            # Handling for standard format (2021+)
             df = pd.read_excel(
                 file_path,
                 sheet_name=sheet_name,
@@ -74,9 +133,9 @@ def process_sheet(file_path: str, sheet_name: str, skiprows: int,
                 thousands=',',
                 dtype={'State': str}
             )
-        
+
         return df
-        
+
     except Exception as e:
         print(f"Error processing sheet {sheet_name}: {str(e)}")
         import traceback
@@ -86,65 +145,31 @@ def process_sheet(file_path: str, sheet_name: str, skiprows: int,
 def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     """Clean a dataset by handling state names and numeric columns"""
     df = df.copy()
-    
+
     # Clean state names
     df['State'] = df['State'].astype(str).str.strip()
     df['State'] = df['State'].str.replace(r'\*+', '', regex=True)  # Remove asterisks
     df['State'] = df['State'].str.replace('"', '')
-    
-    # Filter out unwanted rows - expanded patterns for notes and dates
+
+    # Remove unwanted rows
     unwanted_patterns = [
-        'U.S. Totals',
-        'data inapplicable',
-        'Fiscal year average',
-        r'\d{4}-\d{2}-\d{2}',
-        '^\s*$',
-        '^-',
-        'As of \d{2}/\d{2}/\d{4}',     # Matches "As of MM/DD/YYYY"
-        'As of \d{2}/\d{2}/\d{2}',      # Matches "As of MM/DD/YY"
-        'As of.*',                       # Matches any "As of" text with following content
-        'Calendar year average',         # Matches calendar year notes
-        'Note[s]?:',                     # Matches both "Note:" and "Notes:"
-        'Source:',                       # Matches source citations
-        'Data as of',                    # Matches date stamps
-        'footnote',                      # Matches footnote references
-        '^\d+\.',                        # Matches numbered notes
-        'See note',                      # Matches note references
-        'Revised',                       # Matches revision notes
-        'Updated',                       # Matches update notes
-        r'\d{2}/\d{2}/\d{2,4}',         # Matches any date format
-        r'^\d{4}$',                      # Matches year-only entries
-        '^As of$',                       # Matches standalone "As of"
+        'U.S. Totals', 'data inapplicable', 'Fiscal year average',
+        r'\d{4}-\d{2}-\d{2}', '^-', 'As of .*',
+        'Calendar year average', 'Note[s]?:', 'Source:',
+        'Data as of', 'footnote', '^\d+\.', 'See note',
+        'Revised', 'Updated', r'\d{2}/\d{2}/\d{2,4}', '^As of$'
     ]
-    
+
     pattern = '|'.join(unwanted_patterns)
     mask = ~df['State'].str.contains(pattern, regex=True, na=False)
-    df = df[mask].copy()
-    
-    # Additional filtering for state names
-    df = df[df['State'].str.len() <= 50]  # Filter out long text that might be notes
-    df = df[~df['State'].str.contains(r'\d{4}')]  # Filter out anything with years in it
-    
-    # Filter out rows where State column contains any variant of "As of" case-insensitive
-    df = df[~df['State'].str.lower().str.contains('as of')]
-    
-    # Filter out rows where all numeric columns are 0
-    numeric_cols = df.columns.difference(['State'])
-    all_zeros = df[numeric_cols].apply(lambda x: pd.to_numeric(x, errors='coerce')).fillna(0).eq(0).all(axis=1)
-    df = df[~(all_zeros & df['State'].str.lower().str.contains('note|source|data|see|revised|updated|as of'))]
-    
+    df = df[mask]
+
     # Clean numeric columns
+    numeric_cols = df.columns.difference(['State'])
     for col in numeric_cols:
         if df[col].dtype == 'object':
-            temp_series = (df[col].astype(str)
-                         .str.strip()
-                         .str.replace(',', '')
-                         .str.replace('"', '')
-                         .str.replace('***', '')
-                         .str.replace('-', '0')
-                         .str.replace(r'\*+', '', regex=True))  # Remove asterisks
-            df[col] = pd.to_numeric(temp_series, errors='coerce').fillna(0)
-    
+            df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '').replace('-', '0'), errors='coerce')
+
     return df
 
 def merge_datasets(families_df: pd.DataFrame, 
@@ -164,19 +189,19 @@ def format_final_dataset(df: pd.DataFrame,
                         output_columns: List[str]) -> pd.DataFrame:
     """Format the final dataset with specified columns"""
     df = df.copy()
-    
+
     for col in output_columns:
         if col not in df.columns:
-            df[col] = None
-    
+            df[col] = np.nan
+
     df = df[output_columns].copy()
-    
+
     numeric_cols = df.columns.difference(['Fiscal Year', 'State'])
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', ''), errors='coerce')
         df[col] = df[col].apply(
-            lambda x: "{:,.0f}".format(float(x)) if pd.notnull(x) else "0"
+            lambda x: "{:,}".format(int(x)) if pd.notnull(x) else "-"
         )
-    
+
     df.columns = [col.title() for col in df.columns]
     return df
