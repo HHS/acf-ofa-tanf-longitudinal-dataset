@@ -59,4 +59,3 @@ def reindex_state_year(df: pd.DataFrame) -> pd.DataFrame:
     df = df.reindex(new_index)
 
     return df
-    return df
