@@ -11,7 +11,7 @@ otld.caseload
    :template: custom-module-template.rst
    :recursive:
 
-   caseload_FY2023_long
    caseload_FY2023_wide
+   caseload_all_long_wide
    caseload_utils
    validation

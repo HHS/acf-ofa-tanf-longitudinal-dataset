@@ -10,6 +10,7 @@ otld.caseload.caseload\_utils
       :toctree:
    
       clean_dataset
+      fix_fiscal_year_column
       format_column_names
       format_final_dataset
       merge_datasets
