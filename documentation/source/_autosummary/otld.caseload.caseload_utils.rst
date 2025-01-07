@@ -9,6 +9,7 @@ otld.caseload.caseload\_utils
    .. autosummary::
       :toctree:
    
+      analyze_value_patterns
       clean_dataset
       fix_fiscal_year_column
       format_column_names
