@@ -8,7 +8,8 @@ from caseload_utils import (
     merge_datasets,
     format_final_dataset,
     process_1997_1998_1999_data,
-    fix_fiscal_year_column
+    fix_fiscal_year_column,
+    analyze_value_patterns
 )
 
 # Configuration
@@ -317,33 +318,45 @@ def main():
             if result:
                 master_wide[division_name], master_long = result
 
-
     if any(not df.empty for df in master_wide.values()):
-        with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx", engine='xlsxwriter') as writer:
+        # Generate and save value pattern analysis
+        pattern_analysis = {}
+        for division_name, df in master_wide.items():
+            pattern_analysis[division_name] = analyze_value_patterns(df)
+            
+        with open("src/otld/caseload/appended_data/value_patterns.txt", "w") as f:
+            f.write("TANF Caseload Data Value Pattern Analysis\n")
+            f.write("=====================================\n\n")
+            for division, patterns in pattern_analysis.items():
+                f.write(f"\n{division} Division:\n")
+                f.write("-------------------\n")
+                for col, details in patterns.items():
+                    f.write(f"\nColumn: {col}\n")
+                    f.write(f"Unique values found: {details['unique_values']}\n")
+                    f.write("\nValue patterns by year:\n")
+                    for year, values in sorted(details['by_year'].items()):
+                        f.write(f"{year}: {values}\n")
+                    f.write("\n")
+
+        # Save wide format with preserved representations
+        with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx") as writer:
             for tab_name, df in master_wide.items():
                 df = df[df['State'].notna()]
-                df['Fiscal Year'] = df['Fiscal Year'].astype(str)
                 df = df.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
-
-                # Write data to Excel and prevent formatting
                 df.to_excel(writer, sheet_name=tab_name, index=False)
-                worksheet = writer.sheets[tab_name]
-                worksheet.set_column('A:A', None, None)  # Disable formatting on the first column
 
-    if not master_long.empty:
-        # Ensure Fiscal Year is treated as a string to avoid Excel formatting issues
-        master_long['Fiscal Year'] = master_long['Fiscal Year'].astype(str)  
+        # Save long format
         master_long['Funding'] = master_long['Funding'].replace({
             'Federal': 'TANF',
             'State': 'SSP-MOE',
             'Total': 'TANF and SSP'
         })
         master_long = master_long.sort_values(['Fiscal Year', 'State', 'Funding', 'Category']).reset_index(drop=True)
-
-        with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadLong.xlsx", engine='xlsxwriter') as writer:
-            master_long.to_excel(writer, sheet_name="1998-2023 Caseloads", index=False)
-            worksheet = writer.sheets["1998-2023 Caseloads"]
-            worksheet.set_column('A:A', None, None)  # Disable formatting on the first column
+        master_long.to_excel(
+            "src/otld/caseload/appended_data/CaseloadLong.xlsx", 
+            sheet_name="1997-2023 Caseloads",
+            index=False
+        )
 
 if __name__ == "__main__":
     main()
