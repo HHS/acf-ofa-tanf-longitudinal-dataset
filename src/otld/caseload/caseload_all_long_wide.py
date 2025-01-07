@@ -7,7 +7,7 @@ from caseload_utils import (
     clean_dataset,
     merge_datasets,
     format_final_dataset,
-    process_1998_and_1999_data,
+    process_1997_1998_1999_data,
     fix_fiscal_year_column
 )
 
@@ -80,6 +80,7 @@ FILES = {
         "src/otld/caseload/original_data/fy2000_tan_caseload.xls",
         "src/otld/caseload/original_data/fy1999_tan_caseload.xls",
         "src/otld/caseload/original_data/fy1998_tan_caseload.xls",
+        "src/otld/caseload/original_data/fy1997_tan_caseload.xls"
     ],
     "State": [
         "src/otld/caseload/original_data/fy2023_ssp_caseload.xlsx",
@@ -220,10 +221,10 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool, master
         print(f"\nProcessing {data_type} data for {year}...", end='', flush=True)
 
         # Special handling for 1998 and 1999
-        if year in [1998, 1999]:
+        if year in [1997, 1998, 1999]:
             try:
                 df = pd.read_excel(file_path, skiprows=8, header=None)
-                return process_1998_and_1999_data(year, df, master_wide, master_long)
+                return process_1997_1998_1999_data(year, df, master_wide, master_long)
             except Exception as e:
                 print(f"\nError reading {year} data: {e}")
                 return master_wide, master_long

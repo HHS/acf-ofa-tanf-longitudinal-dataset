@@ -15,20 +15,29 @@ OUTPUT_COLUMNS = [
     "Children Recipients"
 ]
 
-def process_1998_and_1999_data(year: int, df: pd.DataFrame, master_wide: pd.DataFrame, master_long: pd.DataFrame) -> tuple:
-    """
-    Process data for years 1998 and 1999, which have unique formatting.
-    """
+def process_1997_1998_1999_data(year: int, df: pd.DataFrame, master_wide: pd.DataFrame, master_long: pd.DataFrame) -> tuple:
+    """Process data for years 1997-1999, which have unique formatting."""
     try:
-        # Create DataFrame with the right columns directly
-        fiscal_data = pd.DataFrame({
-            'Fiscal Year': year,
-            'State': df.iloc[:, 4],  # State column
-            'Total Families': df.iloc[:, 0],
-            'Two Parent Families': df.iloc[:, 1],
-            'One Parent Families': df.iloc[:, 2],
-            'Total Recipients': df.iloc[:, 3]
-        })
+        if year == 1997:
+            # For 1997, map the different column structure
+            fiscal_data = pd.DataFrame({
+                'Fiscal Year': year,
+                'State': df.iloc[:, 5],  # State column
+                'Total Families': df.iloc[:, 0],  # TOTAL FAMILIES
+                'Two Parent Families': df.iloc[:, 2],  # TANF TWO-PARENT FAMILIES
+                'One Parent Families': df.iloc[:, 3],  # TANF ONE-PARENT FAMILIES
+                'Total Recipients': df.iloc[:, 4]  # TOTAL RECIPIENTS
+            })
+        else:
+            # For 1998-1999, use existing column structure
+            fiscal_data = pd.DataFrame({
+                'Fiscal Year': year,
+                'State': df.iloc[:, 4],  # State column
+                'Total Families': df.iloc[:, 0],
+                'Two Parent Families': df.iloc[:, 1],
+                'One Parent Families': df.iloc[:, 2],
+                'Total Recipients': df.iloc[:, 3]
+            })
 
         # Debugging: Print fiscal_data before fixing Fiscal Year
         print("Before fixing Fiscal Year:\n", fiscal_data[['Fiscal Year', 'State']].head())
