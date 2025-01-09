@@ -15,59 +15,49 @@ OUTPUT_COLUMNS = [
     "Children Recipients"
 ]
 
-def analyze_value_patterns(df: pd.DataFrame) -> dict:
+def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
     """
-    Analyze and document unique value representations in the dataset by column and year.
-    Handles mixed types (str, float, null) appropriately.
-    Returns patterns dictionary containing unique values and their occurrences by year.
+    Analyze only ambiguous values (0, -, blank) in the dataset by column and year.
+    Returns patterns dictionary focusing on these specific values.
     """
     patterns = {}
     numeric_cols = df.columns.difference(['Fiscal Year', 'State', 'Division', 'Funding', 'Category'])
     
+    ambiguous_values = {'0', '-', '', ' ', np.nan}
+    
     for col in numeric_cols:
-        # Get all unique values and handle them appropriately
-        unique_vals = df[col].unique()
+        # Filter for only ambiguous values
+        values_found = set()
+        year_patterns = {}
         
-        # Custom sorting function to handle mixed types
-        def sort_mixed_types(x):
-            if pd.isna(x):
-                return (0, '')  # Nulls first
-            if isinstance(x, str):
-                if x.strip() == '-':
-                    return (1, x)  # Dashes second
-                try:
-                    # Try to convert string to float for proper numeric sorting
-                    return (2, float(x.replace(',', '')))
-                except:
-                    return (3, x)  # Non-numeric strings last
-            return (2, float(x))  # Numbers sorted normally
-        
-        # Sort unique values using custom function
-        sorted_unique = sorted(unique_vals, key=sort_mixed_types)
-        
-        # Format the values for display
-        def format_value(x):
-            if pd.isna(x):
-                return 'null'
-            if isinstance(x, str):
-                return x
-            if isinstance(x, (int, float)):
-                return str(x)
-            return str(x)
-        
-        patterns[col] = {
-            'unique_values': [format_value(x) for x in sorted_unique],
-            'by_year': {}
-        }
-        
-        # Process values by year
         for year in sorted(df['Fiscal Year'].unique()):
-            year_values = df[df['Fiscal Year'] == year][col].unique()
-            patterns[col]['by_year'][year] = [
-                format_value(x) for x in sorted(year_values, key=sort_mixed_types)
-            ]
+            year_data = df[df['Fiscal Year'] == year][col]
+            year_ambiguous = {str(v).strip() for v in year_data.unique() 
+                            if pd.isna(v) or str(v).strip() in ambiguous_values}
             
+            if year_ambiguous:
+                year_patterns[year] = sorted(year_ambiguous)
+                values_found.update(year_ambiguous)
+        
+        if values_found:  # Only include columns that have ambiguous values
+            patterns[col] = {
+                'ambiguous_values_found': sorted(values_found),
+                'by_year': year_patterns
+            }
+    
     return patterns
+
+def analyze_guam_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Extract and analyze Guam's data across all years.
+    """
+    guam_data = df[df['State'].str.contains('Guam', case=False, na=False)].copy()
+    guam_data = guam_data.sort_values('Fiscal Year')
+    
+    # Replace empty strings and whitespace with np.nan for clear missing value identification
+    guam_data = guam_data.replace(r'^\s*$', np.nan, regex=True)
+    
+    return guam_data
 
 def process_1997_1998_1999_data(year: int, df: pd.DataFrame, master_wide: pd.DataFrame, master_long: pd.DataFrame) -> tuple:
     """Process data for years 1997-1999, preserving original value representations."""
@@ -115,10 +105,6 @@ def process_1997_1998_1999_data(year: int, df: pd.DataFrame, master_wide: pd.Dat
         master_long = pd.concat([master_long, long_data], ignore_index=True)
         return master_wide, master_long
         
-    except Exception as e:
-        print(f"Error processing data for {year}: {e}")
-        traceback.print_exc()
-        return master_wide, master_long
     except Exception as e:
         print(f"Error processing data for {year}: {e}")
         traceback.print_exc()

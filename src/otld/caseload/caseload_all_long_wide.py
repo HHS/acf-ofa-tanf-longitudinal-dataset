@@ -297,6 +297,38 @@ def process_workbook(file_path: str, data_type: str, is_old_format: bool, master
         print(f"Error: {str(e)}")
         return master_wide, master_long
 
+def write_analysis_report(ambiguous_patterns: dict, guam_data: pd.DataFrame, output_file: str):
+    """
+    Write a focused analysis report including ambiguous value patterns and Guam's data.
+    """
+    with open(output_file, "w") as f:
+        f.write("TANF Caseload Data Analysis Report\n")
+        f.write("===============================\n\n")
+        
+        # Ambiguous Values Section
+        f.write("1. Ambiguous Value Patterns\n")
+        f.write("-------------------------\n")
+        for col, details in ambiguous_patterns.items():
+            if details['ambiguous_values_found']:
+                f.write(f"\nColumn: {col}\n")
+                f.write(f"Ambiguous values found: {details['ambiguous_values_found']}\n")
+                f.write("\nOccurrences by year:\n")
+                for year, values in sorted(details['by_year'].items()):
+                    f.write(f"{year}: {values}\n")
+        
+        # Guam Section
+        f.write("\n\n2. Guam Data Analysis\n")
+        f.write("-------------------\n")
+        f.write("\nYearly patterns for Guam:\n")
+        
+        for col in guam_data.columns:
+            if col not in ['State', 'Fiscal Year']:
+                f.write(f"\n{col}:\n")
+                year_values = guam_data.groupby('Fiscal Year')[col].first()
+                for year, value in year_values.items():
+                    f.write(f"{year}: {value}\n")
+
+
 def main():
     master_wide = {
         "TANF": pd.DataFrame(columns=OUTPUT_COLUMNS),
@@ -305,6 +337,7 @@ def main():
     }
     master_long = pd.DataFrame(columns=['Fiscal Year', 'State', 'Funding', 'Category', 'Number'])
 
+    # Process all files as before...
     for data_type, file_list in FILES.items():
         for file_path in file_list:
             division_name = TAB_NAMES[data_type]
@@ -319,44 +352,60 @@ def main():
                 master_wide[division_name], master_long = result
 
     if any(not df.empty for df in master_wide.values()):
-        # Generate and save value pattern analysis
-        pattern_analysis = {}
+        # Generate focused analysis
+        analysis_results = {}
+        guam_analysis = {}
+        
         for division_name, df in master_wide.items():
-            pattern_analysis[division_name] = analyze_value_patterns(df)
+            # Analyze ambiguous values
+            analysis_results[division_name] = analyze_ambiguous_values(df)
             
-        with open("src/otld/caseload/appended_data/value_patterns.txt", "w") as f:
-            f.write("TANF Caseload Data Value Pattern Analysis\n")
-            f.write("=====================================\n\n")
-            for division, patterns in pattern_analysis.items():
-                f.write(f"\n{division} Division:\n")
-                f.write("-------------------\n")
+            # Extract Guam's data
+            guam_analysis[division_name] = analyze_guam_data(df)
+        
+        # Write focused analysis report
+        with open("src/otld/caseload/appended_data/analysis_report.txt", "w") as f:
+            f.write("TANF Caseload Data Analysis Report\n")
+            f.write("===============================\n\n")
+            
+            for division_name in master_wide.keys():
+                f.write(f"\n{division_name} Division\n")
+                f.write("-" * len(f"{division_name} Division") + "\n")
+                
+                # Write ambiguous value patterns
+                patterns = analysis_results[division_name]
+                f.write("\nAmbiguous Value Patterns:\n")
                 for col, details in patterns.items():
-                    f.write(f"\nColumn: {col}\n")
-                    f.write(f"Unique values found: {details['unique_values']}\n")
-                    f.write("\nValue patterns by year:\n")
-                    for year, values in sorted(details['by_year'].items()):
-                        f.write(f"{year}: {values}\n")
-                    f.write("\n")
+                    if details['ambiguous_values_found']:
+                        f.write(f"\n{col}:\n")
+                        f.write(f"Values found: {details['ambiguous_values_found']}\n")
+                        for year, values in sorted(details['by_year'].items()):
+                            if values:
+                                f.write(f"{year}: {values}\n")
+                
+                # Write Guam analysis
+                guam_data = guam_analysis[division_name]
+                f.write("\nGuam Data Analysis:\n")
+                for col in guam_data.columns:
+                    if col not in ['State', 'Fiscal Year']:
+                        f.write(f"\n{col}:\n")
+                        year_values = guam_data.groupby('Fiscal Year')[col].first()
+                        for year, value in year_values.items():
+                            f.write(f"{year}: {value}\n")
+                
+                f.write("\n" + "="*50 + "\n")
 
-        # Save wide format with preserved representations
+        # Save the original data files as before...
         with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx") as writer:
             for tab_name, df in master_wide.items():
                 df = df[df['State'].notna()]
                 df = df.sort_values(['Fiscal Year', 'State']).reset_index(drop=True)
                 df.to_excel(writer, sheet_name=tab_name, index=False)
-
-        # Save long format
-        master_long['Funding'] = master_long['Funding'].replace({
-            'Federal': 'TANF',
-            'State': 'SSP-MOE',
-            'Total': 'TANF and SSP'
-        })
-        master_long = master_long.sort_values(['Fiscal Year', 'State', 'Funding', 'Category']).reset_index(drop=True)
-        master_long.to_excel(
-            "src/otld/caseload/appended_data/CaseloadLong.xlsx", 
-            sheet_name="1997-2023 Caseloads",
-            index=False
-        )
+        
+        # Save Guam data separately
+        with pd.ExcelWriter("src/otld/caseload/appended_data/GuamCaseload.xlsx") as writer:
+            for division_name, guam_df in guam_analysis.items():
+                guam_df.to_excel(writer, sheet_name=division_name, index=False)
 
 if __name__ == "__main__":
     main()
