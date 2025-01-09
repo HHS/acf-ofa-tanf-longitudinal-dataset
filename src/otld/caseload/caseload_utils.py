@@ -20,16 +20,19 @@ def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
     Analyze only ambiguous values (0, -, blank) in the dataset by column and year.
     Returns patterns dictionary focusing on these specific values.
     """
+    # Fix Fiscal Year format before analysis
+    df = fix_fiscal_year_column(df.copy())
+    
     patterns = {}
     numeric_cols = df.columns.difference(['Fiscal Year', 'State', 'Division', 'Funding', 'Category'])
     
     ambiguous_values = {'0', '-', '', ' ', np.nan}
     
     for col in numeric_cols:
-        # Filter for only ambiguous values
         values_found = set()
         year_patterns = {}
         
+        # Now Fiscal Year will be consistently formatted as integer
         for year in sorted(df['Fiscal Year'].unique()):
             year_data = df[df['Fiscal Year'] == year][col]
             year_ambiguous = {str(v).strip() for v in year_data.unique() 
@@ -39,7 +42,7 @@ def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
                 year_patterns[year] = sorted(year_ambiguous)
                 values_found.update(year_ambiguous)
         
-        if values_found:  # Only include columns that have ambiguous values
+        if values_found:
             patterns[col] = {
                 'ambiguous_values_found': sorted(values_found),
                 'by_year': year_patterns
@@ -54,8 +57,8 @@ def analyze_guam_data(df: pd.DataFrame) -> pd.DataFrame:
     guam_data = df[df['State'].str.contains('Guam', case=False, na=False)].copy()
     guam_data = guam_data.sort_values('Fiscal Year')
     
-    # Replace empty strings and whitespace with np.nan for clear missing value identification
-    guam_data = guam_data.replace(r'^\s*$', np.nan, regex=True)
+    # Update replace call to handle FutureWarning
+    guam_data = guam_data.replace(r'^\s*$', np.nan, regex=True).infer_objects(copy=False)
     
     return guam_data
 
@@ -215,26 +218,33 @@ def format_column_names(df: pd.DataFrame) -> pd.DataFrame:
 
 def fix_fiscal_year_column(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Fix the Fiscal Year column by removing commas and ensuring integer representation.
+    Standardize Fiscal Year column to string format without commas.
     """
     if 'Fiscal Year' in df.columns:
-        df['Fiscal Year'] = df['Fiscal Year'].astype(str).str.replace(',', '').astype(int)
+        df = df.copy()
+        # Convert to clean string format
+        df['Fiscal Year'] = df['Fiscal Year'].astype(str).str.replace(',', '').str.strip()
     return df
 
 
 def format_final_dataset(df: pd.DataFrame, output_columns: List[str]) -> pd.DataFrame:
+    """
+    Format final dataset while preserving original value representations.
+    """
     df = df.copy()
     
+    # Add any missing columns
     for col in output_columns:
         if col not in df.columns:
             df[col] = np.nan
     
     df = df[output_columns].copy()
     
-    # Format Fiscal Year first, without commas
+    # Handle Fiscal Year as clean string
     if 'Fiscal Year' in df.columns:
-        df['Fiscal Year'] = df['Fiscal Year'].astype(int)
+        df['Fiscal Year'] = df['Fiscal Year'].astype(str).str.replace(',', '').str.strip()
     
+    # Process other numeric columns
     numeric_cols = df.columns.difference(['Fiscal Year', 'State'])
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', ''), errors='coerce')
