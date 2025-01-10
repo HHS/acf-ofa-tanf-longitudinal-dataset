@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import pandas as pd
 
+from otld.paths import out_dir, tableau_dir
 from otld.utils import export_workbook, get_header
 from otld.utils.caseload_utils import (
     clean_dataset,
@@ -89,7 +90,7 @@ for file in os.listdir(DATA_DIR):
     else:
         FILES["State"].append(path)
 
-TAB_NAMES = {"Federal": "TANF", "State": "SSP-MOE", "Total": "TANF and SSP"}
+TAB_NAMES = {"Federal": "TANF", "State": "SSP_MOE", "Total": "TANF_SSP"}
 
 OUTPUT_COLUMNS = [
     "FiscalYear",
@@ -265,13 +266,8 @@ def process_workbook(
 
 def main():
     master_wide = {
-        "TANF": pd.DataFrame(columns=OUTPUT_COLUMNS),
-        "SSP-MOE": pd.DataFrame(columns=OUTPUT_COLUMNS),
-        "TANF and SSP": pd.DataFrame(columns=OUTPUT_COLUMNS),
+        tab: pd.DataFrame(columns=OUTPUT_COLUMNS) for tab in TAB_NAMES.values()
     }
-    master_long = pd.DataFrame(
-        columns=["FiscalYear", "State", "Funding", "Category", "Number"]
-    )
 
     # Process all files as before...
     for data_type, file_list in FILES.items():
@@ -287,27 +283,36 @@ def main():
                 master_wide[division_name],
             )
 
+    for frame in master_wide:
+        master_wide[frame].set_index(["State", "FiscalYear"], inplace=True)
+
     # Save the original data files as before...
+    export_workbook(master_wide, os.path.join(out_dir, "CaseloadDataWide.xlsx"))
+    export_workbook(master_wide, "src/otld/caseload/appended_data/CaseloadWide.xlsx")
+
     master_wide["CaseloadData"] = []
-    with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx") as writer:
-        for tab_name, df in master_wide.items():
-            df = df[df["State"].notna()]
-            df = df.sort_values(["FiscalYear", "State"]).reset_index(drop=True)
-            df.to_excel(writer, sheet_name=tab_name, index=False)
+    for frame in master_wide:
+        if frame == "CaseloadData":
+            continue
+        master_wide[frame] = master_wide[frame].melt(
+            value_vars=CATEGORIES,
+            var_name="Category",
+            value_name="Number",
+            ignore_index=False,
+        )
+        master_wide[frame]["Funding"] = frame
+        master_wide["CaseloadData"].append(master_wide[frame])
 
-            # Append to long data
-            long_data = pd.melt(
-                df,
-                id_vars=["FiscalYear", "State"],
-                value_vars=CATEGORIES,
-                var_name="Category",
-                value_name="Number",
-            )
-            long_data["Funding"] = tab_name
-            master_long = pd.concat([master_long, long_data])
+    master_wide["CaseloadData"] = pd.concat(master_wide["CaseloadData"])
+    for frame in list(master_wide.keys()):
+        if frame != "CaseloadData":
+            del master_wide[frame]
 
-    with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadLong.xlsx") as writer:
-        master_long.to_excel(writer, sheet_name="Temp", index=False)
+    export_workbook(
+        master_wide, os.path.join(tableau_dir, "data", "CaseloadDataLongRaw.xlsx")
+    )
+    export_workbook(master_wide, os.path.join(out_dir, "CaseloadDataLong.xlsx"))
+    export_workbook(master_wide, "src/otld/caseload/appended_data/CaseloadLong.xlsx")
 
 
 if __name__ == "__main__":
