@@ -220,6 +220,8 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
 
     assert df.shape[0] == 55, "Incorrect number of States!"
 
+    df.dropna(subset=["State"], inplace=True)
+
     return df
 
 
@@ -253,6 +255,8 @@ def format_final_dataset(df: pd.DataFrame, output_columns: List[str]) -> pd.Data
     # Format FiscalYear first, without commas
     if "FiscalYear" in df.columns:
         df["FiscalYear"] = df["FiscalYear"].astype(int)
+
+    df = df.sort_values(["FiscalYear", "State"]).reset_index(drop=True)
 
     numeric_cols = df.columns.difference(["FiscalYear", "State"])
     for col in numeric_cols:
