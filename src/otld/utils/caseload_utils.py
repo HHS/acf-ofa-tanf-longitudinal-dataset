@@ -1,3 +1,4 @@
+import re
 import traceback
 from typing import List, Optional
 
@@ -5,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 OUTPUT_COLUMNS = [
-    "Fiscal Year",
+    "FiscalYear",
     "State",
     "Total Families",
     "Two Parent Families",
@@ -25,7 +26,7 @@ def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
 
     patterns = {}
     numeric_cols = df.columns.difference(
-        ["Fiscal Year", "State", "Division", "Funding", "Category"]
+        ["FiscalYear", "State", "Division", "Funding", "Category"]
     )
 
     ambiguous_values = {"0", "-", "", " ", np.nan}
@@ -35,8 +36,8 @@ def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
         values_found = set()
         year_patterns = {}
 
-        for year in sorted(df["Fiscal Year"].unique()):
-            year_data = df[df["Fiscal Year"] == year][col]
+        for year in sorted(df["FiscalYear"].unique()):
+            year_data = df[df["FiscalYear"] == year][col]
             year_ambiguous = {
                 str(v).strip()
                 for v in year_data.unique()
@@ -61,7 +62,7 @@ def analyze_guam_data(df: pd.DataFrame) -> pd.DataFrame:
     Extract and analyze Guam's data across all years.
     """
     guam_data = df[df["State"].str.contains("Guam", case=False, na=False)].copy()
-    guam_data = guam_data.sort_values("Fiscal Year")
+    guam_data = guam_data.sort_values("FiscalYear")
 
     # Replace empty strings and whitespace with np.nan for clear missing value identification
     guam_data = guam_data.replace(r"^\s*$", np.nan, regex=True)
@@ -70,14 +71,14 @@ def analyze_guam_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def process_1997_1998_1999_data(
-    year: int, df: pd.DataFrame, master_wide: pd.DataFrame, master_long: pd.DataFrame
+    year: int, df: pd.DataFrame, master_wide: pd.DataFrame
 ) -> tuple:
     """Process data for years 1997-1999, preserving original value representations."""
     try:
         if year == 1997:
             fiscal_data = pd.DataFrame(
                 {
-                    "Fiscal Year": year,
+                    "FiscalYear": year,
                     "State": df.iloc[:, 5],  # State column
                     "Total Families": df.iloc[:, 0],  # TOTAL FAMILIES
                     "Two Parent Families": df.iloc[:, 2],  # TANF TWO-PARENT FAMILIES
@@ -88,7 +89,7 @@ def process_1997_1998_1999_data(
         else:
             fiscal_data = pd.DataFrame(
                 {
-                    "Fiscal Year": year,
+                    "FiscalYear": year,
                     "State": df.iloc[:, 4],
                     "Total Families": df.iloc[:, 0],
                     "Two Parent Families": df.iloc[:, 1],
@@ -105,86 +106,30 @@ def process_1997_1998_1999_data(
         fiscal_data["Children Recipients"] = "-"
 
         fiscal_data = fiscal_data[OUTPUT_COLUMNS]
-        fiscal_data = fiscal_data.sort_values(["Fiscal Year", "State"]).reset_index(
+        fiscal_data = fiscal_data.sort_values(["FiscalYear", "State"]).reset_index(
             drop=True
         )
 
-        master_wide = pd.concat([master_wide, fiscal_data], ignore_index=True)
-
-        long_data = pd.melt(
-            fiscal_data,
-            id_vars=["Fiscal Year", "State"],
-            value_vars=[
-                "Total Families",
-                "Two Parent Families",
-                "One Parent Families",
-                "Total Recipients",
-            ],
-            var_name="Category",
-            value_name="Number",
-        )
-        long_data["Funding"] = "TANF"
-
-        master_long = pd.concat([master_long, long_data], ignore_index=True)
-        return master_wide, master_long
+        return fiscal_data
 
     except Exception as e:
         print(f"Error processing data for {year}: {e}")
         traceback.print_exc()
-        return master_wide, master_long
+        raise
 
 
 def process_sheet(
-    file_path: str,
-    sheet_name: str,
-    skiprows: int,
-    column_names: List[str],
-    is_old_format: bool,
+    file_path: str, sheet_name: str, skiprows: int, column_names: List[str], year: int
 ) -> Optional[pd.DataFrame]:
     try:
-        year = int(file_path.split("fy")[1][:4])
-
-        if year in [1998, 1999]:
-            # Special handling for 1998 and 1999 data
-            df = pd.read_excel(
-                file_path,
-                sheet_name=sheet_name,
-                skiprows=8,  # Skip rows before the data
-                usecols="A:E",  # Select only relevant columns
-            )
-
-            # Rename columns
-            df.columns = [
-                "State",
-                "Total Families",
-                "Two Parent Families",
-                "One Parent Families",
-                "Total Recipients",
-            ]
-
-            # Clean and format
-            df = df[df["State"].notna()]
-            df["State"] = df["State"].astype(str)
-            df = df[
-                ~df["State"].str.contains(
-                    "U.S. Total|Total|download", case=False, na=False
-                )
-            ]
-            df["Fiscal Year"] = year
-
-            # Add missing columns with NaN or hyphen
-            df["No Parent Families"] = np.nan
-            df["Adult Recipients"] = np.nan
-            df["Children Recipients"] = np.nan
-
-            return df
+        is_old_format = year <= 2020
 
         if is_old_format:
             # Handling for older formats (2000-2020)
             df = pd.read_excel(
                 file_path,
                 sheet_name=sheet_name,
-                skiprows=6,  # Skip rows for old format
+                skiprows=5,  # Skip rows for old format
                 header=None,
                 thousands=",",
                 dtype={"State": str},
@@ -228,6 +173,17 @@ def process_sheet(
         return None
 
 
+def clean_state(state: str):
+    if state.startswith("Dist"):
+        state = "District of Columbia"
+    elif state.startswith("U.S. Total"):
+        state = "U.S. Total"
+    elif state.startswith("Montan"):
+        state = "Montana"
+
+    return re.sub(r"/|\d", "", state).strip()
+
+
 def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     """Clean dataset while preserving original value representations."""
     df = df.copy()
@@ -235,29 +191,36 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     df["State"] = df["State"].astype(str).str.strip()
     df["State"] = df["State"].str.replace(r"\*+", "", regex=True)
     df["State"] = df["State"].str.replace('"', "")
+    df["State"] = df["State"].apply(clean_state)
 
     unwanted_patterns = [
-        "U.S. Totals",
-        "data inapplicable",
-        "Fiscal year average",
-        r"\d{4}-\d{2}-\d{2}",
-        "As of .*",
-        "Calendar year average",
-        "Note[s]?:",
-        "Source:",
-        "Data as of",
-        "footnote",
-        r"^\d+\.",
-        "See note",
-        "Revised",
-        "Updated",
-        r"\d{2}/\d{2}/\d{2,4}",
-        "^As of$",
+        "year",
+        r"(?<!guam\s)\d",
+        "note",
+        "data",
+        "source",
+        "revised",
+        "updated",
+        "^as of$",
+        r"^\W",
+        "'",
+        r"^nan",
+        "^$",
     ]
 
     pattern = "|".join(unwanted_patterns)
-    mask = ~df["State"].str.contains(pattern, regex=True, na=False)
-    return df[mask]
+    mask = ~df["State"].str.lower().str.contains(pattern, regex=True, na=False)
+    df = df[mask]
+
+    if "U.S. Total" not in df["State"].tolist():
+        us_total = df.select_dtypes(include=[np.number]).sum()
+        us_total = us_total.to_frame().T
+        us_total["State"] = "U.S. Total"
+        df = pd.concat([us_total, df])
+
+    assert df.shape[0] == 55, "Incorrect number of States!"
+
+    return df
 
 
 def merge_datasets(
@@ -265,18 +228,16 @@ def merge_datasets(
 ) -> pd.DataFrame:
     """Merge families and recipients datasets"""
     merged = pd.merge(families_df, recipients_df, on="State", how="outer").copy()
-    merged.insert(0, "Fiscal Year", year)
+    merged.insert(0, "FiscalYear", year)
     return merged
 
 
 def fix_fiscal_year_column(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Fix the Fiscal Year column by removing commas and ensuring integer representation.
+    Fix the FiscalYear column by removing commas and ensuring integer representation.
     """
-    if "Fiscal Year" in df.columns:
-        df["Fiscal Year"] = (
-            df["Fiscal Year"].astype(str).str.replace(",", "").astype(int)
-        )
+    if "FiscalYear" in df.columns:
+        df["FiscalYear"] = df["FiscalYear"].astype(str).str.replace(",", "").astype(int)
     return df
 
 
@@ -289,11 +250,11 @@ def format_final_dataset(df: pd.DataFrame, output_columns: List[str]) -> pd.Data
 
     df = df[output_columns].copy()
 
-    # Format Fiscal Year first, without commas
-    if "Fiscal Year" in df.columns:
-        df["Fiscal Year"] = df["Fiscal Year"].astype(int)
+    # Format FiscalYear first, without commas
+    if "FiscalYear" in df.columns:
+        df["FiscalYear"] = df["FiscalYear"].astype(int)
 
-    numeric_cols = df.columns.difference(["Fiscal Year", "State"])
+    numeric_cols = df.columns.difference(["FiscalYear", "State"])
     for col in numeric_cols:
         df[col] = pd.to_numeric(
             df[col].astype(str).str.replace(",", ""), errors="coerce"
@@ -302,5 +263,7 @@ def format_final_dataset(df: pd.DataFrame, output_columns: List[str]) -> pd.Data
             lambda x: "{:,}".format(int(x)) if pd.notnull(x) else "-"
         )
 
-    df.columns = [col.title() for col in df.columns]
+    df.columns = ["FiscalYear"] + [
+        col.title() for col in df.columns if col != "FiscalYear"
+    ]
     return df
