@@ -11,6 +11,7 @@
    :template: custom-module-template.rst
    :recursive:
 
+   append
    append_1997_2009
    append_2010_2014
    append_2015_2023

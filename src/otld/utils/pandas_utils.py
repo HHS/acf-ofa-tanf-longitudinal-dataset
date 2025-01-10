@@ -2,6 +2,7 @@
 
 __all__ = ["convert_to_numeric", "reindex_state_year", "get_header"]
 
+import numpy as np
 import pandas as pd
 
 from otld.utils.string_utils import make_negative_string
@@ -21,6 +22,7 @@ def convert_to_numeric(series: pd.Series, numeric_type: type = float) -> pd.Seri
             lambda x: (make_negative_string(x) if type(x) is str else x)
         )
         series = series.astype(numeric_type)
+        series = series.map(lambda x: round(x) if not np.isnan(x) else x)
     except:
         raise
 

@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-OFA TANF Longitudinal Dataset documentation
+OFA TANF Longitudinal Dataset Documentation
 ===========================================
 
 This documentation outlines the modules and functions for appending OFA's TANF data.
