@@ -1,6 +1,6 @@
 """Common pandas utilities"""
 
-__all__ = ["convert_to_numeric", "reindex_state_year"]
+__all__ = ["convert_to_numeric", "reindex_state_year", "get_header"]
 
 import pandas as pd
 
@@ -57,3 +57,26 @@ def reindex_state_year(df: pd.DataFrame) -> pd.DataFrame:
     df = df.reindex(new_index)
 
     return df
+
+
+def get_header(
+    df: pd.DataFrame,
+    column: str | int,
+    find: str,
+    sanitize: bool = False,
+    idx: bool = False,
+):
+    df = df.copy()
+    df.reset_index(inplace=True)
+
+    if sanitize:
+        index = df[df.loc[:, column].apply(lambda x: str(x).lower().find(find)) > -1]
+    else:
+        index = df[df.loc[:, column].apply(lambda x: str(x).find(find)) > -1]
+
+    index = index.index.min()
+
+    if idx:
+        return index
+
+    return df.loc[index]
