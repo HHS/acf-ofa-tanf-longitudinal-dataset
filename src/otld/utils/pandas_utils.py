@@ -1,6 +1,6 @@
 """Common pandas utilities"""
 
-__all__ = ["convert_to_numeric", "reindex_state_year", "get_header"]
+__all__ = ["convert_to_numeric", "reindex_state_year", "get_header", "excel_to_dict"]
 
 import numpy as np
 import pandas as pd
@@ -82,3 +82,23 @@ def get_header(
         return index
 
     return df.loc[index]
+
+
+def excel_to_dict(path: str, custom_args: dict = None, **kwargs):
+    file = pd.ExcelFile(path)
+    sheets = file.sheet_names
+    if custom_args:
+        try:
+            dictionary = {
+                sheet: pd.read_excel(file, sheet_name=sheet, **custom_args[sheet])
+                for sheet in sheets
+            }
+        except:
+            raise
+
+    else:
+        dictionary = {
+            sheet: pd.read_excel(file, sheet_name=sheet, **kwargs) for sheet in sheets
+        }
+
+    return dictionary
