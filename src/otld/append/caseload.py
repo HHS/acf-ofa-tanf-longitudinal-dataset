@@ -4,9 +4,9 @@ from typing import List, Optional
 
 import pandas as pd
 
+from otld.utils import export_workbook, get_header
 from otld.utils.caseload_utils import (
     clean_dataset,
-    fix_fiscal_year_column,
     format_final_dataset,
     merge_datasets,
     process_1997_1998_1999_data,
@@ -92,7 +92,7 @@ for file in os.listdir(DATA_DIR):
 TAB_NAMES = {"Federal": "TANF", "State": "SSP-MOE", "Total": "TANF and SSP"}
 
 OUTPUT_COLUMNS = [
-    "Fiscal Year",
+    "FiscalYear",
     "State",
     "Total Families",
     "Two Parent Families",
@@ -113,7 +113,7 @@ CATEGORIES = [
     "Children Recipients",
 ]
 
-LONG_FORMAT_COLUMNS = ["Fiscal Year", "State", "Funding", "Category", "Number"]
+LONG_FORMAT_COLUMNS = ["FiscalYear", "State", "Funding", "Category", "Number"]
 
 
 def find_matching_sheet(
@@ -173,26 +173,28 @@ def find_matching_sheet(
 def process_workbook(
     file_path: str,
     data_type: str,
-    is_old_format: bool,
+    year: int,
     master_wide: pd.DataFrame,
-    master_long: pd.DataFrame,
 ) -> Optional[tuple]:
     try:
         if not os.path.exists(file_path):
-            print(f"File not found: {file_path}")
-            return master_wide, master_long
+            raise FileNotFoundError(f"File does not exist: {file_path}")
 
-        year = int(file_path.split("fy")[1][:4])
         print(f"\nProcessing {data_type} data for {year}...", end="", flush=True)
 
         # Special handling for 1998 and 1999
         if year in [1997, 1998, 1999]:
             try:
-                df = pd.read_excel(file_path, skiprows=8, header=None)
-                return process_1997_1998_1999_data(year, df, master_wide, master_long)
+                df = pd.read_excel(file_path, header=None)
+                index = get_header(df, 0, "total", sanitize=True, idx=True)
+                df = df.iloc[index + 1 :, :]
+                df = process_1997_1998_1999_data(year, df, master_wide)
+                df = clean_dataset(df)
+                df = format_final_dataset(df, OUTPUT_COLUMNS)
+                return pd.concat([master_wide, df])
             except Exception as e:
                 print(f"\nError reading {year} data: {e}")
-                return master_wide, master_long
+                raise
 
         config = DATA_CONFIGS[data_type]
         xls = pd.ExcelFile(file_path)
@@ -206,18 +208,16 @@ def process_workbook(
         )
 
         if not families_tab or not recipients_tab:
-            print("\nFailed to find required sheets. Debug information:")
-            print(f"Available sheets: {sheet_names}")
-            print(f"Found families tab: {families_tab}")
-            print(f"Found recipients tab: {recipients_tab}")
-            return master_wide, master_long
+            raise AttributeError(
+                f"A tab is missing!\nFamilies: {families_tab};\nRecipients: {recipients_tab}"
+            )
 
         families_data = process_sheet(
             file_path=file_path,
             sheet_name=families_tab,
             skiprows=config["skiprows"],
             column_names=config["column_mappings"]["families"],
-            is_old_format=is_old_format,
+            year=year,
         )
 
         recipients_data = process_sheet(
@@ -225,45 +225,42 @@ def process_workbook(
             sheet_name=recipients_tab,
             skiprows=config["skiprows"],
             column_names=config["column_mappings"]["recipients"],
-            is_old_format=is_old_format,
+            year=year,
         )
 
         if families_data is None or recipients_data is None:
-            return master_wide, master_long
+            raise AttributeError(
+                f"At least one sheet is missing:\nFamilies: {families_data}\nRecipients: {recipients_data}"
+            )
+
+        if year == 2004 and data_type == "State":
+            assert families_data["State"].loc[53] == "As of 9/21/2006"
+            assert recipients_data["State"].loc[53] == "As of 9/21/2006"
+
+            for df in [families_data, recipients_data]:
+                df["State"] = df["State"].apply(
+                    lambda x: "Wisconsin" if x == "As of 9/21/2006" else x
+                )
 
         families_data = clean_dataset(families_data)
         recipients_data = clean_dataset(recipients_data)
 
         merged_data = merge_datasets(families_data, recipients_data, year)
         if merged_data.empty:
-            return master_wide, master_long
+            return master_wide
 
         final_data = format_final_dataset(merged_data, OUTPUT_COLUMNS)
         if final_data.empty:
-            return master_wide, master_long
+            return master_wide
 
-        final_data = fix_fiscal_year_column(
-            final_data
-        )  # Ensure Fiscal Year is fixed here
         master_wide = pd.concat([master_wide, final_data], ignore_index=True)
 
-        long_data = pd.melt(
-            final_data,
-            id_vars=["Fiscal Year", "State"],
-            value_vars=CATEGORIES,
-            var_name="Category",
-            value_name="Number",
-        )
-        long_data["Funding"] = data_type
-        long_data = fix_fiscal_year_column(long_data)  # Fix Fiscal Year for long format
-        master_long = pd.concat([master_long, long_data], ignore_index=True)
-
-        return master_wide, master_long
+        return master_wide
 
     except Exception as e:
         print(f"\nError processing {file_path} ({data_type})")
         print(f"Error: {str(e)}")
-        return master_wide, master_long
+        raise
 
 
 def main():
@@ -273,29 +270,44 @@ def main():
         "TANF and SSP": pd.DataFrame(columns=OUTPUT_COLUMNS),
     }
     master_long = pd.DataFrame(
-        columns=["Fiscal Year", "State", "Funding", "Category", "Number"]
+        columns=["FiscalYear", "State", "Funding", "Category", "Number"]
     )
 
     # Process all files as before...
     for data_type, file_list in FILES.items():
         for file_path in file_list:
+            year = int(file_path.split("fy")[1][:4])
             division_name = TAB_NAMES[data_type]
-            result = process_workbook(
+            # if year != 2004 or division_name != "SSP-MOE":
+            #     continue
+            master_wide[division_name] = process_workbook(
                 file_path,
                 data_type,
-                int(file_path.split("fy")[1][:4]) <= 2020,
+                year,
                 master_wide[division_name],
-                master_long,
             )
-            if result:
-                master_wide[division_name], master_long = result
 
     # Save the original data files as before...
+    master_wide["CaseloadData"] = []
     with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadWide.xlsx") as writer:
         for tab_name, df in master_wide.items():
             df = df[df["State"].notna()]
-            df = df.sort_values(["Fiscal Year", "State"]).reset_index(drop=True)
+            df = df.sort_values(["FiscalYear", "State"]).reset_index(drop=True)
             df.to_excel(writer, sheet_name=tab_name, index=False)
+
+            # Append to long data
+            long_data = pd.melt(
+                df,
+                id_vars=["FiscalYear", "State"],
+                value_vars=CATEGORIES,
+                var_name="Category",
+                value_name="Number",
+            )
+            long_data["Funding"] = tab_name
+            master_long = pd.concat([master_long, long_data])
+
+    with pd.ExcelWriter("src/otld/caseload/appended_data/CaseloadLong.xlsx") as writer:
+        master_long.to_excel(writer, sheet_name="Temp", index=False)
 
 
 if __name__ == "__main__":
