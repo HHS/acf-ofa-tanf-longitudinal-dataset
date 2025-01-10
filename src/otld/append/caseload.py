@@ -80,7 +80,7 @@ DATA_CONFIGS = {
 }
 
 FILES = {"Federal": [], "State": [], "Total": []}
-DATA_DIR = "src/otld/caseload/original_data"
+DATA_DIR = "data/original_data"
 for file in os.listdir(DATA_DIR):
     path = os.path.join(DATA_DIR, file)
     if re.search(r"tanf?_caseload", file):
@@ -288,7 +288,7 @@ def main():
 
     # Save the original data files as before...
     export_workbook(master_wide, os.path.join(out_dir, "CaseloadDataWide.xlsx"))
-    export_workbook(master_wide, "src/otld/caseload/appended_data/CaseloadWide.xlsx")
+    export_workbook(master_wide, "data/appended_data/CaseloadWide.xlsx")
 
     master_wide["CaseloadData"] = []
     for frame in master_wide:
@@ -312,7 +312,7 @@ def main():
         master_wide, os.path.join(tableau_dir, "data", "CaseloadDataLongRaw.xlsx")
     )
     export_workbook(master_wide, os.path.join(out_dir, "CaseloadDataLong.xlsx"))
-    export_workbook(master_wide, "src/otld/caseload/appended_data/CaseloadLong.xlsx")
+    export_workbook(master_wide, "data/appended_data/CaseloadLong.xlsx")
 
 
 if __name__ == "__main__":
