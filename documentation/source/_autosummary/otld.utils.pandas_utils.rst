@@ -10,5 +10,7 @@ otld.utils.pandas\_utils
       :toctree:
    
       convert_to_numeric
+      excel_to_dict
+      get_header
       reindex_state_year
    
