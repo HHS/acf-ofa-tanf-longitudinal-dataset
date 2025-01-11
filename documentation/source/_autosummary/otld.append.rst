@@ -12,4 +12,8 @@ otld.append
    :recursive:
 
    TANFData
+   append_1997_2009
+   append_2010_2014
+   append_2015_2023
+   caseload
    gui
