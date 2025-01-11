@@ -81,15 +81,6 @@ DATA_CONFIGS = {
 
 FILES = {"Federal": [], "State": [], "Total": []}
 DATA_DIR = "data/original_data"
-for file in os.listdir(DATA_DIR):
-    path = os.path.join(DATA_DIR, file)
-    if re.search(r"tanf?_caseload", file):
-        FILES["Federal"].append(path)
-    elif re.search(r"tanf?ssp_caseload", file):
-        FILES["Total"].append(path)
-    else:
-        FILES["State"].append(path)
-
 TAB_NAMES = {"Federal": "TANF", "State": "SSP_MOE", "Total": "TANF_SSP"}
 
 OUTPUT_COLUMNS = [
@@ -265,6 +256,15 @@ def process_workbook(
 
 
 def main():
+    for file in os.listdir(DATA_DIR):
+        path = os.path.join(DATA_DIR, file)
+        if re.search(r"tanf?_caseload", file):
+            FILES["Federal"].append(path)
+        elif re.search(r"tanf?ssp_caseload", file):
+            FILES["Total"].append(path)
+        else:
+            FILES["State"].append(path)
+
     master_wide = {
         tab: pd.DataFrame(columns=OUTPUT_COLUMNS) for tab in TAB_NAMES.values()
     }
