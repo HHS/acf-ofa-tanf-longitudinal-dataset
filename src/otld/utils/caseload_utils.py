@@ -17,6 +17,9 @@ OUTPUT_COLUMNS = [
     "Children Recipients",
 ]
 
+FAMILY_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}families")
+RECIPIENT_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*recipients")
+
 
 def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
     """
@@ -243,7 +246,9 @@ def fix_fiscal_year_column(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def format_final_dataset(df: pd.DataFrame, output_columns: List[str]) -> pd.DataFrame:
+def format_final_dataset(
+    df: pd.DataFrame, output_columns: List[str] = OUTPUT_COLUMNS
+) -> pd.DataFrame:
     df = df.copy()
 
     for col in output_columns:
