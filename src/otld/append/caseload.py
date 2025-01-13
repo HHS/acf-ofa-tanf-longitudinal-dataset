@@ -178,7 +178,7 @@ def process_workbook(
         if year in [1997, 1998, 1999]:
             try:
                 df = pd.read_excel(file_path, header=None)
-                index = get_header(df, 0, "total", sanitize=True, idx=True)
+                index = get_header(df, 0, "total", reset=True, sanitize=True, idx=True)
                 df = df.iloc[index + 1 :, :]
                 df = process_1997_1998_1999_data(year, df, master_wide)
                 df = clean_dataset(df)
