@@ -9,9 +9,6 @@ otld.format\_appended\_files
    .. autosummary::
       :toctree:
    
-      add_table
-      export_workbook
-      format_openpyxl_worksheet
       format_pd_columns
       main
    

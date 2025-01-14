@@ -5,9 +5,9 @@ import re
 
 import pandas as pd
 
-from otld.paths import inter_dir
-from otld.utils import missingness, reindex_state_year
-from otld.utils.crosswalk_2014_2015 import crosswalk, crosswalk_dict
+from otld.paths import input_dir, inter_dir
+from otld.utils import missingness, reindex_state_year, validate_data_frame
+from otld.utils.crosswalk_2014_2015 import crosswalk, crosswalk_dict, map_columns
 
 
 def get_column_list(crosswalk: pd.DataFrame, column: str | int) -> list[str]:
@@ -27,34 +27,6 @@ def get_column_list(crosswalk: pd.DataFrame, column: str | int) -> list[str]:
     columns = [c.strip() for c in columns]
 
     return columns
-
-
-def map_columns(df: pd.DataFrame, crosswalk_dict: dict) -> pd.DataFrame:
-    """Convert ACF-196 columns into ACF-196R equivalents.
-
-    Args:
-        df (pd.DataFrame): Data frame in which to make conversion.
-        crosswalk_dict (dict): Dictionary mapping ACF-196 to ACF-196R
-
-    Returns:
-        pd.DataFrame: Data frame with columns converted to ACF-196R equivalents
-    """
-    new_df = pd.DataFrame()
-    for key, value in crosswalk_dict.items():
-        value_196 = value[196]
-        try:
-            if not value_196:
-                continue
-            # If values is a string, rename
-            elif isinstance(value_196, str):
-                new_df[key] = df[value_196]
-            # Otherwise, sum the two columns
-            elif isinstance(value_196, list):
-                new_df[key] = df[value_196].sum(axis=1)
-        except KeyError:
-            continue
-
-    return new_df
 
 
 def reorder_alpha_numeric(values: list | pd.Series) -> list:
@@ -79,7 +51,47 @@ def reorder_alpha_numeric(values: list | pd.Series) -> list:
     return values
 
 
-def main():
+def format_state_index(value: tuple) -> tuple:
+    """Adjust the formatting of the state index.
+
+    Args:
+        value (tuple): Index tuple.
+
+    Returns:
+        tuple: Index tuple with state adjusted.
+    """
+    state_name = value[0].title()
+    state_name = (
+        "District of Columbia" if state_name.startswith("Dist.") else state_name
+    )
+
+    return state_name, value[1]
+
+
+def consolidate_categories(row: pd.Series, df: pd.DataFrame) -> None:
+    """Consolidate Funding categories (for visualization)
+
+    Args:
+        row (pd.Series): Row containing consolidation instructions and new variable name.
+        df (pd.DataFrame): DataFrame in which to create new columns.
+    """
+
+    columns = str(row["instructions"]).split(",")
+    try:
+        in_columns = [column in df.columns for column in columns]
+        assert all(in_columns)
+    except AssertionError:
+        present = []
+        for i, val in enumerate(in_columns):
+            if val is True:
+                present.append(columns[i])
+
+        columns = present
+
+    df[row["name"]] = df[columns].sum(axis=1)
+
+
+def main() -> dict[pd.DataFrame]:
     """Entry point for combine_appended_files.py"""
 
     columns_196 = get_column_list(crosswalk, 196)
@@ -106,16 +118,16 @@ def main():
             state.append(df)
 
     # Append data frames and reorder columns
-    rename_dict = {key: value["name"] for key, value in crosswalk_dict.items()}
+    rename_dict = {
+        key: f"{key}. " + value["name"] for key, value in crosswalk_dict.items()
+    }
 
     state = pd.concat(state)
     state = state[reorder_alpha_numeric(state.columns)]
-    state.drop(["1", "2", "3", "4", "5", "7", "8", "24"], inplace=True, axis=1)
+    state.drop(["1", "2", "3", "4", "5", "7", "8"], inplace=True, axis=1)
 
     federal = pd.concat(federal)
     federal = federal[reorder_alpha_numeric(federal.columns)]
-    for df in [federal, state]:
-        df.fillna(0, inplace=True)
 
     frames = {"Federal": federal, "State": state}
 
@@ -127,8 +139,22 @@ def main():
     total = total[reorder_alpha_numeric(total.columns)]
 
     for df in [total, federal, state]:
+        # Calculate consolidated_categories
+        consolidated_categories = pd.read_excel(
+            os.path.join(input_dir, "Instruction Crosswalk.xlsx"),
+            sheet_name="consolidated_categories",
+        )
+        consolidated_categories.apply(
+            lambda row: consolidate_categories(row, df), axis=1
+        )
+        # Title case the state names
+        df.index = pd.MultiIndex.from_tuples(
+            df.index.map(format_state_index), names=["State", "FiscalYear"]
+        )
         df.rename(columns=rename_dict, inplace=True)
-        df.index.rename(["State", "Year"], inplace=True)
+        df.drop(index="Puerto Rico", level=0, inplace=True)
+
+        validate_data_frame(df)
 
     frames.update({"Total": total})
 
