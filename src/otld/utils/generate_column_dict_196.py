@@ -19,9 +19,17 @@ from otld.paths import input_dir
 def split_line(
     line: str,
     line_re: re.Pattern = re.compile(r"Lines?\s?(.+?\.)\s+(.+?)$", re.DOTALL),
-):
-    """
-    Split line into line number and name
+) -> tuple[str, str]:
+    """Split line into line number and name
+
+    Args:
+        line (str): The line to be split.
+        line_re (re.Pattern, optional): A regex pattern to use to split `line`.
+            Defaults to re.compile(r"Lines?\s?(.+?\.)\s+(.+?)$", re.DOTALL).
+
+    Returns:
+        tuple[str, str]: A tuple containing the line_number associated with `line` and
+        and the name associated.
     """
     line = re.sub(r"<.+?>", "", line)
     line = line_re.search(line)
@@ -35,6 +43,7 @@ def split_line(
 
 
 def main():
+    """Generate column dictionary"""
     # Extract PDF text as HTML (this allows identifying bolded sections)
     instructions = os.path.join(input_dir, "ACF_196_Instructions.pdf")
     output_string = StringIO()

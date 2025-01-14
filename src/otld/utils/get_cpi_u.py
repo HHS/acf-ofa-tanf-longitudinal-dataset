@@ -8,6 +8,7 @@ from otld.paths import inter_dir
 
 
 def get_cpi_u():
+    """Download CPI-U HTML Table"""
     session = requests.Session()
     data = {
         "request_action": "get_data",
