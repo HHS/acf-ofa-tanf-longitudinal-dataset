@@ -1,0 +1,3 @@
+0 = Program exists but zero cases
+-1 = Program not offered 
+-99 = Not reported/Missing
