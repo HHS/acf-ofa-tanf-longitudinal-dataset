@@ -1,6 +1,8 @@
 """Common pandas utilities"""
 
-__all__ = ["convert_to_numeric", "reindex_state_year"]
+__all__ = ["convert_to_numeric", "reindex_state_year", "get_header", "excel_to_dict"]
+
+import re
 
 import numpy as np
 import pandas as pd
@@ -59,3 +61,74 @@ def reindex_state_year(df: pd.DataFrame) -> pd.DataFrame:
     df = df.reindex(new_index)
 
     return df
+
+
+def get_header(
+    df: pd.DataFrame,
+    column: str | int = None,
+    find: str = None,
+    reset: bool = False,
+    sanitize: bool = False,
+    idx: bool = False,
+) -> int | pd.DataFrame:
+    df = df.copy()
+    if reset:
+        df.reset_index(inplace=True)
+
+    def known_header(
+        df: pd.DataFrame, column: str | int, find: str, sanitize: bool, idx: bool
+    ):
+        assert column is not None, "Must specify a column to search within."
+        assert find is not None, "Must specify a string to find."
+        if sanitize:
+            index = df[
+                df.loc[:, column].apply(lambda x: bool(re.search(find, str(x).lower())))
+            ]
+        else:
+            index = df[df.loc[:, column].apply(lambda x: bool(re.search(find, str(x))))]
+
+        index = index.index.min()
+
+        if idx:
+            return index
+
+        return df.loc[index]
+
+    def unknown_header(df: pd.DataFrame) -> pd.DataFrame:
+        df.dropna(axis=1, how="all", inplace=True)
+        header = 0
+        while True:
+            if bool(df.loc[header, :].isna().any()) is False:
+                break
+
+            header += 1
+
+        df.columns = df.loc[header, :]
+        df = df.loc[header + 1 :, :]
+
+        return df
+
+    if column or find:
+        return known_header(df, column, find, sanitize, idx)
+    else:
+        return unknown_header(df)
+
+
+def excel_to_dict(path: str, custom_args: dict = None, **kwargs):
+    file = pd.ExcelFile(path)
+    sheets = file.sheet_names
+    if custom_args:
+        try:
+            dictionary = {
+                sheet: pd.read_excel(file, sheet_name=sheet, **custom_args[sheet])
+                for sheet in sheets
+            }
+        except:
+            raise
+
+    else:
+        dictionary = {
+            sheet: pd.read_excel(file, sheet_name=sheet, **kwargs) for sheet in sheets
+        }
+
+    return dictionary
