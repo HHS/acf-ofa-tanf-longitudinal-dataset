@@ -1,7 +1,7 @@
-otld.append\_1997\_2009
-=======================
+otld.append.append\_1997\_2009
+==============================
 
-.. automodule:: otld.append_1997_2009
+.. automodule:: otld.append.append_1997_2009
 
    
    .. rubric:: Functions
