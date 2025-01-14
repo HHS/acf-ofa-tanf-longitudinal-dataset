@@ -103,6 +103,8 @@ def main() -> dict[pd.DataFrame]:
 
     # Append files to relevant lists
     for file in files:
+        if not file.startswith("federal") and not file.startswith("state"):
+            continue
         df = pd.read_csv(os.path.join(inter_dir, file), index_col=["STATE", "year"])
         level = "state" if file.startswith("state") else "federal"
 
