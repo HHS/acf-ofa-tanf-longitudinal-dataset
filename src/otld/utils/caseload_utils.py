@@ -247,6 +247,21 @@ def fix_fiscal_year_column(df: pd.DataFrame) -> pd.DataFrame:
 def format_final_dataset(
     df: pd.DataFrame, output_columns: List[str] = OUTPUT_COLUMNS
 ) -> pd.DataFrame:
+    def float_none(string: str) -> float | None:
+        try:
+            return float(string)
+        except ValueError:
+            return None
+
+    def to_numeric(series: pd.Series):
+        series.fillna("", inplace=True)
+        series = series.astype(str).str.replace(",", "")
+        series = series.apply(
+            lambda x: "{:,}".format(round(float(x), 2)) if float_none(x) else x
+        )
+
+        return series
+
     df = df.copy()
 
     for col in output_columns:
@@ -262,13 +277,7 @@ def format_final_dataset(
     df = df.sort_values(["FiscalYear", "State"]).reset_index(drop=True)
 
     numeric_cols = df.columns.difference(["FiscalYear", "State"])
-    for col in numeric_cols:
-        df[col] = pd.to_numeric(
-            df[col].astype(str).str.replace(",", ""), errors="coerce"
-        )
-        df[col] = df[col].apply(
-            lambda x: "{:,}".format(int(x)) if pd.notnull(x) else "-"
-        )
+    df[numeric_cols] = df[numeric_cols].apply(to_numeric)
 
     df.columns = ["FiscalYear"] + [
         col.title() for col in df.columns if col != "FiscalYear"

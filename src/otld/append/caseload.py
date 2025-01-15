@@ -3,6 +3,7 @@ import re
 from typing import List, Optional
 
 import pandas as pd
+from openpyxl.styles.numbers import FORMAT_NUMBER_COMMA_SEPARATED1
 
 from otld.paths import out_dir, tableau_dir
 from otld.utils import export_workbook, get_header
@@ -274,8 +275,16 @@ def main():
         master_wide[frame].set_index(["State", "FiscalYear"], inplace=True)
 
     # Save the original data files as before...
-    export_workbook(master_wide, os.path.join(out_dir, "CaseloadDataWide.xlsx"))
-    export_workbook(master_wide, "data/appended_data/CaseloadWide.xlsx")
+    export_workbook(
+        master_wide,
+        os.path.join(out_dir, "CaseloadDataWide.xlsx"),
+        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
+    )
+    export_workbook(
+        master_wide,
+        "data/appended_data/CaseloadWide.xlsx",
+        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
+    )
 
     master_wide["CaseloadData"] = []
     for frame in master_wide:
@@ -296,10 +305,20 @@ def main():
             del master_wide[frame]
 
     export_workbook(
-        master_wide, os.path.join(tableau_dir, "data", "CaseloadDataLongRaw.xlsx")
+        master_wide,
+        os.path.join(tableau_dir, "data", "CaseloadDataLongRaw.xlsx"),
+        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
     )
-    export_workbook(master_wide, os.path.join(out_dir, "CaseloadDataLong.xlsx"))
-    export_workbook(master_wide, "data/appended_data/CaseloadLong.xlsx")
+    export_workbook(
+        master_wide,
+        os.path.join(out_dir, "CaseloadDataLong.xlsx"),
+        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
+    )
+    export_workbook(
+        master_wide,
+        "data/appended_data/CaseloadLong.xlsx",
+        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
+    )
 
 
 if __name__ == "__main__":
