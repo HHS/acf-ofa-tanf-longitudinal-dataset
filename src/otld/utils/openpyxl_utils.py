@@ -138,7 +138,9 @@ def add_table(ws: Worksheet, displayName: str, ref: str):
     ws.add_table(tab)
 
 
-def format_openpyxl_worksheet(ws: Worksheet):
+def format_openpyxl_worksheet(
+    ws: Worksheet, skip_cols: int = 2, number_format: str = numbers.FORMAT_CURRENCY_USD
+):
     """Format openpyxl worksheet.
 
     Args:
@@ -159,7 +161,7 @@ def format_openpyxl_worksheet(ws: Worksheet):
                 cell.alignment = Alignment(vertical="top", wrap_text=True)
             continue
 
-        for cell in row[2:]:
+        for cell in row[skip_cols:]:
             cell.alignment = Alignment(horizontal="right")
 
             # Check if the value is a number and, if so, format as currency.
@@ -167,12 +169,14 @@ def format_openpyxl_worksheet(ws: Worksheet):
             # appear in the first 2 columns of each row and therefore are excluded.
             try:
                 float(cell.value)
-                cell.number_format = numbers.FORMAT_CURRENCY_USD
+                cell.number_format = number_format
             except ValueError:
                 pass
 
 
-def export_workbook(frames: dict, path: str, drop: list[str] = []):
+def export_workbook(
+    frames: dict, path: str, drop: list[str] = [], format_options: dict = {}
+):
     """Export a dictionary of data frames as an Excel Workbook.
 
     Args:
@@ -206,7 +210,7 @@ def export_workbook(frames: dict, path: str, drop: list[str] = []):
             ws.append(row)
 
         add_table(ws, frame, ws.dimensions)
-        format_openpyxl_worksheet(ws)
+        format_openpyxl_worksheet(ws, **format_options)
 
     # Export
     wb.save(path)
