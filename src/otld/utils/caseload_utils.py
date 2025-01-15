@@ -235,15 +235,6 @@ def merge_datasets(
     return merged
 
 
-def fix_fiscal_year_column(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Fix the FiscalYear column by removing commas and ensuring integer representation.
-    """
-    if "FiscalYear" in df.columns:
-        df["FiscalYear"] = df["FiscalYear"].astype(str).str.replace(",", "").astype(int)
-    return df
-
-
 def format_final_dataset(
     df: pd.DataFrame, output_columns: List[str] = OUTPUT_COLUMNS
 ) -> pd.DataFrame:
