@@ -38,7 +38,7 @@ DATA_CONFIGS = {
         },
     },
     "State": {
-        "skiprows": 5,
+        "skiprows": 4,
         # Change from list to single pattern that works for both formats
         "families_pattern": "-Families",  # This will match both FYCY and regular patterns
         "recipients_pattern": "-Recipients",
@@ -196,7 +196,6 @@ def process_workbook(
         families_data = process_sheet(
             file_path=file_path,
             sheet_name=families_tab,
-            skiprows=config["skiprows"],
             column_names=config["column_mappings"]["families"],
             year=year,
         )
@@ -204,7 +203,6 @@ def process_workbook(
         recipients_data = process_sheet(
             file_path=file_path,
             sheet_name=recipients_tab,
-            skiprows=config["skiprows"],
             column_names=config["column_mappings"]["recipients"],
             year=year,
         )

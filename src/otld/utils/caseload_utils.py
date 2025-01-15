@@ -5,6 +5,8 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 
+from otld.utils import get_header
+
 OUTPUT_COLUMNS = [
     "FiscalYear",
     "State",
@@ -122,7 +124,7 @@ def process_1997_1998_1999_data(
 
 
 def process_sheet(
-    file_path: str, sheet_name: str, skiprows: int, column_names: List[str], year: int
+    file_path: str, sheet_name: str, column_names: List[str], year: int
 ) -> Optional[pd.DataFrame]:
     try:
         is_old_format = year <= 2020
@@ -160,13 +162,14 @@ def process_sheet(
             df = pd.read_excel(
                 file_path,
                 sheet_name=sheet_name,
-                skiprows=skiprows,
                 names=column_names,
                 na_values=["--"],
                 keep_default_na=False,
                 thousands=",",
                 dtype={"State": str},
             )
+            header = get_header(df, "State", "^State$", idx=True, reset=True)
+            df = df.iloc[header + 1 :, :]
 
         return df
 
@@ -215,12 +218,7 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     mask = ~df["State"].str.lower().str.contains(pattern, regex=True, na=False)
     df = df[mask]
 
-    if "U.S. Total" not in df["State"].tolist():
-        us_total = df.select_dtypes(include=[np.number]).sum()
-        us_total = us_total.to_frame().T
-        us_total["State"] = "U.S. Total"
-        df = pd.concat([us_total, df])
-
+    # Check for the correct number of states
     assert df.shape[0] == 55, "Incorrect number of States!"
 
     df.dropna(subset=["State"], inplace=True)
