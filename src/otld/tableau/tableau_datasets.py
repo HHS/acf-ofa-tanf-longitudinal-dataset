@@ -5,7 +5,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from otld.paths import input_dir, inter_dir, tableau_dir
+from otld.paths import input_dir, inter_dir, out_dir, tableau_dir
+from otld.utils import excel_to_dict, export_workbook, reindex_state_year
 
 
 def load_cpi_u() -> pd.DataFrame:
@@ -70,7 +71,38 @@ def inflation_adjust(row: pd.Series) -> float:
     return adjusted
 
 
-def main():
+def wide_with_index(frames: dict[pd.DataFrame]):
+    out = pd.DataFrame()
+    for name, data in frames.items():
+        data = data.copy()
+        data.insert(0, "Funding", name)
+
+        if out.empty:
+            out = data
+        else:
+            out = pd.concat([out, data])
+
+    out.set_index(["Funding", "FiscalYear", "State"], inplace=True)
+    out.sort_index(
+        level=["Funding", "FiscalYear", "State"],
+        ascending=[False, False, True],
+        inplace=True,
+    )
+    out = reindex_state_year(out, list(out.index.names))
+
+    return {"FinancialData": out.reset_index()}
+
+
+def generate_wide_data():
+    frames = excel_to_dict(os.path.join(out_dir, "FinancialDataWide.xlsx"))
+    export_workbook(
+        wide_with_index(frames),
+        os.path.join(tableau_dir, "data", "FinancialDataWide.xlsx"),
+        format_options={"skip_cols": 3},
+    )
+
+
+def generate_long_data():
     """Generate Tableau-specific long dataset"""
     financial_data = pd.read_excel(
         os.path.join(tableau_dir, "data", "FinancialDataLongRaw.xlsx")
@@ -141,6 +173,11 @@ def main():
         index=False,
         sheet_name="FinancialData",
     )
+
+
+def main():
+    generate_wide_data()
+    generate_long_data()
 
 
 if __name__ == "__main__":
