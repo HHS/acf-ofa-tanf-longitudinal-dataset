@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 
 from otld.paths import input_dir, inter_dir, out_dir, tableau_dir
-from otld.utils import excel_to_dict, export_workbook, reindex_state_year
+from otld.utils import excel_to_dict, export_workbook
+from otld.utils.expenditure_utils import reindex_state_year
 
 
 def load_cpi_u() -> pd.DataFrame:
