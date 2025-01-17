@@ -3,8 +3,11 @@ import random
 
 import openpyxl as opxl
 
+from otld.utils.states import STATES
+
 # Globals
 FINANCIAL_COLUMNS = [
+    "State",
     "1. Awarded",
     "2. Transfers to Child Care and Development Fund (CCDF) Discretionary",
     "3. Transfers to Social Services Block Grant (SSBG)",
@@ -62,63 +65,6 @@ FAMILY_COLUMNS = [
     "No Parent Families",
 ]
 RECIPIENT_COLUMNS = ["State", "Total Recipients", "Adults", "Children"]
-STATES = [
-    "Alabama",
-    "Alaska",
-    "Arizona",
-    "Arkansas",
-    "California",
-    "Colorado",
-    "Connecticut",
-    "Delaware",
-    "District of Columbia",
-    "Florida",
-    "Georgia",
-    "Guam",
-    "Hawaii",
-    "Idaho",
-    "Illinois",
-    "Indiana",
-    "Iowa",
-    "Kansas",
-    "Kentucky",
-    "Louisiana",
-    "Maine",
-    "Maryland",
-    "Massachusetts",
-    "Michigan",
-    "Minnesota",
-    "Mississippi",
-    "Missouri",
-    "Montana",
-    "Nebraska",
-    "Nevada",
-    "New Hampshire",
-    "New Jersey",
-    "New Mexico",
-    "New York",
-    "North Carolina",
-    "North Dakota",
-    "Ohio",
-    "Oklahoma",
-    "Oregon",
-    "Pennsylvania",
-    "Puerto Rico",
-    "Rhode Island",
-    "South Carolina",
-    "South Dakota",
-    "Tennessee",
-    "Texas",
-    "U.S. Total",
-    "Utah",
-    "Vermont",
-    "Virgin Islands",
-    "Virginia",
-    "Washington",
-    "West Virginia",
-    "Wisconsin",
-    "Wyoming",
-]
 
 
 class MockData:
@@ -204,20 +150,31 @@ class MockData:
         parameters = parameters[self._type]
         choices = parameters["choices"]
         num_range = parameters["range"]
-        for state in STATES:
+        total = [0] * len(columns)
+        total[0] = "U.S. Total"
+
+        states = STATES
+        states.pop(states.index("U.S. Total"))
+        for state in states:
             new_row = [state]
             for i in range(numeric):
                 rand_int = random.randint(1, 10)
                 if rand_int == 1:
                     value = random.choice(choices)
-                else:
+                elif self._type == "caseload":
                     value = random.uniform(*num_range)
                     # Idea to allow normal sampling from actual values
                     # value = random.gauss()
+                elif self._type == "financial":
+                    value = random.randint(*num_range)
+
                 new_row.append(value)
+                if isinstance(value, (int, float)):
+                    total[i + 1] += value
 
             rows.append(new_row)
 
+        rows.append(total)
         return rows
 
     def generate_data(self):
@@ -254,6 +211,7 @@ class MockData:
 if __name__ == "__main__":
     from otld.paths import scrap_dir
 
-    mock_data = MockData("caseload", 2024)
+    mock_data = MockData("financial", 2024)
     mock_data.generate_data()
+    exit()
     mock_data.export(os.path.join(scrap_dir, "mock"))
