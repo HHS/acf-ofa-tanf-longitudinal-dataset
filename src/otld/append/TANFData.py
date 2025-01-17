@@ -186,6 +186,7 @@ class TANFData:
             )
             del self._df
 
+        exit()
         self.export_workbook()
 
     def get_df(self, level: str, worksheet: str | list[str]):
@@ -215,7 +216,8 @@ class TANFData:
 
             self._df = df
             self.rename_columns()
-            validate_data_frame(self._df)
+            self.validate_data_frame()
+
         elif self._type == "caseload":
             data = []
             for sheet in worksheet:
@@ -234,6 +236,11 @@ class TANFData:
             df.set_index(["State", "FiscalYear"], inplace=True)
 
             self._df = df
+            # self.validate_data_frame()
+
+        # Currently caseload data fails the numeric check because "-" and other string
+        # characters are allowed in columns
+        # self.validate_data_frame()
 
     def rename_columns(self):
         """Rename the columns in TANFData._df"""
@@ -260,6 +267,10 @@ class TANFData:
         # Handle renaming in the case of caseload data
         elif self._type == "caseload":
             pass
+
+    def validate_data_frame(self):
+        df = self._df.copy()
+        validate_data_frame(df)
 
     def export_workbook(self):
         """Export data to Excel workbook"""
