@@ -92,12 +92,18 @@ class TANFData:
             },
             "caseload": {
                 "TANF_SSP": {
-                    "family": FAMILY_SHEET_REGEX_PATTERN,
-                    "recipient": RECIPIENT_SHEET_REGEX_PATTERN,
+                    "family": [re.compile(r"avg.*fam"), FAMILY_SHEET_REGEX_PATTERN],
+                    "recipient": [
+                        re.compile(r"avg.*recipient"),
+                        RECIPIENT_SHEET_REGEX_PATTERN,
+                    ],
                 },
                 "TANF": {
-                    "family": FAMILY_SHEET_REGEX_PATTERN,
-                    "recipient": RECIPIENT_SHEET_REGEX_PATTERN,
+                    "family": [re.compile(r"avg.*fam"), FAMILY_SHEET_REGEX_PATTERN],
+                    "recipient": [
+                        re.compile(r"avg.*recipient"),
+                        RECIPIENT_SHEET_REGEX_PATTERN,
+                    ],
                 },
                 "SSP_MOE": {
                     "family": [re.compile(r"avg.*fam"), FAMILY_SHEET_REGEX_PATTERN],
@@ -186,7 +192,6 @@ class TANFData:
             )
             del self._df
 
-        exit()
         self.export_workbook()
 
     def get_df(self, level: str, worksheet: str | list[str]):
@@ -197,7 +202,9 @@ class TANFData:
             worksheet (str): The worksheet to extract data from.
         """
         if self._type == "financial":
-            df = pd.read_excel(self._to_append["data"], sheet_name=worksheet)
+            df = pd.read_excel(
+                self._to_append["data"], sheet_name=worksheet, header=None
+            )
             df = get_header(df)
             df.columns = [col.strip() for col in df.columns]
 
@@ -221,9 +228,10 @@ class TANFData:
         elif self._type == "caseload":
             data = []
             for sheet in worksheet:
-                df = pd.read_excel(self._to_append["data"][level], sheet_name=sheet)
+                df = pd.read_excel(
+                    self._to_append["data"][level], sheet_name=sheet, header=None
+                )
                 df = get_header(df)
-
                 df = clean_dataset(df)
                 data.append(df)
 
