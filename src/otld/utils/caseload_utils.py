@@ -19,7 +19,7 @@ OUTPUT_COLUMNS = [
     "Children Recipients",
 ]
 
-FAMILY_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}families")
+FAMILY_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*families")
 RECIPIENT_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*recipients")
 
 
