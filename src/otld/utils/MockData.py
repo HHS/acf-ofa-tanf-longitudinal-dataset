@@ -2,6 +2,7 @@ import os
 import random
 
 import openpyxl as opxl
+import pandas as pd
 
 from otld.utils.states import STATES
 
@@ -85,6 +86,10 @@ class MockData:
     @property
     def workbooks(self):
         return self._workbooks
+
+    @property
+    def pandas(self):
+        return self._pandas
 
     def data_specifications(self):
         if self._type == "financial":
@@ -202,10 +207,17 @@ class MockData:
 
             self._workbooks.update({path: wb})
 
-    def export(self, dir: str):
-        for path, wb in self._workbooks.items():
-            path = os.path.join(dir, path)
-            wb.save(path)
+    def export(self, dir: str = None, pandas: bool = False):
+        assert dir or pandas, "One of `dir` or `pandas` must be specified."
+        if dir:
+            for path, wb in self._workbooks.items():
+                path = os.path.join(dir, path)
+                wb.save(path)
+                wb.close()
+        elif pandas:
+            self._pandas = {}
+            for path, wb in self._workbooks.items():
+                self._pandas[path] = pd.ExcelFile(wb, engine="openpyxl")
 
 
 if __name__ == "__main__":
@@ -214,4 +226,5 @@ if __name__ == "__main__":
     mock_data = MockData("financial", 2024)
     mock_data.generate_data()
     exit()
-    mock_data.export(os.path.join(test_dir, "mock"))
+    mock_data.export(pandas=True)
+    mock_data.export(os.path.join(test_dir, "mock", "financial_data.xlsx"))
