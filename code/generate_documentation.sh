@@ -9,5 +9,6 @@ cd documentation
 make html
 
 # Add transformation documentation
+cd ..
 bash code/make_html_documentation.sh
-py -m code/update_index.py
+python3 -m code/update_index.py
