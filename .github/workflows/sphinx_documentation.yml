@@ -24,12 +24,9 @@ jobs:
             -o 
             "./documentation/build/html/TransformationDocumentation.html"
             "./data/TransformationDocumentation.docx" 
-      - name: Transformation documentation
+      - name: Index and transformation
         id: transformation
-        run: sudo bash code/make_html_documentation.sh
-      - name: Update documentation index
-        id: docindex
-        run: python3 code/update_index.py
+        run: python3 code/update_documentation.py
       - name: Commit and push documentation
         id: push
         run: |
