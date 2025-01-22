@@ -26,9 +26,7 @@ jobs:
             "./data/TransformationDocumentation.docx" 
       - name: Index and transformation
         id: transformation
-        run: | 
-          source .venv/bin/activate
-          sudo python3 code/update_documentation.py
+        run: sudo .venv/bin/python3 code/update_documentation.py
       - name: Commit and push documentation
         id: push
         run: |
