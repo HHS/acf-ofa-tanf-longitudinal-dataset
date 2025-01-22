@@ -19,11 +19,19 @@ jobs:
       - name: Transformation documentation
         id: transformation
         uses: docker://pandoc/core:3.5
+<<<<<<< HEAD
         with:
           args: >-
             -o 
             "data/TransformationDocumentation.docx" 
             "documentation/build/html/TransformationDocumentation.html"
+=======
+          with:
+            args: >-
+              -o 
+              "data/TransformationDocumentation.docx" 
+              "documentation/build/html/TransformationDocumentation.html"
+>>>>>>> 4d7e4644a52cec78ef1cd10bdf9e82af9717c1d6
         run: bash code/make_html_documentation.sh
       - name: Commit and push documentation
         id: push
