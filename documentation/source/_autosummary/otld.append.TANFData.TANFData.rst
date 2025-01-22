@@ -20,6 +20,8 @@ otld.append.TANFData.TANFData
       ~TANFData.append
       ~TANFData.export_workbook
       ~TANFData.get_df
+      ~TANFData.get_worksheets
+      ~TANFData.identify_workbook_level
       ~TANFData.rename_columns
    
    
@@ -31,6 +33,7 @@ otld.append.TANFData.TANFData
    .. autosummary::
    
       ~TANFData.appended
+      ~TANFData.sheet_dict
       ~TANFData.to_append
       ~TANFData.type
    

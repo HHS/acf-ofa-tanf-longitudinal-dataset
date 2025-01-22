@@ -15,10 +15,12 @@ otld.utils
    caseload_utils
    checks
    crosswalk_2014_2015
+   expenditure_utils
    generate_column_dict_196
    generate_column_dict_196_r
    get_cpi_u
    missingness
+   mock_data
    openpyxl_utils
    pandas_utils
    string_utils
