@@ -22,8 +22,8 @@ jobs:
         with:
           args: >-
             -o 
-            "data/TransformationDocumentation.docx" 
-            "documentation/build/html/TransformationDocumentation.html"
+            "./data/TransformationDocumentation.docx" 
+            "./documentation/build/html/TransformationDocumentation.html"
       - name: Transformation documentation
         id: transformation
         run: bash code/make_html_documentation.sh
