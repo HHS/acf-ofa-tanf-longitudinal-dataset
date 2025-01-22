@@ -1,14 +1,14 @@
+# Set paths
 root=$(pwd)
 data_dir="$root/data"
 doc_dir="$root/documentation/build/html"
 
-# raw_documentation="$data_dir/TransformationDocumentation.docx"
 html_documentation="$doc_dir/TransformationDocumentation.html"
 
-# pandoc -o "$html_documentation" "$raw_documentation"
-
+# Get initial contents of html file
 content=$(cat "$html_documentation")
 
+# Add header
 cat << EOF > "$html_documentation"
 <head>
     <meta charset="utf-8">
@@ -27,6 +27,7 @@ cat << EOF > "$html_documentation"
 </head>
 EOF
 
+# Add body and divs
 cat << EOF >> "$html_documentation"
 <body>
     <div class="document">
@@ -35,8 +36,10 @@ cat << EOF >> "$html_documentation"
                 <div class="body" role="main">
 EOF
 
+# Add content
 echo $content >> "$html_documentation"
 
+# Close body and divs
 cat << EOF >> "$html_documentation"
                 </div>
             </div>
