@@ -10,5 +10,5 @@ make html
 
 # Add transformation documentation
 cd ..
-bash code/make_html_documentation.sh
-python3 -m code/update_index.py
+# bash code/make_html_documentation.sh
+# python3 -m code/update_index.py
