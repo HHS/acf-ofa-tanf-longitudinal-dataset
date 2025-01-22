@@ -32,8 +32,8 @@ def update_index(file: str) -> None:
 def update_transformation_documentation(file: str):
     handle = open(file, "r+", encoding="utf-8")
 
-    soup = BeautifulSoup(handle)
-    new_soup = BeautifulSoup()
+    soup = BeautifulSoup(handle, "lxml")
+    new_soup = BeautifulSoup(features="lxml")
     handle.close()
 
     handle = open(file, "w", encoding="utf-8")
