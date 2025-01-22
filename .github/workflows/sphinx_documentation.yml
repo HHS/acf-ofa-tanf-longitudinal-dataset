@@ -26,7 +26,7 @@ jobs:
             "./data/TransformationDocumentation.docx" 
       - name: Transformation documentation
         id: transformation
-        run: bash code/make_html_documentation.sh
+        run: sudo bash code/make_html_documentation.sh
       - name: Commit and push documentation
         id: push
         run: |
