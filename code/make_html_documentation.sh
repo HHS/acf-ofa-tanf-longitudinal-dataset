@@ -2,10 +2,10 @@ root=$(pwd)
 data_dir="$root/data"
 doc_dir="$root/documentation/build/html"
 
-raw_documentation="$data_dir/TransformationDocumentation.docx"
+# raw_documentation="$data_dir/TransformationDocumentation.docx"
 html_documentation="$doc_dir/TransformationDocumentation.html"
 
-pandoc -o "$html_documentation" "$raw_documentation"
+# pandoc -o "$html_documentation" "$raw_documentation"
 
 content=$(cat "$html_documentation")
 
