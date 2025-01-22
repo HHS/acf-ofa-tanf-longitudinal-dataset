@@ -172,7 +172,10 @@ def update_transformation_documentation(file: str):
 if __name__ == "__main__":
     current_dir = os.path.dirname(__file__)
     doc_dir = os.path.join(current_dir, "..", "documentation")
-    update_transformation_documentation(
-        os.path.join(doc_dir, "build", "html", "TransformationDocumentation.html")
+    transformation_documentation = os.path.join(
+        doc_dir, "build", "html", "TransformationDocumentation.html"
     )
-    update_index(os.path.join(doc_dir, "build", "html", "index.html"))
+    index = os.path.join(doc_dir, "build", "html", "index.html")
+    assert os.path.exists(transformation_documentation)
+    update_transformation_documentation(transformation_documentation)
+    update_index(index)
