@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 def update_index(file: str) -> None:
     handle = open(file, "r+")
 
-    soup = BeautifulSoup(handle)
+    soup = BeautifulSoup(handle, "lxml")
     handle.seek(0)
 
     # Add link to transformation documentation
@@ -35,8 +35,6 @@ def update_transformation_documentation(file: str):
     soup = BeautifulSoup(handle, "lxml")
     new_soup = BeautifulSoup(features="lxml")
     handle.close()
-
-    handle = open(file, "w", encoding="utf-8")
 
     # Prepare header
     header = soup.new_tag("head")
@@ -164,8 +162,25 @@ def update_transformation_documentation(file: str):
     for table in tables:
         table.attrs.update({"class": "longtable docutils align-default"})
 
-    # Write
-    handle.write(new_soup.prettify())
+    return new_soup
+
+
+def add_nav_bar(file: str, soup: BeautifulSoup):
+    # Load nav_bar
+    handle = open(file, "r")
+    nav_bar = BeautifulSoup(handle, "html.parser")
+    handle.close()
+
+    # Add to transformation documentation
+    document = soup.find("div", class_="document")
+    document.append(nav_bar)
+
+    return soup
+
+
+def write_soup(file: str, soup: BeautifulSoup):
+    handle = open(file, "w", encoding="utf-8")
+    handle.write(soup.prettify())
     handle.close()
 
 
@@ -176,6 +191,8 @@ if __name__ == "__main__":
         doc_dir, "build", "html", "TransformationDocumentation.html"
     )
     index = os.path.join(doc_dir, "build", "html", "index.html")
-    assert os.path.exists(transformation_documentation)
-    update_transformation_documentation(transformation_documentation)
+    nav_bar = os.path.join(current_dir, "..", "data", "nav_bar.html")
+    soup = update_transformation_documentation(transformation_documentation)
+    soup = add_nav_bar(nav_bar, soup)
+    write_soup(transformation_documentation, soup)
     update_index(index)
