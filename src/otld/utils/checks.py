@@ -33,18 +33,22 @@ class ExpenditureDataChecker:
 
     @property
     def df(self):
+        """Expenditure data frame"""
         return self._df
 
     @property
     def level(self):
+        """Funding level (State, Federal, Total)"""
         return self._level
 
     @property
     def action(self):
+        """Action to be taken when an assertion fails"""
         return self._action
 
     @property
     def kind(self):
+        """ACF Instructions (196, 196R, Appended)"""
         return self._kind
 
     def names_to_lines(self):
@@ -59,6 +63,8 @@ class ExpenditureDataChecker:
             )
 
     def lines_to_names(self, df: pd.DataFrame):
+        """Rename line numbers to human readable names"""
+
         def get_name(line: str):
             entry = crosswalk_dict.get(line)
             return entry["name"] if entry else line
@@ -87,11 +93,17 @@ class ExpenditureDataChecker:
             ), "awarded + carryover - transfers - expenditures != unliquidated + unobligated"
         except AssertionError as e:
             if self._action == "error":
-                raise (e)
+                raise e
 
             failed = df[~funds_check]
             failed.columns = self.lines_to_names(failed)
             checks["funds_obligations"] = failed
 
     def export(self, path: str | os.PathLike, sheet_name: str = None) -> None:
+        """Export checks to a workbook
+
+        Args:
+            path (str | os.PathLike): Path to export checks to.
+            sheet_name (str, optional): An optional sheet name for the checks. Defaults to None.
+        """
         export_workbook(self._checks, path)

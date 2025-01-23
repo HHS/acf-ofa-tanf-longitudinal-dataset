@@ -1,3 +1,5 @@
+"""Utilities to support caseload.py"""
+
 import re
 import traceback
 from typing import List, Optional
@@ -24,9 +26,13 @@ RECIPIENT_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*recipients")
 
 
 def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
-    """
-    Analyze only ambiguous values (0, -, blank) in the dataset by column and year.
-    Returns patterns dictionary focusing on these specific values.
+    """Display ambiguous values in data frame (0, -, blank)
+
+    Args:
+        df (pd.DataFrame): Data frame to analyze
+
+    Returns:
+        dict: A dictionary of columns with ambiguous values and the year found
     """
 
     patterns = {}
@@ -63,8 +69,13 @@ def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
 
 
 def analyze_guam_data(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Extract and analyze Guam's data across all years.
+    """Extract and analyze Guam's data
+
+    Args:
+        df (pd.DataFrame): Full caseload dataset
+
+    Returns:
+        pd.DataFrame: Data frame including only Guam data
     """
     guam_data = df[df["State"].str.contains("Guam", case=False, na=False)].copy()
     guam_data = guam_data.sort_values("FiscalYear")
@@ -126,6 +137,18 @@ def process_1997_1998_1999_data(
 def process_sheet(
     file_path: str, sheet_name: str, column_names: List[str], year: int
 ) -> Optional[pd.DataFrame]:
+    """Load caseload worksheet
+
+    Args:
+        file_path (str): Path to caseload workbook
+        sheet_name (str): Sheet to load
+        skiprows (int): Number of rows to skip
+        column_names (List[str]): Names to assign to columns
+        year (int): Fiscal year associated with caseload data
+
+    Returns:
+        Optional[pd.DataFrame]: Data frame
+    """
     try:
         is_old_format = year <= 2020
 
@@ -179,7 +202,15 @@ def process_sheet(
         return None
 
 
-def clean_state(state: str):
+def clean_state(state: str) -> str:
+    """Clean up state names
+
+    Args:
+        state (str): String state name
+
+    Returns:
+        str: String state name
+    """
     if state.startswith("Dist"):
         state = "District of Columbia"
     elif state.startswith("U.S. Total"):
@@ -191,9 +222,22 @@ def clean_state(state: str):
 
 
 def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
-    """Clean dataset while preserving original value representations."""
+    """Clean dataset
+
+    This function performs the following actions:
+        - Clean up State variable
+        - Remove rows not containing a state name
+        - If "U.S. Total" is not present, generate it by summing all other rows.
+
+    Args:
+        df (pd.DataFrame): Data frame to clean
+
+    Returns:
+        pd.DataFrame: Cleaned data frame
+    """
     df = df.copy()
 
+    # Convert State to string and remove incorrect entries
     df["State"] = df["State"].astype(str).str.strip()
     df["State"] = df["State"].str.replace(r"\*+", "", regex=True)
     df["State"] = df["State"].str.replace('"', "")
@@ -223,13 +267,25 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
 
     df.dropna(subset=["State"], inplace=True)
 
+    # Check for the correct number of states
+    assert df.shape[0] == 55, "Incorrect number of States!"
+
     return df
 
 
 def merge_datasets(
     families_df: pd.DataFrame, recipients_df: pd.DataFrame, year: str
 ) -> pd.DataFrame:
-    """Merge families and recipients datasets"""
+    """Merge families and recipients datasets
+
+    Args:
+        families_df (pd.DataFrame): Data frame generated from families tab
+        recipients_df (pd.DataFrame): Data frame generated from recipients tab
+        year (str): Fiscal year of caseload data
+
+    Returns:
+        pd.DataFrame: Merged data frame
+    """
     merged = pd.merge(families_df, recipients_df, on="State", how="outer").copy()
     merged.insert(0, "FiscalYear", year)
     return merged
@@ -238,6 +294,21 @@ def merge_datasets(
 def format_final_dataset(
     df: pd.DataFrame, output_columns: List[str] = OUTPUT_COLUMNS
 ) -> pd.DataFrame:
+      """Format dataset
+
+    This function performs the following actions:
+        - Generate columns as NaN if missing
+        - Format fiscal year as in integer
+        - Add commas to numeric columns
+        - Convert column names to title case
+
+    Args:
+        df (pd.DataFrame): Data frame to format
+        output_columns (List[str]): Columns to include in final dataset
+
+    Returns:
+        pd.DataFrame: Formatted data frame
+    """
     def float_none(string: str) -> float | None:
         try:
             return float(string)
@@ -255,21 +326,24 @@ def format_final_dataset(
 
     df = df.copy()
 
+    # Set missing columns to NaN
     for col in output_columns:
         if col not in df.columns:
             df[col] = np.nan
 
-    df = df[output_columns].copy()
+    df = df[output_columns]
 
-    # Format FiscalYear first, without commas
+    # Format FiscalYear without commas
     if "FiscalYear" in df.columns:
         df["FiscalYear"] = df["FiscalYear"].astype(int)
 
     df = df.sort_values(["FiscalYear", "State"]).reset_index(drop=True)
 
+    # Format other columns with a comma
     numeric_cols = df.columns.difference(["FiscalYear", "State"])
     df[numeric_cols] = df[numeric_cols].apply(to_numeric)
 
+    # Convert all columns to title case
     df.columns = ["FiscalYear"] + [
         col.title() for col in df.columns if col != "FiscalYear"
     ]
