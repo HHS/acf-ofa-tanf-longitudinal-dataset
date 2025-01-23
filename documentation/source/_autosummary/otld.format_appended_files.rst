@@ -11,5 +11,4 @@ otld.format\_appended\_files
    
       format_pd_columns
       main
-      wide_with_index
    

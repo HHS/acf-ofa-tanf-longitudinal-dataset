@@ -5,10 +5,12 @@ import re
 from typing import List, Optional
 
 import pandas as pd
+from openpyxl.styles.numbers import FORMAT_NUMBER_COMMA_SEPARATED1
 
 from otld.paths import out_dir, tableau_dir
 from otld.utils import export_workbook, get_header
 from otld.utils.caseload_utils import (
+    OUTPUT_COLUMNS,
     clean_dataset,
     format_final_dataset,
     merge_datasets,
@@ -39,7 +41,7 @@ DATA_CONFIGS = {
         },
     },
     "State": {
-        "skiprows": 5,
+        "skiprows": 4,
         # Change from list to single pattern that works for both formats
         "families_pattern": "-Families",  # This will match both FYCY and regular patterns
         "recipients_pattern": "-Recipients",
@@ -84,18 +86,6 @@ DATA_CONFIGS = {
 FILES = {"Federal": [], "State": [], "Total": []}
 DATA_DIR = "data/original_data"
 TAB_NAMES = {"Federal": "TANF", "State": "SSP_MOE", "Total": "TANF_SSP"}
-
-OUTPUT_COLUMNS = [
-    "FiscalYear",
-    "State",
-    "Total Families",
-    "Two Parent Families",
-    "One Parent Families",
-    "No Parent Families",
-    "Total Recipients",
-    "Adult Recipients",
-    "Children Recipients",
-]
 
 CATEGORIES = [
     "Total Families",
@@ -241,7 +231,6 @@ def process_workbook(
         families_data = process_sheet(
             file_path=file_path,
             sheet_name=families_tab,
-            skiprows=config["skiprows"],
             column_names=config["column_mappings"]["families"],
             year=year,
         )
@@ -249,7 +238,6 @@ def process_workbook(
         recipients_data = process_sheet(
             file_path=file_path,
             sheet_name=recipients_tab,
-            skiprows=config["skiprows"],
             column_names=config["column_mappings"]["recipients"],
             year=year,
         )
@@ -322,8 +310,16 @@ def main():
         master_wide[frame].set_index(["State", "FiscalYear"], inplace=True)
 
     # Save the original data files as before...
-    export_workbook(master_wide, os.path.join(out_dir, "CaseloadDataWide.xlsx"))
-    export_workbook(master_wide, "data/appended_data/CaseloadWide.xlsx")
+    export_workbook(
+        master_wide,
+        os.path.join(out_dir, "CaseloadDataWide.xlsx"),
+        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
+    )
+    export_workbook(
+        master_wide,
+        "data/appended_data/CaseloadWide.xlsx",
+        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
+    )
 
     master_wide["CaseloadData"] = []
     for frame in master_wide:
@@ -344,10 +340,20 @@ def main():
             del master_wide[frame]
 
     export_workbook(
-        master_wide, os.path.join(tableau_dir, "data", "CaseloadDataLongRaw.xlsx")
+        master_wide,
+        os.path.join(tableau_dir, "data", "CaseloadDataLongRaw.xlsx"),
+        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
     )
-    export_workbook(master_wide, os.path.join(out_dir, "CaseloadDataLong.xlsx"))
-    export_workbook(master_wide, "data/appended_data/CaseloadLong.xlsx")
+    export_workbook(
+        master_wide,
+        os.path.join(out_dir, "CaseloadDataLong.xlsx"),
+        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
+    )
+    export_workbook(
+        master_wide,
+        "data/appended_data/CaseloadLong.xlsx",
+        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
+    )
 
 
 if __name__ == "__main__":

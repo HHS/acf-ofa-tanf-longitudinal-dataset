@@ -16,6 +16,17 @@ jobs:
       - name: Update documentation
         id: update
         run: bash code/generate_documentation.sh
+      - name: Convert transformation documentation
+        id: pandoc
+        uses: docker://pandoc/core:3.5
+        with:
+          args: >-
+            -o 
+            "./documentation/build/html/TransformationDocumentation.html"
+            "./data/TransformationDocumentation.docx" 
+      - name: Index and transformation
+        id: transformation
+        run: sudo .venv/bin/python3 code/update_documentation.py
       - name: Commit and push documentation
         id: push
         run: |

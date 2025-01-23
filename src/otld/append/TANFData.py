@@ -4,23 +4,26 @@ import os
 import re
 import time
 
-import openpyxl
 import pandas as pd
-from openpyxl.worksheet.worksheet import Worksheet
 
 from otld.utils import (
     convert_to_numeric,
-    delete_empty_columns,
     export_workbook,
-    get_column_names,
+    get_header,
     standardize_line_number,
     validate_data_frame,
+)
+from otld.utils.caseload_utils import (
+    FAMILY_SHEET_REGEX_PATTERN,
+    RECIPIENT_SHEET_REGEX_PATTERN,
+    clean_dataset,
+    format_final_dataset,
 )
 from otld.utils.crosswalk_2014_2015 import crosswalk_dict
 
 
 class TANFData:
-    def __init__(self, type: str, appended_path: str, to_append_path: str):
+    def __init__(self, type: str, appended_path: str, to_append_path: str | list[str]):
         """Initialize TANFData class
 
         Args:
@@ -31,24 +34,80 @@ class TANFData:
         assert appended_path.endswith(
             ".xlsx"
         ), "Appended file is not an xlsx formatted Excel Workbook"
-        assert to_append_path.endswith(
-            ".xlsx"
-        ), "File to append is not an xlsx formatted Excel Workbook"
 
         self._appended = pd.ExcelFile(appended_path)
-
-        self._to_append = {}
-        self._to_append["data"] = openpyxl.load_workbook(to_append_path, data_only=True)
-        self._to_append["year"] = re.search(
-            r"(\d{4})", os.path.split(to_append_path)[1]
-        ).group(0)
-        self._to_append["year"] = int(self._to_append["year"])
 
         self._type = type.lower()
 
         self._frames = {}
 
         self._out_dir = os.path.split(appended_path)[0]
+
+        year_pattern = re.compile(r"(\d{4})")
+
+        self._to_append = {}
+        if isinstance(to_append_path, str):
+            # Confirm file is xlsx
+            assert to_append_path.endswith(
+                ".xlsx"
+            ), "File to append is not an xlsx formatted Excel Workbook"
+
+            # Load file
+            self._to_append["data"] = pd.ExcelFile(to_append_path)
+
+            # Get year of file
+            self._to_append["year"] = year_pattern.search(
+                os.path.split(to_append_path)[1]
+            ).group(0)
+            self._to_append["year"] = int(self._to_append["year"])
+        elif isinstance(to_append_path, list):
+            # Confirm files are xlsx
+            for path in to_append_path:
+                assert path.endswith(
+                    "xlsx"
+                ), f"File to append is not an xlsx formatted Excel Workbook {path}"
+
+            # Load files
+            self._to_append["data"] = {
+                self.identify_workbook_level(path): pd.ExcelFile(path)
+                for path in to_append_path
+            }
+
+            # Assume year of first file is the year of all files
+            self._to_append["year"] = year_pattern.search(
+                os.path.split(to_append_path[0])[1]
+            ).group(0)
+            self._to_append["year"] = int(self._to_append["year"])
+        else:
+            raise TypeError(
+                "Path to files to append must be a string or list of strings."
+            )
+
+        # Dictionary defining which sheets correspond to which tabs
+        self._sheet_dict = {
+            "financial": {
+                "Total": "B. Total Expenditures",
+                "Federal": "C.1 Federal Expenditures",
+                "State": "C.2 State Expenditures",
+            },
+            "caseload": {
+                "TANF_SSP": {
+                    "family": FAMILY_SHEET_REGEX_PATTERN,
+                    "recipient": RECIPIENT_SHEET_REGEX_PATTERN,
+                },
+                "TANF": {
+                    "family": FAMILY_SHEET_REGEX_PATTERN,
+                    "recipient": RECIPIENT_SHEET_REGEX_PATTERN,
+                },
+                "SSP_MOE": {
+                    "family": [re.compile(r"avg.*fam"), FAMILY_SHEET_REGEX_PATTERN],
+                    "recipient": [
+                        re.compile(r"avg.*recipient"),
+                        RECIPIENT_SHEET_REGEX_PATTERN,
+                    ],
+                },
+            },
+        }
 
     @property
     def appended(self):
@@ -65,23 +124,59 @@ class TANFData:
         """The kind of data being appended"""
         return self._type
 
+    @property
+    def sheet_dict(self):
+        return self._sheet_dict
+
+    def identify_workbook_level(self, path: str):
+        if self._type == "caseload":
+            if re.search(r"tanf?_caseload", path):
+                return "TANF"
+            elif re.search(r"tanf?ssp_caseload", path):
+                return "TANF_SSP"
+            elif re.search(r"(?<!tan)(?<!tanf)ssp_caseload", path):
+                return "SSP_MOE"
+            else:
+                raise ValueError(f"Cannot process workbook: {path}")
+
+    def get_worksheets(self, level: str):
+        if self._type == "financial":
+            sheet = self._sheet_dict[self._type][level]
+            return sheet
+        elif self._type == "caseload":
+            sheets = []
+            sheet_names = self._to_append["data"][level].sheet_names
+            level_patterns = self._sheet_dict[self._type][level]
+            for patterns in level_patterns.values():
+                if not isinstance(patterns, list):
+                    patterns = [patterns]
+
+                found = False
+
+                for pattern in patterns:
+                    for sheet in sheet_names:
+                        clean_sheet = re.sub(r"\W", "", sheet).lower().strip()
+                        if pattern.search(clean_sheet):
+                            sheets.append(sheet)
+                            found = True
+                            break
+                        if found:
+                            break
+                    if found:
+                        break
+
+                if not found:
+                    raise ValueError(f"No matching sheets found: {level}")
+
+            return sheets
+
     def append(self):
         """Append financial or caseload data"""
 
-        # Dictionary defining which sheets correspond to which tabs
-        sheet_dict = {
-            "financial": {
-                "Total": "B. Total Expenditures",
-                "Federal": "C.1 Federal Expenditures",
-                "State": "C.2 State Expenditures",
-            },
-            "caseload": {},
-        }
-
         # Append data
-        for level in sheet_dict[self._type]:
-            sheet = sheet_dict[self._type][level]
-            self.get_df(self._to_append["data"][sheet])
+        for level in self._sheet_dict[self._type]:
+            sheet = self.get_worksheets(level)
+            self.get_df(level, sheet)
             self._frames[level] = pd.concat(
                 [
                     pd.read_excel(
@@ -96,18 +191,17 @@ class TANFData:
 
         self.export_workbook()
 
-    def get_df(self, worksheet: Worksheet):
+    def get_df(self, level: str, worksheet: str | list[str]):
         """Get data from file to append
 
         Args:
-            worksheet (Worksheet): The worksheet to extract data from.
+            level (str): The current funding level.
+            worksheet (str): The worksheet to extract data from.
         """
         if self._type == "financial":
-            delete_empty_columns(worksheet)
-            columns, i = get_column_names(worksheet)
-            data = list(worksheet.values)[i:]
-
-            df = pd.DataFrame(data, columns=columns)
+            df = pd.read_excel(self._to_append["data"], sheet_name=worksheet)
+            df = get_header(df)
+            df.columns = [col.strip() for col in df.columns]
 
             # Add year column
             df["Year"] = self._to_append["year"]
@@ -116,7 +210,7 @@ class TANFData:
             df.dropna(subset=["STATE"], inplace=True)
             df["STATE"] = df["STATE"].map(lambda x: x.strip())
             df.set_index(["STATE", "Year"], inplace=True)
-            df.index.rename(["State", "Year"], inplace=True)
+            df.index.rename(["State", "FiscalYear"], inplace=True)
 
             # Convert to numeric
             df = df.apply(convert_to_numeric)
@@ -125,6 +219,24 @@ class TANFData:
             self._df = df
             self.rename_columns()
             validate_data_frame(self._df)
+        elif self._type == "caseload":
+            data = []
+            for sheet in worksheet:
+                df = pd.read_excel(self._to_append["data"][level], sheet_name=sheet)
+                df = get_header(df)
+
+                df = clean_dataset(df)
+                data.append(df)
+
+            df = data[0].merge(data[1], on="State", how="outer", indicator=True)
+            assert (df["_merge"] == "both").all(), "Imperfect merge."
+            df.drop("_merge", axis=1, inplace=True)
+
+            df["FiscalYear"] = self._to_append["year"]
+            df = format_final_dataset(df)
+            df.set_index(["State", "FiscalYear"], inplace=True)
+
+            self._df = df
 
     def rename_columns(self):
         """Rename the columns in TANFData._df"""
@@ -155,33 +267,34 @@ class TANFData:
     def export_workbook(self):
         """Export data to Excel workbook"""
 
+        title = f"{self._type.title()}Data"
         # Export wide data
         current_date = time.strftime("%Y%m%d", time.gmtime())
         path = os.path.join(
             self._out_dir,
-            f"FinancialDataWide_{current_date}.xlsx",
+            f"{title}Wide_{current_date}.xlsx",
         )
         export_workbook(self._frames, path)
 
         # Reshape and export long data
-        path = path = os.path.join(
+        path = os.path.join(
             self._out_dir,
-            f"FinancialDataLong_{current_date}.xlsx",
+            f"{title}Long_{current_date}.xlsx",
         )
 
-        self._frames["FinancialData"] = []
+        self._frames[title] = []
         for frame in self._frames:
-            if frame == "FinancialData":
+            if frame == title:
                 continue
             self._frames[frame] = self._frames[frame].melt(
                 var_name="Category", value_name="Amount", ignore_index=False
             )
-            self._frames[frame]["Level"] = frame
-            self._frames["FinancialData"].append(self._frames[frame])
+            self._frames[frame]["Funding"] = frame
+            self._frames[title].append(self._frames[frame])
 
-        self._frames["FinancialData"] = pd.concat(self._frames["FinancialData"])
+        self._frames[title] = pd.concat(self._frames[title])
         for frame in list(self._frames.keys()):
-            if frame != "FinancialData":
+            if frame != title:
                 del self._frames[frame]
 
         export_workbook(self._frames, path)
@@ -190,10 +303,20 @@ class TANFData:
 if __name__ == "__main__":
     from otld.paths import scrap_dir
 
+    # tanf_data = TANFData(
+    #     "financial",
+    #     os.path.join(scrap_dir, "FinancialDataWide.xlsx"),
+    #     os.path.join(scrap_dir, "tanf_financial_data_fy_2024.xlsx"),
+    # )
+
     tanf_data = TANFData(
-        "financial",
-        os.path.join(scrap_dir, "FinancialDataWide.xlsx"),
-        os.path.join(scrap_dir, "tanf_financial_data_fy_2024.xlsx"),
+        "caseload",
+        os.path.join(scrap_dir, "CaseloadDataWide.xlsx"),
+        [
+            os.path.join(scrap_dir, "fy2024_ssp_caseload.xlsx"),
+            os.path.join(scrap_dir, "fy2024_tanf_caseload.xlsx"),
+            os.path.join(scrap_dir, "fy2024_tanssp_caseload.xlsx"),
+        ],
     )
 
     tanf_data.append()

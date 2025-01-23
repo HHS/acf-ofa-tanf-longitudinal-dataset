@@ -1,7 +1,7 @@
-otld.append.TANFData
-====================
+otld.utils.mock\_data
+=====================
 
-.. automodule:: otld.append.TANFData
+.. automodule:: otld.utils.mock_data
 
    
    .. rubric:: Classes
@@ -10,5 +10,5 @@ otld.append.TANFData
       :toctree:
       :template: custom-class-template.rst
    
-      TANFData
+      MockData
    

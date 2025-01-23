@@ -1,6 +1,6 @@
 """Common pandas utilities"""
 
-__all__ = ["convert_to_numeric", "reindex_state_year", "get_header", "excel_to_dict"]
+__all__ = ["convert_to_numeric", "get_header", "excel_to_dict"]
 
 import re
 
@@ -29,38 +29,6 @@ def convert_to_numeric(series: pd.Series, numeric_type: type = float) -> pd.Seri
         raise
 
     return series
-
-
-def reindex_state_year(df: pd.DataFrame) -> pd.DataFrame:
-    """Update the index of the data frame
-
-    Args:
-        df (pd.DataFrame): Data frame to update index of.
-
-    Returns:
-        pd.DataFrame: Data frame with updated index.
-    """
-    # Add year to index
-    index_list = df.index.to_list()
-
-    # Rearrange indices
-    new_index = []
-    position = {}
-    for i, index in enumerate(index_list):
-        if index[0] == "ALABAMA":
-            position[index[1]] = i
-        elif index[0] == "U.S. TOTAL":
-            new_index.insert(position[index[1]], index)
-            continue
-
-        new_index.append(index)
-
-    # Reindex
-    new_index = pd.MultiIndex.from_tuples(new_index, names=["STATE", "year"])
-    assert len(new_index) == df.shape[0]
-    df = df.reindex(new_index)
-
-    return df
 
 
 def get_header(

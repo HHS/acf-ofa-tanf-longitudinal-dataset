@@ -7,6 +7,8 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 
+from otld.utils import get_header
+
 OUTPUT_COLUMNS = [
     "FiscalYear",
     "State",
@@ -18,6 +20,9 @@ OUTPUT_COLUMNS = [
     "Adult Recipients",
     "Children Recipients",
 ]
+
+FAMILY_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}families")
+RECIPIENT_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*recipients")
 
 
 def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
@@ -130,7 +135,7 @@ def process_1997_1998_1999_data(
 
 
 def process_sheet(
-    file_path: str, sheet_name: str, skiprows: int, column_names: List[str], year: int
+    file_path: str, sheet_name: str, column_names: List[str], year: int
 ) -> Optional[pd.DataFrame]:
     """Load caseload worksheet
 
@@ -180,13 +185,14 @@ def process_sheet(
             df = pd.read_excel(
                 file_path,
                 sheet_name=sheet_name,
-                skiprows=skiprows,
                 names=column_names,
                 na_values=["--"],
                 keep_default_na=False,
                 thousands=",",
                 dtype={"State": str},
             )
+            header = get_header(df, "State", "^State$", idx=True, reset=True)
+            df = df.iloc[header + 1 :, :]
 
         return df
 
@@ -256,12 +262,8 @@ def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
     mask = ~df["State"].str.lower().str.contains(pattern, regex=True, na=False)
     df = df[mask]
 
-    # If U.S. Total missing, add it
-    if "U.S. Total" not in df["State"].tolist():
-        us_total = df.select_dtypes(include=[np.number]).sum()
-        us_total = us_total.to_frame().T
-        us_total["State"] = "U.S. Total"
-        df = pd.concat([us_total, df])
+    # Check for the correct number of states
+    assert df.shape[0] == 55, "Incorrect number of States!"
 
     df.dropna(subset=["State"], inplace=True)
 
@@ -289,8 +291,10 @@ def merge_datasets(
     return merged
 
 
-def format_final_dataset(df: pd.DataFrame, output_columns: List[str]) -> pd.DataFrame:
-    """Format dataset
+def format_final_dataset(
+    df: pd.DataFrame, output_columns: List[str] = OUTPUT_COLUMNS
+) -> pd.DataFrame:
+      """Format dataset
 
     This function performs the following actions:
         - Generate columns as NaN if missing
@@ -305,6 +309,21 @@ def format_final_dataset(df: pd.DataFrame, output_columns: List[str]) -> pd.Data
     Returns:
         pd.DataFrame: Formatted data frame
     """
+    def float_none(string: str) -> float | None:
+        try:
+            return float(string)
+        except ValueError:
+            return None
+
+    def to_numeric(series: pd.Series):
+        series.fillna("", inplace=True)
+        series = series.astype(str).str.replace(",", "")
+        series = series.apply(
+            lambda x: "{:,}".format(round(float(x), 2)) if float_none(x) else x
+        )
+
+        return series
+
     df = df.copy()
 
     # Set missing columns to NaN
@@ -322,13 +341,7 @@ def format_final_dataset(df: pd.DataFrame, output_columns: List[str]) -> pd.Data
 
     # Format other columns with a comma
     numeric_cols = df.columns.difference(["FiscalYear", "State"])
-    for col in numeric_cols:
-        df[col] = pd.to_numeric(
-            df[col].astype(str).str.replace(",", ""), errors="coerce"
-        )
-        df[col] = df[col].apply(
-            lambda x: "{:,}".format(int(x)) if pd.notnull(x) else "-"
-        )
+    df[numeric_cols] = df[numeric_cols].apply(to_numeric)
 
     # Convert all columns to title case
     df.columns = ["FiscalYear"] + [
