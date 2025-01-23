@@ -9,6 +9,7 @@ from otld.utils.crosswalk_2014_2015 import crosswalk_dict
 
 
 def main(frames: dict):
+    """Check combined workbook for missing columns"""
     excel_writer = os.path.join(diagnostics_dir, "missingness.xlsx")
     if not os.path.exists(excel_writer):
         pd.DataFrame().to_excel(excel_writer, sheet_name="Federal")

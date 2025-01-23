@@ -1,3 +1,5 @@
+"Append historical caseload data"
+
 import os
 import re
 from typing import List, Optional
@@ -111,7 +113,23 @@ LONG_FORMAT_COLUMNS = ["FiscalYear", "State", "Funding", "Category", "Number"]
 def find_matching_sheet(
     sheet_names: List[str], pattern: str, file_path: str
 ) -> Optional[str]:
-    """Find first sheet name that matches pattern, handling special cases"""
+    """Find first sheet matching pattern
+
+    Iterates through sheets until a sheet matching the provided pattern is found.
+    If not sheet is found, raises an AttributeError.
+
+    Args:
+        sheet_names (List[str]): A list of sheet names.
+        pattern (str): String identifying which type of sheet (families or recipients)
+            is being searched for.
+        file_path (str): Path to caseload file.
+
+    Raises:
+        AttributeError: Raise AttributeError if no matching sheet can be found.
+
+    Returns:
+        Optional[str]: A sheet name
+    """
 
     # Regex patterns
     family_pattern = re.compile(r"fy(cy)?\d{4}families")
@@ -167,7 +185,23 @@ def process_workbook(
     data_type: str,
     year: int,
     master_wide: pd.DataFrame,
-) -> Optional[tuple]:
+) -> pd.DataFrame:
+    """Extract and transform caseload data from Excel file
+
+    Args:
+        file_path (str): Path to caseload data
+        data_type (str): Funding level of data (State, Federal, Total)
+        year (int): The fiscal year associated with the caseload data.
+        master_wide (pd.DataFrame): Wide data frame to append new records to
+
+    Raises:
+        FileNotFoundError: Raise a FileNotFoundError if the target file does not exist.
+        AttributeError: Raise an AttributeError if either the families or recipients tab
+            cannot be found.
+
+    Returns:
+        pd.DataFrame: Concatenated data frame.
+    """
     try:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File does not exist: {file_path}")
@@ -256,6 +290,7 @@ def process_workbook(
 
 
 def main():
+    """Entry point for caseload data processing"""
     for file in os.listdir(DATA_DIR):
         path = os.path.join(DATA_DIR, file)
         if re.search(r"tanf?_caseload", file):
