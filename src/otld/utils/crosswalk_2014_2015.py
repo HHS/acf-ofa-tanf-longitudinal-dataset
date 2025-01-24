@@ -60,3 +60,10 @@ def map_columns(df: pd.DataFrame, crosswalk_dict: dict) -> pd.DataFrame:
             continue
 
     return new_df
+
+
+if __name__ == "__main__":
+    import json
+
+    with open("data/crosswalk.json", "w") as f:
+        json.dump(crosswalk_dict, f, indent=4)
