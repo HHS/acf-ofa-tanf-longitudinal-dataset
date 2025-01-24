@@ -19,7 +19,7 @@ from otld.utils.caseload_utils import (
     clean_dataset,
     format_final_dataset,
 )
-from otld.utils.crosswalk_2014_2015 import crosswalk_dict
+from otld.utils.crosswalk_dict import crosswalk_dict
 
 
 class TANFData:
@@ -212,9 +212,11 @@ class TANFData:
             df["Year"] = self._to_append["year"]
 
             # Drop if state is missing
-            df.dropna(subset=["STATE"], inplace=True)
-            df["STATE"] = df["STATE"].map(lambda x: x.strip())
-            df.set_index(["STATE", "Year"], inplace=True)
+            state_column = df.filter(regex=re.compile("^state$", re.IGNORECASE)).columns
+            state_column = state_column[0]
+            df.dropna(subset=[state_column], inplace=True)
+            df[state_column] = df[state_column].map(lambda x: x.strip())
+            df.set_index([state_column, "Year"], inplace=True)
             df.index.rename(["State", "FiscalYear"], inplace=True)
 
             # Convert to numeric
@@ -272,6 +274,8 @@ class TANFData:
             }
 
             df.rename(columns=renamer, inplace=True)
+            # Drop if column is unnamed
+            df.drop(df.filter(regex="^Unnamed: \\d+$|^$").columns, axis=1, inplace=True)
         # Handle renaming in the case of caseload data
         elif self._type == "caseload":
             pass
@@ -315,24 +319,32 @@ class TANFData:
 
         export_workbook(self._frames, path)
 
+    def close_excel_files(self):
+        workbooks = self._to_append["data"]
+        if isinstance(workbooks, dict):
+            for book in workbooks.values():
+                book.close()
+        else:
+            workbooks.close()
+
 
 if __name__ == "__main__":
-    from otld.paths import scrap_dir
-
-    # tanf_data = TANFData(
-    #     "financial",
-    #     os.path.join(scrap_dir, "FinancialDataWide.xlsx"),
-    #     os.path.join(scrap_dir, "tanf_financial_data_fy_2024.xlsx"),
-    # )
+    from otld.paths import test_dir
 
     tanf_data = TANFData(
-        "caseload",
-        os.path.join(scrap_dir, "CaseloadDataWide.xlsx"),
-        [
-            os.path.join(scrap_dir, "fy2024_ssp_caseload.xlsx"),
-            os.path.join(scrap_dir, "fy2024_tanf_caseload.xlsx"),
-            os.path.join(scrap_dir, "fy2024_tanssp_caseload.xlsx"),
-        ],
+        "financial",
+        os.path.join(test_dir, "FinancialDataWide.xlsx"),
+        os.path.join(test_dir, "mock", "tanf_financial_data_fy_2024.xlsx"),
     )
+
+    # tanf_data = TANFData(
+    #     "caseload",
+    #     os.path.join(scrap_dir, "CaseloadDataWide.xlsx"),
+    #     [
+    #         os.path.join(scrap_dir, "fy2024_ssp_caseload.xlsx"),
+    #         os.path.join(scrap_dir, "fy2024_tanf_caseload.xlsx"),
+    #         os.path.join(scrap_dir, "fy2024_tanssp_caseload.xlsx"),
+    #     ],
+    # )
 
     tanf_data.append()
