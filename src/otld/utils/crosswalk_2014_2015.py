@@ -64,6 +64,9 @@ def map_columns(df: pd.DataFrame, crosswalk_dict: dict) -> pd.DataFrame:
 
 if __name__ == "__main__":
     import json
+    import os
 
-    with open("data/crosswalk.json", "w") as f:
-        json.dump(crosswalk_dict, f, indent=4)
+    current_dir = os.path.dirname(__file__)
+    with open(os.path.join(current_dir, "crosswalk_dict.py"), "w") as file:
+        file.write("crosswalk_dict = ")
+        file.write(json.dumps(crosswalk_dict, indent=4))
