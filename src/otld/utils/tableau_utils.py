@@ -7,7 +7,7 @@ import pandas as pd
 from otld.utils.expenditure_utils import reindex_state_year
 
 
-def wide_with_index(frames: dict[pd.DataFrame]):
+def wide_with_index(frames: dict[pd.DataFrame], tab_name: str = "FinancialData"):
     out = pd.DataFrame()
     for name, data in frames.items():
         data = data.copy()
@@ -26,4 +26,4 @@ def wide_with_index(frames: dict[pd.DataFrame]):
     )
     out = reindex_state_year(out, list(out.index.names))
 
-    return {"FinancialData": out.reset_index()}
+    return {tab_name: out.reset_index()}

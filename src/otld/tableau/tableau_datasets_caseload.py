@@ -9,7 +9,7 @@ from otld.utils import excel_to_dict, export_workbook, wide_with_index
 def generate_wide_data():
     frames = excel_to_dict(os.path.join(out_dir, "CaseloadDataWideClean.xlsx"))
     export_workbook(
-        wide_with_index(frames),
+        wide_with_index(frames, "CaseloadData"),
         os.path.join(tableau_dir, "data", "CaseloadDataWide.xlsx"),
         format_options={
             "skip_cols": 3,
