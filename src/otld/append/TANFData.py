@@ -200,6 +200,16 @@ class TANFData:
 
         self.export_workbook()
 
+    def get_header_wrapper(self, df=pd.DataFrame):
+        new_df = get_header(df)
+
+        if new_df.empty or any(
+            [isinstance(col, (int, float)) for col in new_df.columns]
+        ):
+            new_df = get_header(df, concatenate=True)
+
+        return new_df
+
     def get_df(self):
         """Get data from file to append
 
@@ -213,7 +223,7 @@ class TANFData:
             df = pd.read_excel(
                 self._to_append["data"], sheet_name=worksheet, header=None
             )
-            df = get_header(df)
+            df = self.get_header_wrapper(df)
             df.columns = [col.strip() for col in df.columns]
 
             # Add year column
@@ -241,7 +251,7 @@ class TANFData:
                 df = pd.read_excel(
                     self._to_append["data"][level], sheet_name=sheet, header=None
                 )
-                df = get_header(df)
+                df = self.get_header_wrapper(df)
                 df = clean_dataset(df)
                 data.append(df)
 

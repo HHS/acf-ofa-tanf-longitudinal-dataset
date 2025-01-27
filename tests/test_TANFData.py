@@ -3,6 +3,8 @@ import tempfile
 import time
 import unittest
 
+import pandas as pd
+
 from otld.append.TANFData import TANFData
 from otld.paths import test_dir
 from otld.utils.MockData import MockData
@@ -90,12 +92,36 @@ class TestTANFData(unittest.TestCase):
 
         tanf_data.close_excel_files()
 
+    def test_get_header_wrapper(self):
+        tanf_data = TANFData(
+            "financial",
+            os.path.join(test_dir, "FinancialDataWide.xlsx"),
+            os.path.join(test_dir, "fy2023_ssp_caseload.xlsx"),
+        )
+        df = pd.read_excel(
+            os.path.join(test_dir, "test_get_header.xlsx"),
+            sheet_name="test_get_header_wrapper_1",
+            header=None,
+        )
+        columns = tanf_data.get_header_wrapper(df).columns.tolist()
+        columns.sort()
+        self.assertEqual(columns, ["Line 1 Name", "Line 2 Name", "State"])
+
+        df = pd.read_excel(
+            os.path.join(test_dir, "test_get_header.xlsx"),
+            sheet_name="test_get_header_wrapper_2",
+            header=None,
+        )
+        columns = tanf_data.get_header_wrapper(df).columns.tolist()
+        columns.sort()
+        self.assertEqual(columns, ["Line 1 Name", "Line 2 Name", "State"])
+
     def tearDown(self):
         return super().tearDown()
 
 
 if __name__ == "__main__":
-    unittest.main()
-    # suite = unittest.TestSuite()
-    # suite.addTest(TestTANFData("test_append_caseload"))
-    # unittest.TextTestRunner().run(suite)
+    # unittest.main()
+    suite = unittest.TestSuite()
+    suite.addTest(TestTANFData("test_get_header_wrapper"))
+    unittest.TextTestRunner().run(suite)

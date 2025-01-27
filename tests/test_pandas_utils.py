@@ -36,6 +36,19 @@ class TestPandasUtils(unittest.TestCase):
             ],
         )
 
+        # Test concatenation
+        df = pd.read_excel(
+            os.path.join(test_dir, "test_get_header.xlsx"),
+            sheet_name="test_get_header",
+            header=None,
+        )
+
+        df = putils.get_header(df, concatenate=True)
+        columns = df.columns.tolist()
+        columns.sort()
+        self.assertEqual(columns, ["Line 1 Name", "Line 2 Name", "State"])
+        self.assertEqual(df.iloc[0].tolist(), [1, 2, 3])
+
 
 if __name__ == "__main__":
     unittest.main()
