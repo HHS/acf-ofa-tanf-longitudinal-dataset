@@ -294,7 +294,7 @@ def merge_datasets(
 def format_final_dataset(
     df: pd.DataFrame, output_columns: List[str] = OUTPUT_COLUMNS
 ) -> pd.DataFrame:
-      """Format dataset
+    """Format dataset
 
     This function performs the following actions:
         - Generate columns as NaN if missing
@@ -309,6 +309,7 @@ def format_final_dataset(
     Returns:
         pd.DataFrame: Formatted data frame
     """
+
     def float_none(string: str) -> float | None:
         try:
             return float(string)
