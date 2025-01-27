@@ -96,3 +96,6 @@ class TestTANFData(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+    # suite = unittest.TestSuite()
+    # suite.addTest(TestTANFData("test_append_caseload"))
+    # unittest.TextTestRunner().run(suite)
