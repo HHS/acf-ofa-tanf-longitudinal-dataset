@@ -1,3 +1,5 @@
+"""Validate TANF data"""
+
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
@@ -5,6 +7,7 @@ from otld.utils import STATES
 
 
 def validate_data_frame(df: pd.DataFrame):
+    """Validate TANF data"""
     # Confirm all columns are numeric
     is_numeric = df.dtypes.map(is_numeric_dtype)
     not_numeric = df.columns[~is_numeric]

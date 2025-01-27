@@ -1,4 +1,5 @@
-# validate_caseload.py
+"""Validate caseload data"""
+
 import argparse
 import os
 import random
@@ -121,6 +122,7 @@ def validate_values(
 
 
 def main():
+    """Validate caseload data"""
     args = parse_arguments()
 
     # Load wide format data as ExcelFile to access all tabs

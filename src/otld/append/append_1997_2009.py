@@ -10,11 +10,11 @@ from otld.paths import diagnostics_dir, input_dir, inter_dir
 from otld.utils import (
     ExpenditureDataChecker,
     convert_to_numeric,
-    reindex_state_year,
     standardize_file_name,
     standardize_line_number,
     validate_data_frame,
 )
+from otld.utils.expenditure_utils import reindex_state_year
 from otld.utils.LineTracker import LineTracker
 
 # Instantiate a LineTracker object to track what files lines came from.

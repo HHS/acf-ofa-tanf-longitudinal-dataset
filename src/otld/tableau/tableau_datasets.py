@@ -5,7 +5,9 @@ import os
 import numpy as np
 import pandas as pd
 
-from otld.paths import input_dir, inter_dir, tableau_dir
+from otld.paths import input_dir, inter_dir, out_dir, tableau_dir
+from otld.utils import excel_to_dict, export_workbook
+from otld.utils.expenditure_utils import reindex_state_year
 
 
 def load_cpi_u() -> pd.DataFrame:
@@ -70,14 +72,69 @@ def inflation_adjust(row: pd.Series) -> float:
     return adjusted
 
 
-def main():
+def wide_with_index(frames: dict[pd.DataFrame]):
+    out = pd.DataFrame()
+    for name, data in frames.items():
+        data = data.copy()
+        data.insert(0, "Funding", name)
+
+        if out.empty:
+            out = data
+        else:
+            out = pd.concat([out, data])
+
+    out.set_index(["Funding", "FiscalYear", "State"], inplace=True)
+    out.sort_index(
+        level=["Funding", "FiscalYear", "State"],
+        ascending=[False, False, True],
+        inplace=True,
+    )
+    out = reindex_state_year(out, list(out.index.names))
+
+    return {"FinancialData": out.reset_index()}
+
+
+def update_consolidation_map(row: pd.Series, map: dict):
+    instructions = row["instructions"]
+    name = row["name"]
+    if isinstance(instructions, int):
+        map.update({str(instructions): name})
+    elif isinstance(instructions, str):
+        instructions = instructions.split(",")
+        map.update({i.strip(): name for i in instructions})
+    else:
+        raise ValueError("Object is not int or str.")
+
+
+def get_consolidated_column(column: str, map: dict):
+    if column.find(".") == -1:
+        return ""
+
+    line = column.split(".")[0]
+
+    try:
+        return map[line]
+    except KeyError:
+        return ""
+
+
+def generate_wide_data():
+    """Generate Tableau-specific wide dataset"""
+    frames = excel_to_dict(os.path.join(out_dir, "FinancialDataWide.xlsx"))
+    export_workbook(
+        wide_with_index(frames),
+        os.path.join(tableau_dir, "data", "FinancialDataWide.xlsx"),
+        format_options={"skip_cols": 3},
+    )
+
+
+def generate_long_data():
     """Generate Tableau-specific long dataset"""
+    instructions = pd.ExcelFile(os.path.join(input_dir, "Instruction Crosswalk.xlsx"))
     financial_data = pd.read_excel(
         os.path.join(tableau_dir, "data", "FinancialDataLongRaw.xlsx")
     )
-    crosswalk = pd.read_excel(
-        os.path.join(input_dir, "Instruction Crosswalk.xlsx"), sheet_name="crosswalk"
-    )
+    crosswalk = pd.read_excel(instructions, sheet_name="crosswalk")
 
     crosswalk["Category"] = crosswalk.apply(
         lambda x: f"{x["196R"]}. {x["name"]}", axis=1
@@ -135,12 +192,27 @@ def main():
     )
     financial_data.drop(["Year", "cpi"], inplace=True, axis=1)
 
+    # Add column indicating which consolidated variable is associated
+    consolidations = pd.read_excel(instructions, sheet_name="consolidated_categories")
+    consolidation_map = {}
+    consolidations.apply(
+        lambda row: update_consolidation_map(row, consolidation_map), axis=1
+    )
+    financial_data["consolidated_column"] = financial_data["Category"].map(
+        lambda x: get_consolidated_column(x, consolidation_map)
+    )
+
     # Export
     financial_data.to_excel(
         os.path.join(tableau_dir, "data", "FinancialDataLong.xlsx"),
         index=False,
         sheet_name="FinancialData",
     )
+
+
+def main():
+    generate_wide_data()
+    generate_long_data()
 
 
 if __name__ == "__main__":

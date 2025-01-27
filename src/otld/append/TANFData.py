@@ -117,14 +117,17 @@ class TANFData:
 
     @property
     def appended(self):
+        """Base file containing appended data"""
         return self._appended
 
     @property
     def to_append(self):
+        """File, or list of files, to append to base file"""
         return self._to_append
 
     @property
     def type(self):
+        """The kind of data being appended"""
         return self._type
 
     @property
