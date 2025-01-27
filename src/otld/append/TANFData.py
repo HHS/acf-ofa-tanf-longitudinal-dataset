@@ -142,7 +142,8 @@ class TANFData:
             else:
                 raise ValueError(f"Cannot process workbook: {path}")
 
-    def get_worksheets(self, level: str):
+    def get_worksheets(self):
+        level = self._level
         if self._type == "financial":
             sheet = self._sheet_dict[self._type][level]
             return sheet
@@ -171,15 +172,16 @@ class TANFData:
                 if not found:
                     raise ValueError(f"No matching sheets found: {level}")
 
-            return sheets
+            self._sheets = sheets
 
     def append(self):
         """Append financial or caseload data"""
 
         # Append data
         for level in self._sheet_dict[self._type]:
-            sheet = self.get_worksheets(level)
-            self.get_df(level, sheet)
+            self._level = level
+            self.get_worksheets()
+            self.get_df()
             self._frames[level] = pd.concat(
                 [
                     pd.read_excel(
@@ -194,13 +196,15 @@ class TANFData:
 
         self.export_workbook()
 
-    def get_df(self, level: str, worksheet: str | list[str]):
+    def get_df(self):
         """Get data from file to append
 
         Args:
             level (str): The current funding level.
             worksheet (str): The worksheet to extract data from.
         """
+        worksheet = self._sheets
+        level = self._level
         if self._type == "financial":
             df = pd.read_excel(
                 self._to_append["data"], sheet_name=worksheet, header=None
@@ -241,11 +245,12 @@ class TANFData:
             assert (df["_merge"] == "both").all(), "Imperfect merge."
             df.drop("_merge", axis=1, inplace=True)
 
-            df["FiscalYear"] = self._to_append["year"]
-            df = format_final_dataset(df)
-            df.set_index(["State", "FiscalYear"], inplace=True)
-
             self._df = df
+            self.rename_columns()
+
+            self._df["FiscalYear"] = self._to_append["year"]
+            self._df = format_final_dataset(self._df)
+            self._df.set_index(["State", "FiscalYear"], inplace=True)
             # self.validate_data_frame()
 
         # Currently caseload data fails the numeric check because "-" and other string
@@ -278,7 +283,27 @@ class TANFData:
             df.drop(df.filter(regex="^Unnamed: \\d+$|^$").columns, axis=1, inplace=True)
         # Handle renaming in the case of caseload data
         elif self._type == "caseload":
-            pass
+
+            def rename(column: str):
+                family_column = re.search("^\s*(one|two|no)", column, re.IGNORECASE)
+                recipient_column = re.search(
+                    "^\s*(adult|children)", column, re.IGNORECASE
+                )
+                misc_column = re.search("^\s*(total|state)", column, re.IGNORECASE)
+                if family_column:
+                    column = f"{family_column.group(1)} Parent Families".title()
+                elif recipient_column:
+                    column = f"{recipient_column.group(1)} Recipients".title()
+                elif misc_column:
+                    column
+                else:
+                    raise ValueError(
+                        "Column does not match expected patterns for family or recipient sheets"
+                    )
+
+                return column
+
+            self._df.columns = self._df.columns.map(rename)
 
     def validate_data_frame(self):
         df = self._df.copy()
@@ -329,22 +354,22 @@ class TANFData:
 
 
 if __name__ == "__main__":
-    from otld.paths import test_dir
-
-    tanf_data = TANFData(
-        "financial",
-        os.path.join(test_dir, "FinancialDataWide.xlsx"),
-        os.path.join(test_dir, "mock", "tanf_financial_data_fy_2024.xlsx"),
-    )
+    from otld.paths import scrap_dir, test_dir
 
     # tanf_data = TANFData(
-    #     "caseload",
-    #     os.path.join(scrap_dir, "CaseloadDataWide.xlsx"),
-    #     [
-    #         os.path.join(scrap_dir, "fy2024_ssp_caseload.xlsx"),
-    #         os.path.join(scrap_dir, "fy2024_tanf_caseload.xlsx"),
-    #         os.path.join(scrap_dir, "fy2024_tanssp_caseload.xlsx"),
-    #     ],
+    #     "financial",
+    #     os.path.join(test_dir, "FinancialDataWide.xlsx"),
+    #     os.path.join(test_dir, "mock", "tanf_financial_data_fy_2024.xlsx"),
     # )
+
+    tanf_data = TANFData(
+        "caseload",
+        os.path.join(scrap_dir, "CaseloadDataWide.xlsx"),
+        [
+            os.path.join(scrap_dir, "mock", "fy2024_ssp_caseload.xlsx"),
+            os.path.join(scrap_dir, "mock", "fy2024_tanf_caseload.xlsx"),
+            os.path.join(scrap_dir, "mock", "fy2024_tanfssp_caseload.xlsx"),
+        ],
+    )
 
     tanf_data.append()
