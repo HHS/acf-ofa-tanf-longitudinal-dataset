@@ -63,6 +63,7 @@ def reindex_state_year(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+# How does get_header work if there are merged cells?
 def get_header(
     df: pd.DataFrame,
     column: str | int = None,
