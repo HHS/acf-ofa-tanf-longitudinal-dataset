@@ -20,6 +20,7 @@ from otld.utils.caseload_utils import (
     format_final_dataset,
 )
 from otld.utils.crosswalk_dict import crosswalk_dict
+from otld.utils.expenditure_utils import reindex_state_year
 
 
 class TANFData:
@@ -254,6 +255,7 @@ class TANFData:
             self._df["FiscalYear"] = self._to_append["year"]
             self._df = format_final_dataset(self._df)
             self._df.set_index(["State", "FiscalYear"], inplace=True)
+            self._df = reindex_state_year(self._df, ["State", "FiscalYear"])
             # self.validate_data_frame()
 
         # Currently caseload data fails the numeric check because "-" and other string
@@ -288,11 +290,11 @@ class TANFData:
         elif self._type == "caseload":
 
             def rename(column: str):
-                family_column = re.search("^\s*(one|two|no)", column, re.IGNORECASE)
+                family_column = re.search(r"^\s*(one|two|no)", column, re.IGNORECASE)
                 recipient_column = re.search(
-                    "^\s*(adult|children)", column, re.IGNORECASE
+                    r"^\s*(adult|children)", column, re.IGNORECASE
                 )
-                misc_column = re.search("^\s*(total|state)", column, re.IGNORECASE)
+                misc_column = re.search(r"^\s*(total|state)", column, re.IGNORECASE)
                 if family_column:
                     column = f"{family_column.group(1)} Parent Families".title()
                 elif recipient_column:
