@@ -150,7 +150,7 @@ class MockData:
         numeric = len(columns) - 1
         parameters = {
             "financial": {"choices": ["", None], "range": [0, 2 * 10**8]},
-            "caseload": {"choices": ["", "-", None], "range": [0, 10**5]},
+            "caseload": {"choices": ["", None], "range": [0, 10**5]},
         }
         parameters = parameters[self._type]
         choices = parameters["choices"]
