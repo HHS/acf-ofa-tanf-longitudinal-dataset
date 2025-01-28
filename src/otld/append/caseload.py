@@ -277,16 +277,6 @@ def process_workbook(
         raise
 
 
-def clean_frames(frames: dict[pd.DataFrame]) -> dict[pd.DataFrame]:
-    new_frames = {}
-    for sheet, df in frames.items():
-        df = df.copy()
-        df.replace("-", "", inplace=True)
-        new_frames[sheet] = df
-
-    return new_frames
-
-
 def main():
     """Entry point for caseload data processing"""
     for file in os.listdir(DATA_DIR):
@@ -319,8 +309,6 @@ def main():
     for frame in master_wide:
         master_wide[frame].set_index(["State", "FiscalYear"], inplace=True)
 
-    wide_clean = clean_frames(master_wide)
-
     # Save the original data files as before...
     export_workbook(
         master_wide,
@@ -329,12 +317,12 @@ def main():
     )
     export_workbook(
         master_wide,
-        "data/appended_data/CaseloadWide.xlsx",
+        os.path.join(tableau_dir, "CaseloadDataWideRaw.xlsx"),
         format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
     )
     export_workbook(
-        wide_clean,
-        os.path.join(out_dir, "CaseloadDataWideClean.xlsx"),
+        master_wide,
+        "data/appended_data/CaseloadWide.xlsx",
         format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
     )
 
@@ -356,8 +344,6 @@ def main():
         if frame != "CaseloadData":
             del master_wide[frame]
 
-    master_wide["CaseloadDataClean"] = clean_frames(master_wide)["CaseloadData"]
-
     export_workbook(
         master_wide,
         os.path.join(tableau_dir, "data", "CaseloadDataLongRaw.xlsx"),
@@ -366,11 +352,6 @@ def main():
     export_workbook(
         master_wide,
         os.path.join(out_dir, "CaseloadDataLong.xlsx"),
-        format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
-    )
-    export_workbook(
-        master_wide,
-        "data/appended_data/CaseloadLong.xlsx",
         format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
     )
 

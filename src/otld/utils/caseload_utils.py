@@ -117,9 +117,9 @@ def process_1997_1998_1999_data(
         fiscal_data = fiscal_data[fiscal_data["State"].notna()]
 
         # Add missing columns while preserving original representations
-        fiscal_data["No Parent Families"] = "-"
-        fiscal_data["Adult Recipients"] = "-"
-        fiscal_data["Children Recipients"] = "-"
+        fiscal_data["No Parent Families"] = None
+        fiscal_data["Adult Recipients"] = None
+        fiscal_data["Children Recipients"] = None
 
         fiscal_data = fiscal_data[OUTPUT_COLUMNS]
         fiscal_data = fiscal_data.sort_values(["FiscalYear", "State"]).reset_index(
@@ -309,19 +309,6 @@ def format_final_dataset(
     Returns:
         pd.DataFrame: Formatted data frame
     """
-
-    def float_none(string: str) -> float | None:
-        try:
-            return float(string)
-        except ValueError:
-            return None
-
-    def to_numeric(series: pd.Series):
-        series.fillna("", inplace=True)
-        series = series.apply(lambda x: round(float(x), 2) if float_none(x) else x)
-
-        return series
-
     df = df.copy()
 
     # Set missing columns to NaN
@@ -339,10 +326,11 @@ def format_final_dataset(
 
     # Format other columns with a comma
     numeric_cols = df.columns.difference(["FiscalYear", "State"])
-    df[numeric_cols] = df[numeric_cols].apply(to_numeric)
+    df[numeric_cols] = df[numeric_cols].astype(np.float64)
 
     # Convert all columns to title case
     df.columns = ["FiscalYear"] + [
         col.title() for col in df.columns if col != "FiscalYear"
     ]
+
     return df
