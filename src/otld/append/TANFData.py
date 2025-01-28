@@ -24,7 +24,13 @@ from otld.utils.expenditure_utils import reindex_state_year
 
 
 class TANFData:
-    def __init__(self, type: str, appended_path: str, to_append_path: str | list[str]):
+    def __init__(
+        self,
+        type: str,
+        appended_path: str,
+        to_append_path: str | list[str],
+        sheets: dict[list] = {},
+    ):
         """Initialize TANFData class
 
         Args:
@@ -47,6 +53,8 @@ class TANFData:
         year_pattern = re.compile(r"(\d{4})")
 
         self._to_append = {}
+
+        # Load the data
         if isinstance(to_append_path, str):
             # Confirm file is xlsx
             assert to_append_path.endswith(
@@ -85,36 +93,41 @@ class TANFData:
             )
 
         # Dictionary defining which sheets correspond to which tabs
-        self._sheet_dict = {
-            "financial": {
-                "Total": "B. Total Expenditures",
-                "Federal": "C.1 Federal Expenditures",
-                "State": "C.2 State Expenditures",
-            },
-            "caseload": {
-                "TANF_SSP": {
-                    "family": [re.compile(r"avg.*fam"), FAMILY_SHEET_REGEX_PATTERN],
-                    "recipient": [
-                        re.compile(r"avg.*recipient"),
-                        RECIPIENT_SHEET_REGEX_PATTERN,
-                    ],
+        if sheets:
+            self._sheet_dict = sheets
+            self._sheet_dict.update({"internal": 0})
+        else:
+            self._sheet_dict = {
+                "financial": {
+                    "Total": "B. Total Expenditures",
+                    "Federal": "C.1 Federal Expenditures",
+                    "State": "C.2 State Expenditures",
                 },
-                "TANF": {
-                    "family": [re.compile(r"avg.*fam"), FAMILY_SHEET_REGEX_PATTERN],
-                    "recipient": [
-                        re.compile(r"avg.*recipient"),
-                        RECIPIENT_SHEET_REGEX_PATTERN,
-                    ],
+                "caseload": {
+                    "TANF_SSP": {
+                        "family": [re.compile(r"avg.*fam"), FAMILY_SHEET_REGEX_PATTERN],
+                        "recipient": [
+                            re.compile(r"avg.*recipient"),
+                            RECIPIENT_SHEET_REGEX_PATTERN,
+                        ],
+                    },
+                    "TANF": {
+                        "family": [re.compile(r"avg.*fam"), FAMILY_SHEET_REGEX_PATTERN],
+                        "recipient": [
+                            re.compile(r"avg.*recipient"),
+                            RECIPIENT_SHEET_REGEX_PATTERN,
+                        ],
+                    },
+                    "SSP_MOE": {
+                        "family": [re.compile(r"avg.*fam"), FAMILY_SHEET_REGEX_PATTERN],
+                        "recipient": [
+                            re.compile(r"avg.*recipient"),
+                            RECIPIENT_SHEET_REGEX_PATTERN,
+                        ],
+                    },
                 },
-                "SSP_MOE": {
-                    "family": [re.compile(r"avg.*fam"), FAMILY_SHEET_REGEX_PATTERN],
-                    "recipient": [
-                        re.compile(r"avg.*recipient"),
-                        RECIPIENT_SHEET_REGEX_PATTERN,
-                    ],
-                },
-            },
-        }
+            }
+            self._sheet_dict.update({"internal": 1})
 
     @property
     def appended(self):
@@ -146,15 +159,20 @@ class TANFData:
             else:
                 raise ValueError(f"Cannot process workbook: {path}")
 
+    def get_current_sheet(self):
+        return self._sheet_dict[self._type][self._level]
+
     def get_worksheets(self):
-        level = self._level
         if self._type == "financial":
-            sheet = self._sheet_dict[self._type][level]
-            return sheet
+            self._sheets = self.get_current_sheet()
+            return self
         elif self._type == "caseload":
+            if not self._sheet_dict["internal"]:
+                self._sheets = self.get_current_sheet()
+                return self
             sheets = []
-            sheet_names = self._to_append["data"][level].sheet_names
-            level_patterns = self._sheet_dict[self._type][level]
+            sheet_names = self._to_append["data"][self._level].sheet_names
+            level_patterns = self.get_current_sheet()
             for patterns in level_patterns.values():
                 if not isinstance(patterns, list):
                     patterns = [patterns]
@@ -174,9 +192,10 @@ class TANFData:
                         break
 
                 if not found:
-                    raise ValueError(f"No matching sheets found: {level}")
+                    raise ValueError(f"No matching sheets found: {self._level}")
 
             self._sheets = sheets
+            return self
 
     def append(self):
         """Append financial or caseload data"""
@@ -266,7 +285,7 @@ class TANFData:
             self._df = format_final_dataset(self._df)
             self._df.set_index(["State", "FiscalYear"], inplace=True)
             self._df = reindex_state_year(self._df, ["State", "FiscalYear"])
-            # self.validate_data_frame()
+            self.validate_data_frame()
 
         # Currently caseload data fails the numeric check because "-" and other string
         # characters are allowed in columns
@@ -367,15 +386,19 @@ class TANFData:
         else:
             workbooks.close()
 
+        self.appended.close()
+
 
 if __name__ == "__main__":
-    from otld.paths import scrap_dir, test_dir
+    # from otld.paths import test_dir
 
     # tanf_data = TANFData(
     #     "financial",
     #     os.path.join(test_dir, "FinancialDataWide.xlsx"),
     #     os.path.join(test_dir, "mock", "tanf_financial_data_fy_2024.xlsx"),
     # )
+
+    from otld.paths import scrap_dir
 
     tanf_data = TANFData(
         "caseload",
