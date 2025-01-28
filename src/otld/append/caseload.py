@@ -317,7 +317,7 @@ def main():
     )
     export_workbook(
         master_wide,
-        os.path.join(tableau_dir, "CaseloadDataWideRaw.xlsx"),
+        os.path.join(tableau_dir, "data", "CaseloadDataWideRaw.xlsx"),
         format_options={"number_format": FORMAT_NUMBER_COMMA_SEPARATED1},
     )
     export_workbook(
