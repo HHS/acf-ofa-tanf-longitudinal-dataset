@@ -27,7 +27,11 @@ def generate_long_data():
     df["log_value"] = df["Number"].map(
         lambda x: math.log(x) if isinstance(x, (float, int)) and x != 0 else None
     )
-    df.to_excel(os.path.join(tableau_dir, "data", "CasleoadDataLong.xlsx"))
+    df.to_excel(
+        os.path.join(tableau_dir, "data", "CasleoadDataLong.xlsx"),
+        sheet_name="CaseloadData",
+        index=False,
+    )
 
 
 def main():
