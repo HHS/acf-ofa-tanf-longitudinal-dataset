@@ -116,6 +116,53 @@ class TestTANFData(unittest.TestCase):
         columns.sort()
         self.assertEqual(columns, ["Line 1 Name", "Line 2 Name", "State"])
 
+    def test_get_worksheets(self):
+        # Test externally provided sheets, financial
+        tanf_data = TANFData(
+            "financial",
+            os.path.join(test_dir, "FinancialDataWide.xlsx"),
+            os.path.join(test_dir, "fy2023_ssp_caseload.xlsx"),
+            sheets={"financial": {"Federal": "September 2023"}},
+        )
+        tanf_data._level = "Federal"
+        self.assertEqual("September 2023", tanf_data.get_worksheets()._sheets)
+
+        # Test internally provided sheets, financial
+        tanf_data = TANFData(
+            "financial",
+            os.path.join(test_dir, "FinancialDataWide.xlsx"),
+            os.path.join(test_dir, "fy2023_ssp_caseload.xlsx"),
+        )
+        tanf_data._level = "Federal"
+        self.assertEqual("C.1 Federal Expenditures", tanf_data.get_worksheets()._sheets)
+
+        # Test externally provided sheets, caseload
+        tanf_data = TANFData(
+            "caseload",
+            os.path.join(test_dir, "FinancialDataWide.xlsx"),
+            os.path.join(test_dir, "fy2023_ssp_caseload.xlsx"),
+            sheets={"caseload": {"TANF": "September 2023"}},
+        )
+        tanf_data._level = "TANF"
+
+        self.assertEqual("September 2023", tanf_data.get_worksheets()._sheets)
+
+        # Test internally discovered sheets, caseload
+        tanf_data = TANFData(
+            "caseload",
+            os.path.join(test_dir, "CaseloadDataWide.xlsx"),
+            [
+                os.path.join(test_dir, "mock", "fy2024_ssp_caseload.xlsx"),
+                os.path.join(test_dir, "mock", "fy2024_tanfssp_caseload.xlsx"),
+                os.path.join(test_dir, "mock", "fy2024_tanf_caseload.xlsx"),
+            ],
+        )
+        tanf_data._level = "SSP_MOE"
+        self.assertEqual(
+            ["Avg Month Num Fam", "Avg Mo. Num Recipient"],
+            tanf_data.get_worksheets()._sheets,
+        )
+
     def tearDown(self):
         return super().tearDown()
 
@@ -123,5 +170,5 @@ class TestTANFData(unittest.TestCase):
 if __name__ == "__main__":
     # unittest.main()
     suite = unittest.TestSuite()
-    suite.addTest(TestTANFData("test_get_header_wrapper"))
+    suite.addTest(TestTANFData("test_append_caseload"))
     unittest.TextTestRunner().run(suite)
