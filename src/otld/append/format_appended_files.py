@@ -8,7 +8,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from otld import combine_appended_files
+from otld.append import combine_appended_files
 from otld.utils.openpyxl_utils import export_workbook
 
 
