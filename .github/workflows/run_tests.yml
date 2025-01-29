@@ -1,0 +1,13 @@
+name: Test Suite
+run-name: Pull request for ${{ github.ref }} triggered tests.
+on:
+  pull_request:
+    types: [opened, edited]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run tests
+        id: tests
+        run: bash code/run_tests.sh
