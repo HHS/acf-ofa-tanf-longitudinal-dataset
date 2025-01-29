@@ -223,8 +223,7 @@ class MockData:
 if __name__ == "__main__":
     from otld.paths import test_dir
 
-    mock_data = MockData("financial", 2024)
+    mock_data = MockData("caseload", 2024)
     mock_data.generate_data()
-    exit()
-    mock_data.export(pandas=True)
-    mock_data.export(os.path.join(test_dir, "mock", "financial_data.xlsx"))
+    # mock_data.export(pandas=True)
+    mock_data.export(os.path.join(test_dir, "mock"))

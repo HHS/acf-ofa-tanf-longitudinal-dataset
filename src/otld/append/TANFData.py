@@ -14,6 +14,7 @@ from otld.utils import (
     validate_data_frame,
 )
 from otld.utils.caseload_utils import (
+    CASELOAD_FORMAT_OPTIONS,
     FAMILY_SHEET_REGEX_PATTERN,
     RECIPIENT_SHEET_REGEX_PATTERN,
     clean_dataset,
@@ -346,6 +347,11 @@ class TANFData:
     def export_workbook(self):
         """Export data to Excel workbook"""
 
+        if self._type == "caseload":
+            format_options = CASELOAD_FORMAT_OPTIONS
+        else:
+            format_options = {}
+
         title = f"{self._type.title()}Data"
         # Export wide data
         current_date = time.strftime("%Y%m%d", time.gmtime())
@@ -353,7 +359,7 @@ class TANFData:
             self._out_dir,
             f"{title}Wide_{current_date}.xlsx",
         )
-        export_workbook(self._frames, path)
+        export_workbook(self._frames, path, format_options=format_options)
 
         # Reshape and export long data
         path = os.path.join(
@@ -376,7 +382,7 @@ class TANFData:
             if frame != title:
                 del self._frames[frame]
 
-        export_workbook(self._frames, path)
+        export_workbook(self._frames, path, format_options=format_options)
 
     def close_excel_files(self):
         workbooks = self._to_append["data"]
