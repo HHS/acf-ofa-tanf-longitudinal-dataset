@@ -1,7 +1,7 @@
-otld.combine\_appended\_files
-=============================
+otld.append.combine\_appended\_files
+====================================
 
-.. automodule:: otld.combine_appended_files
+.. automodule:: otld.append.combine_appended_files
 
    
    .. rubric:: Functions
