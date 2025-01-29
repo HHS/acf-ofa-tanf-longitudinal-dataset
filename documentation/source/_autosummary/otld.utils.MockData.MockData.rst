@@ -1,7 +1,7 @@
-otld.utils.mock\_data.MockData
-==============================
+otld.utils.MockData.MockData
+============================
 
-.. currentmodule:: otld.utils.mock_data
+.. currentmodule:: otld.utils.MockData
 
 .. autoclass:: MockData
    :members:
@@ -30,6 +30,7 @@ otld.utils.mock\_data.MockData
 
    .. autosummary::
    
+      ~MockData.pandas
       ~MockData.type
       ~MockData.workbooks
       ~MockData.year

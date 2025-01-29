@@ -31,6 +31,7 @@ def convert_to_numeric(series: pd.Series, numeric_type: type = float) -> pd.Seri
     return series
 
 
+# How does get_header work if there are merged cells?
 def get_header(
     df: pd.DataFrame,
     column: str | int = None,
@@ -38,6 +39,7 @@ def get_header(
     reset: bool = False,
     sanitize: bool = False,
     idx: bool = False,
+    concatenate: bool = False,
 ) -> int | pd.DataFrame | pd.Series:
     """Find and extract the header row from a data frame
 
@@ -90,22 +92,33 @@ def get_header(
 
         return df.loc[index]
 
-    def unknown_header(df: pd.DataFrame) -> pd.DataFrame:
+    def unknown_header(df: pd.DataFrame, concatenate: bool = False) -> pd.DataFrame:
         """Handle the case where the header is unknown"""
 
         # Drop any columns which only contain missing values
         df.dropna(axis=1, how="all", inplace=True)
         header = 0
+        columns = df.loc[header, :]
 
         # Identify first row with no missing values
         while True:
-            if bool(df.loc[header, :].isna().any()) is False:
+            if bool(columns.isna().any()) is False:
                 break
 
             header += 1
+            if concatenate:
+                columns.fillna("", inplace=True)
+                new_columns = df.loc[header, :].fillna("")
+                columns = [
+                    f"{col} {new}".strip() if f"{col} {new}".strip() else np.nan
+                    for col, new in zip(columns, new_columns)
+                ]
+                columns = pd.Series(columns)
+            else:
+                columns = df.loc[header, :]
 
         # Set column names to the header row
-        df.columns = df.loc[header, :]
+        df.columns = columns
 
         # Keep only rows after the header row
         df = df.loc[header + 1 :, :]
@@ -115,7 +128,7 @@ def get_header(
     if column or find:
         return known_header(df, column, find, sanitize, idx)
     else:
-        return unknown_header(df)
+        return unknown_header(df, concatenate)
 
 
 def excel_to_dict(path: str, custom_args: dict = None, **kwargs) -> dict[pd.DataFrame]:

@@ -2,9 +2,13 @@ import os
 import random
 
 import openpyxl as opxl
+import pandas as pd
+
+from otld.utils.states import STATES
 
 # Globals
 FINANCIAL_COLUMNS = [
+    "State",
     "1. Awarded",
     "2. Transfers to Child Care and Development Fund (CCDF) Discretionary",
     "3. Transfers to Social Services Block Grant (SSBG)",
@@ -62,63 +66,6 @@ FAMILY_COLUMNS = [
     "No Parent Families",
 ]
 RECIPIENT_COLUMNS = ["State", "Total Recipients", "Adults", "Children"]
-STATES = [
-    "Alabama",
-    "Alaska",
-    "Arizona",
-    "Arkansas",
-    "California",
-    "Colorado",
-    "Connecticut",
-    "Delaware",
-    "District of Columbia",
-    "Florida",
-    "Georgia",
-    "Guam",
-    "Hawaii",
-    "Idaho",
-    "Illinois",
-    "Indiana",
-    "Iowa",
-    "Kansas",
-    "Kentucky",
-    "Louisiana",
-    "Maine",
-    "Maryland",
-    "Massachusetts",
-    "Michigan",
-    "Minnesota",
-    "Mississippi",
-    "Missouri",
-    "Montana",
-    "Nebraska",
-    "Nevada",
-    "New Hampshire",
-    "New Jersey",
-    "New Mexico",
-    "New York",
-    "North Carolina",
-    "North Dakota",
-    "Ohio",
-    "Oklahoma",
-    "Oregon",
-    "Pennsylvania",
-    "Puerto Rico",
-    "Rhode Island",
-    "South Carolina",
-    "South Dakota",
-    "Tennessee",
-    "Texas",
-    "U.S. Total",
-    "Utah",
-    "Vermont",
-    "Virgin Islands",
-    "Virginia",
-    "Washington",
-    "West Virginia",
-    "Wisconsin",
-    "Wyoming",
-]
 
 
 class MockData:
@@ -139,6 +86,10 @@ class MockData:
     @property
     def workbooks(self):
         return self._workbooks
+
+    @property
+    def pandas(self):
+        return self._pandas
 
     def data_specifications(self):
         if self._type == "financial":
@@ -199,25 +150,36 @@ class MockData:
         numeric = len(columns) - 1
         parameters = {
             "financial": {"choices": ["", None], "range": [0, 2 * 10**8]},
-            "caseload": {"choices": ["", "-", None], "range": [0, 10**5]},
+            "caseload": {"choices": ["", None], "range": [0, 10**5]},
         }
         parameters = parameters[self._type]
         choices = parameters["choices"]
         num_range = parameters["range"]
-        for state in STATES:
+        total = [0] * len(columns)
+        total[0] = "U.S. Total"
+
+        states = STATES.copy()
+        states.pop(states.index("U.S. Total"))
+        for state in states:
             new_row = [state]
             for i in range(numeric):
                 rand_int = random.randint(1, 10)
                 if rand_int == 1:
                     value = random.choice(choices)
-                else:
+                elif self._type == "caseload":
                     value = random.uniform(*num_range)
                     # Idea to allow normal sampling from actual values
                     # value = random.gauss()
+                elif self._type == "financial":
+                    value = random.randint(*num_range)
+
                 new_row.append(value)
+                if isinstance(value, (int, float)):
+                    total[i + 1] += value
 
             rows.append(new_row)
 
+        rows.append(total)
         return rows
 
     def generate_data(self):
@@ -245,15 +207,23 @@ class MockData:
 
             self._workbooks.update({path: wb})
 
-    def export(self, dir: str):
-        for path, wb in self._workbooks.items():
-            path = os.path.join(dir, path)
-            wb.save(path)
+    def export(self, dir: str = None, pandas: bool = False):
+        assert dir or pandas, "One of `dir` or `pandas` must be specified."
+        if dir:
+            for path, wb in self._workbooks.items():
+                path = os.path.join(dir, path)
+                wb.save(path)
+                wb.close()
+        elif pandas:
+            self._pandas = {}
+            for path, wb in self._workbooks.items():
+                self._pandas[path] = pd.ExcelFile(wb, engine="openpyxl")
 
 
 if __name__ == "__main__":
-    from otld.paths import scrap_dir
+    from otld.paths import test_dir
 
     mock_data = MockData("caseload", 2024)
     mock_data.generate_data()
-    mock_data.export(os.path.join(scrap_dir, "mock"))
+    # mock_data.export(pandas=True)
+    mock_data.export(os.path.join(test_dir, "mock"))

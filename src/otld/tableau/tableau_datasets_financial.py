@@ -6,8 +6,7 @@ import numpy as np
 import pandas as pd
 
 from otld.paths import input_dir, inter_dir, out_dir, tableau_dir
-from otld.utils import excel_to_dict, export_workbook
-from otld.utils.expenditure_utils import reindex_state_year
+from otld.utils import excel_to_dict, export_workbook, wide_with_index
 
 
 def load_cpi_u() -> pd.DataFrame:
@@ -70,28 +69,6 @@ def inflation_adjust(row: pd.Series) -> float:
     """
     adjusted = row["Amount"] * base_cpi / row["cpi"]
     return adjusted
-
-
-def wide_with_index(frames: dict[pd.DataFrame]):
-    out = pd.DataFrame()
-    for name, data in frames.items():
-        data = data.copy()
-        data.insert(0, "Funding", name)
-
-        if out.empty:
-            out = data
-        else:
-            out = pd.concat([out, data])
-
-    out.set_index(["Funding", "FiscalYear", "State"], inplace=True)
-    out.sort_index(
-        level=["Funding", "FiscalYear", "State"],
-        ascending=[False, False, True],
-        inplace=True,
-    )
-    out = reindex_state_year(out, list(out.index.names))
-
-    return {"FinancialData": out.reset_index()}
 
 
 def update_consolidation_map(row: pd.Series, map: dict):

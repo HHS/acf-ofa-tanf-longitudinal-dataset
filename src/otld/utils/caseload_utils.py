@@ -6,6 +6,7 @@ from typing import List, Optional
 
 import numpy as np
 import pandas as pd
+from openpyxl.styles.numbers import FORMAT_NUMBER_COMMA_SEPARATED1
 
 from otld.utils import get_header
 
@@ -21,8 +22,9 @@ OUTPUT_COLUMNS = [
     "Children Recipients",
 ]
 
-FAMILY_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}families")
+FAMILY_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*families")
 RECIPIENT_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*recipients")
+CASELOAD_FORMAT_OPTIONS = {"number_format": FORMAT_NUMBER_COMMA_SEPARATED1}
 
 
 def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
@@ -117,9 +119,9 @@ def process_1997_1998_1999_data(
         fiscal_data = fiscal_data[fiscal_data["State"].notna()]
 
         # Add missing columns while preserving original representations
-        fiscal_data["No Parent Families"] = "-"
-        fiscal_data["Adult Recipients"] = "-"
-        fiscal_data["Children Recipients"] = "-"
+        fiscal_data["No Parent Families"] = None
+        fiscal_data["Adult Recipients"] = None
+        fiscal_data["Children Recipients"] = None
 
         fiscal_data = fiscal_data[OUTPUT_COLUMNS]
         fiscal_data = fiscal_data.sort_values(["FiscalYear", "State"]).reset_index(
@@ -294,7 +296,7 @@ def merge_datasets(
 def format_final_dataset(
     df: pd.DataFrame, output_columns: List[str] = OUTPUT_COLUMNS
 ) -> pd.DataFrame:
-      """Format dataset
+    """Format dataset
 
     This function performs the following actions:
         - Generate columns as NaN if missing
@@ -309,21 +311,6 @@ def format_final_dataset(
     Returns:
         pd.DataFrame: Formatted data frame
     """
-    def float_none(string: str) -> float | None:
-        try:
-            return float(string)
-        except ValueError:
-            return None
-
-    def to_numeric(series: pd.Series):
-        series.fillna("", inplace=True)
-        series = series.astype(str).str.replace(",", "")
-        series = series.apply(
-            lambda x: "{:,}".format(round(float(x), 2)) if float_none(x) else x
-        )
-
-        return series
-
     df = df.copy()
 
     # Set missing columns to NaN
@@ -341,10 +328,11 @@ def format_final_dataset(
 
     # Format other columns with a comma
     numeric_cols = df.columns.difference(["FiscalYear", "State"])
-    df[numeric_cols] = df[numeric_cols].apply(to_numeric)
+    df[numeric_cols] = df[numeric_cols].astype(np.float64)
 
     # Convert all columns to title case
     df.columns = ["FiscalYear"] + [
         col.title() for col in df.columns if col != "FiscalYear"
     ]
+
     return df

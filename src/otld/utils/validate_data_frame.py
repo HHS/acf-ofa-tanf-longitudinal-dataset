@@ -3,6 +3,8 @@
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 
+from otld.utils import STATES
+
 
 def validate_data_frame(df: pd.DataFrame):
     """Validate TANF data"""
@@ -18,6 +20,25 @@ def validate_data_frame(df: pd.DataFrame):
     # Confirm no indices duplicated
     duplicated = df.index[df.index.duplicated()]
     assert not df.index.duplicated().any(), f"Some indices duplicated: {duplicated}"
+
+    # Confirm all states are valid
+    if "State" in df.index.names:
+        if isinstance(df.index, pd.MultiIndex):
+            index = [i for i, name in enumerate(df.index.names) if name == "State"]
+            index = index[0]
+            invalid_states = [
+                i for i, tup in enumerate(df.index) if tup[index] not in STATES
+            ]
+        else:
+            invalid_states = [i for i, state in df.index if state not in STATES]
+        invalid_states = df.index[invalid_states].to_list()
+    elif "State" in df.columns:
+        invalid_states = [state for state in df["State"] if state not in STATES]
+
+    try:
+        assert not any(invalid_states), f"Some states are invalid: {invalid_states}"
+    except (UnboundLocalError, NameError):
+        pass
 
 
 if __name__ == "__main__":

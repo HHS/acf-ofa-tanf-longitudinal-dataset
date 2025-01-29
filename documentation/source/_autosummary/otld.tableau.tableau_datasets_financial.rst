@@ -1,7 +1,7 @@
-otld.tableau.tableau\_datasets
-==============================
+otld.tableau.tableau\_datasets\_financial
+=========================================
 
-.. automodule:: otld.tableau.tableau_datasets
+.. automodule:: otld.tableau.tableau_datasets_financial
 
    
    .. rubric:: Functions
@@ -17,5 +17,4 @@ otld.tableau.tableau\_datasets
       load_cpi_u
       main
       update_consolidation_map
-      wide_with_index
    

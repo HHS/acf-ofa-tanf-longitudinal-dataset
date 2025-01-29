@@ -1,7 +1,7 @@
-otld.utils.mock\_data
-=====================
+otld.utils.MockData
+===================
 
-.. automodule:: otld.utils.mock_data
+.. automodule:: otld.utils.MockData
 
    
    .. rubric:: Classes
