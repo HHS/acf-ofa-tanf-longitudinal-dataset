@@ -8,6 +8,9 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository code
+        id: checkout
+        uses: actions/checkout@v4
       - name: Run tests
         id: tests
         run: bash code/run_tests.sh
