@@ -10,6 +10,7 @@ otld.utils.pandas\_utils
       :toctree:
    
       convert_to_numeric
+      dict_to_excel
       excel_to_dict
       get_header
    
