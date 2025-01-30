@@ -223,8 +223,10 @@ class TANFData:
     def get_header_wrapper(self, df=pd.DataFrame):
         new_df = get_header(df)
 
-        if new_df.empty or any(
-            [isinstance(col, (int, float)) for col in new_df.columns]
+        if (
+            new_df.empty
+            or any([isinstance(col, (int, float)) for col in new_df.columns])
+            or new_df.columns.duplicated().any()
         ):
             new_df = get_header(df, concatenate=True)
 
