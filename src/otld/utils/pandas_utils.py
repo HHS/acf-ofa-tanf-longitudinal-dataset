@@ -158,3 +158,13 @@ def excel_to_dict(path: str, custom_args: dict = None, **kwargs) -> dict[pd.Data
         }
 
     return dictionary
+
+
+def dict_to_excel(dictionary: dict, path: str, **kwargs) -> None:
+    writer = pd.ExcelWriter(path)
+    for tab in dictionary:
+        pd.DataFrame.from_dict(dictionary[tab], **kwargs).to_excel(
+            writer, sheet_name=tab, index=False
+        )
+
+    writer.close()
