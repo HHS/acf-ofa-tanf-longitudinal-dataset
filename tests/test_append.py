@@ -2,6 +2,7 @@ import os
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock
 
 from otld.append.append import TANFAppend
@@ -52,7 +53,7 @@ class TestTANFAppend(unittest.TestCase):
 
         appender = TANFAppend()
         files = appender._to_append
-        files = [file.split("\\")[-1] for file in files]
+        files = [Path(file).name for file in files]
         files.sort()
         correct = [
             "fy2024_ssp_caseload.xlsx",
