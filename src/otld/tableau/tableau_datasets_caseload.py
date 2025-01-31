@@ -47,7 +47,7 @@ def generate_long_data():
     df["pct_of_total"] = df["pct_of_total"].replace(
         [np.nan, np.inf, -np.inf], [0, 0, 0]
     )
-    df.drop("Total", inplace=True, axis=1)
+    df.drop(["Total", "group"], inplace=True, axis=1)
 
     # Deviation from base year
     base_year = (
