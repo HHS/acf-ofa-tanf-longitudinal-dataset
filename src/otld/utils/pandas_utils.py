@@ -161,6 +161,13 @@ def excel_to_dict(path: str, custom_args: dict = None, **kwargs) -> dict[pd.Data
 
 
 def dict_to_excel(dictionary: dict, path: str, **kwargs) -> None:
+    """Convert a dictionary of dictionaries to an Excel workbook
+
+    Args:
+        dictionary (dict): A dictionary containing dictionaries. The key will become the
+        name of the tab.
+        path (str): The path to the Excel file.
+    """
     writer = pd.ExcelWriter(path)
     for tab in dictionary:
         pd.DataFrame.from_dict(dictionary[tab], **kwargs).to_excel(

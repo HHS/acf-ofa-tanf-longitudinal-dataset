@@ -77,6 +77,7 @@ def generate_long_data():
 
 
 def main():
+    """Generate Tableau-specific datasets"""
     generate_wide_data()
     generate_long_data()
 

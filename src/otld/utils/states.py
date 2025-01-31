@@ -1,3 +1,5 @@
+"""List of U.S. States and territories"""
+
 STATES = [
     "Alabama",
     "Alaska",
