@@ -157,6 +157,8 @@ def excel_to_dict(path: str, custom_args: dict = None, **kwargs) -> dict[pd.Data
             sheet: pd.read_excel(file, sheet_name=sheet, **kwargs) for sheet in sheets
         }
 
+    file.close()
+
     return dictionary
 
 
