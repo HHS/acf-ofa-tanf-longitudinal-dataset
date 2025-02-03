@@ -11,11 +11,11 @@ from otld.utils.consolidation_map import CONSOLIDATION_MAP
 from otld.utils.crosswalk_dict import crosswalk_dict
 
 
-def calculate_pce(base_year: int) -> pd.DataFrame:
+def calculate_pce(path: str, base_year: int) -> pd.DataFrame:
     """Output a base_pce as well as calculate pce for every federal fiscal year.
 
     Args:
-        df (pd.DataFrame): DataFrame containing PCE information
+        path (str): Path to PCE csv
         base_year (int): The year to which to scale inflation adjusted dollars
 
     Returns:
@@ -24,9 +24,7 @@ def calculate_pce(base_year: int) -> pd.DataFrame:
     global base_pce
 
     # Read in PCE
-    df = pd.read_csv(os.path.join(inter_dir, "pce_clean.csv")).rename(
-        columns={"year": "Year"}
-    )
+    df = pd.read_csv(path).rename(columns={"year": "Year"})
     df.set_index("Year", inplace=True)
 
     def calculate(row: pd.Series):
@@ -94,7 +92,7 @@ def generate_wide_data():
     )
 
 
-def transform_financial_long(df: pd.DataFrame) -> pd.DataFrame:
+def transform_financial_long(df: pd.DataFrame, pce_path: str) -> pd.DataFrame:
     # Line Crosswalk
     crosswalk = pd.DataFrame.from_dict(crosswalk_dict, orient="index")
     crosswalk["Category"] = crosswalk.apply(lambda x: f"{x.name}. {x["name"]}", axis=1)
@@ -139,7 +137,7 @@ def transform_financial_long(df: pd.DataFrame) -> pd.DataFrame:
     df.drop("Total", inplace=True, axis=1)
 
     # Add inflation adjusted amount
-    pce = calculate_pce(df["FiscalYear"].max())
+    pce = calculate_pce(pce_path, df["FiscalYear"].max())
     df = df.merge(pce, how="left", left_on="FiscalYear", right_on="Year")
     df["InflationAdjustedAmount"] = df.apply(inflation_adjust, axis=1)
     df.drop(["Year", "pce"], inplace=True, axis=1)
@@ -159,7 +157,9 @@ def generate_long_data():
     )
 
     # Transformations
-    financial_data = transform_financial_long(financial_data)
+    financial_data = transform_financial_long(
+        financial_data, os.path.join(inter_dir, "pce_clean.csv")
+    )
 
     # Export
     financial_data.to_excel(
@@ -170,7 +170,7 @@ def generate_long_data():
 
 
 def main():
-    generate_wide_data()
+    # generate_wide_data()
     generate_long_data()
 
 
