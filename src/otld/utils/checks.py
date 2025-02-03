@@ -83,7 +83,7 @@ class ExpenditureDataChecker:
     def federal_expenditure_data_checks(self):
         """Execute federal expenditure data checks"""
         checks = self._checks
-        df = self._df
+        df = self._df.copy()
         df["funds"] = df["1"] + df["5"] - df["2"] - df["3"] - df["24"]
         df["obligations"] = df["27"] + df["28"]
         funds_check = df["funds"] == df["obligations"]
@@ -98,6 +98,31 @@ class ExpenditureDataChecker:
             failed = df[~funds_check]
             failed.columns = self.lines_to_names(failed)
             checks["funds_obligations"] = failed
+
+        # Check that sum of expenditure columns equals total expenditures
+        df = self._df.copy()
+        non_expenditure_cols = df.filter(
+            regex=r"^1$|^2$|^3$|^4$|^5$|\d+[abc]|24|27|28"
+        ).columns.tolist()
+        expenditure_cols = df.columns.difference(non_expenditure_cols).tolist()
+        if self._kind == "196":
+            expenditure_cols.extend(["11a", "22a", "22c"])
+        df["expenditures"] = df[expenditure_cols].sum(axis=1)
+        expenditure_cols = expenditure_cols + ["expenditures", "24"]
+
+        expenditure_check = df["expenditures"] == df["24"]
+        try:
+            assert (
+                expenditure_check.all()
+            ), "Sum of expenditures does not equal total expenditure column"
+        except AssertionError as e:
+            if self._action == "error":
+                raise e
+
+            failed = df[~expenditure_check][expenditure_cols]
+            failed.columns = self.lines_to_names(failed)
+            failed["difference"] = df["24"] - df["expenditures"]
+            checks["expenditures"] = failed
 
     def export(self, path: str | os.PathLike, sheet_name: str = None) -> None:
         """Export checks to a workbook
