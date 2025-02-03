@@ -13,7 +13,7 @@ MOCK_DIR = TEMP_DIR.name
 for dataset in ["financial", "caseload"]:
     mock_data = MockData(dataset, 2024)
     mock_data.generate_data()
-    mock_data.export(dir=MOCK_DIR)
+    mock_data.export(directory=MOCK_DIR)
 
 FINANCIAL_MOCKED = [
     os.path.join(MOCK_DIR, f) for f in os.listdir(MOCK_DIR) if f.startswith("tanf")

@@ -16,7 +16,7 @@ class TestTANFAppend(unittest.TestCase):
         mock_dir = self.mock_dir
         mock_data = MockData("caseload", 2024)
         mock_data.generate_data()
-        mock_data.export(dir=mock_dir)
+        mock_data.export(directory=mock_dir)
 
     def tearDown(self):
         return super().tearDown()
