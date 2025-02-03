@@ -377,6 +377,7 @@ class MockData:
             worksheet = workbook.active
             worksheet.title = sheet_name
 
+            index = 0
             for path, wb in self._pandas.items():
                 for ws in wb.sheet_names:
                     df = pd.read_excel(wb, sheet_name=ws).set_index(
@@ -389,8 +390,13 @@ class MockData:
                     )
                     df["Funding"] = ws
                     rows = dataframe_to_rows(df.reset_index(), index=False)
+                    if index != 0:
+                        next(rows)
+
                     for row in rows:
                         worksheet.append(row)
+
+                    index += 1
 
             self._workbooks[sheet_name] = workbook
             self.export(directory=directory)
