@@ -25,6 +25,15 @@ OUTPUT_COLUMNS = [
 FAMILY_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*families")
 RECIPIENT_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*recipients")
 CASELOAD_FORMAT_OPTIONS = {"number_format": FORMAT_NUMBER_COMMA_SEPARATED1}
+CATEGORIES = [
+    "Total Families",
+    "Two Parent Families",
+    "One Parent Families",
+    "No Parent Families",
+    "Total Recipients",
+    "Adult Recipients",
+    "Children Recipients",
+]
 
 
 def analyze_ambiguous_values(df: pd.DataFrame) -> dict:

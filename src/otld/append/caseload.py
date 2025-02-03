@@ -10,6 +10,7 @@ from otld.paths import out_dir, tableau_dir
 from otld.utils import export_workbook, get_header
 from otld.utils.caseload_utils import (
     CASELOAD_FORMAT_OPTIONS,
+    CATEGORIES,
     OUTPUT_COLUMNS,
     clean_dataset,
     format_final_dataset,
@@ -86,17 +87,6 @@ DATA_CONFIGS = {
 FILES = {"Federal": [], "State": [], "Total": []}
 DATA_DIR = "data/original_data"
 TAB_NAMES = {"Federal": "TANF", "State": "SSP_MOE", "Total": "TANF_SSP"}
-
-CATEGORIES = [
-    "Total Families",
-    "Two Parent Families",
-    "One Parent Families",
-    "No Parent Families",
-    "Total Recipients",
-    "Adult Recipients",
-    "Children Recipients",
-]
-
 LONG_FORMAT_COLUMNS = ["FiscalYear", "State", "Funding", "Category", "Number"]
 
 
