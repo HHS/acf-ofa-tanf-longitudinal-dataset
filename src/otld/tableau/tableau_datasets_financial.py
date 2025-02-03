@@ -9,36 +9,23 @@ from otld.paths import input_dir, inter_dir, out_dir, tableau_dir
 from otld.utils import excel_to_dict, export_workbook, wide_with_index
 
 
-def load_cpi_u() -> pd.DataFrame:
-    """Load the urban Consumer price index (CPI) data
-
-    Returns:
-        pd.DataFrame: CPI-U data frame
-    """
-    cpi = pd.read_excel(os.path.join(inter_dir, "cpi_u.xlsx"))
-    skip = 0
-    for i in range(cpi.shape[0]):
-        if cpi.iloc[i, 0] == "Year":
-            skip = i
-            break
-
-    cpi = pd.read_excel(os.path.join(inter_dir, "cpi_u.xlsx"), header=skip + 1)
-
-    return cpi
-
-
-def calculate_cpi(cpi: pd.DataFrame, base_year: int) -> pd.DataFrame:
-    """Output a base_cpi as well as calculate cpi for every federal fiscal year.
+def calculate_pce(base_year: int) -> pd.DataFrame:
+    """Output a base_pce as well as calculate pce for every federal fiscal year.
 
     Args:
-        cpi (pd.DataFrame): CPI data frame
+        df (pd.DataFrame): DataFrame containing PCE information
         base_year (int): The year to which to scale inflation adjusted dollars
 
     Returns:
-        pd.DataFrame: Data frame with cpi calculated
+        pd.DataFrame: Data frame with pce calculated
     """
-    global base_cpi
-    cpi.set_index("Year", inplace=True)
+    global base_pce
+
+    # Read in PCE
+    df = pd.read_csv(os.path.join(inter_dir, "pce_clean.csv")).rename(
+        columns={"year": "Year"}
+    )
+    df.set_index("Year", inplace=True)
 
     def calculate(row: pd.Series):
         try:
@@ -46,16 +33,16 @@ def calculate_cpi(cpi: pd.DataFrame, base_year: int) -> pd.DataFrame:
                 row[
                     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"]
                 ].sum()
-                + cpi.loc[row.name - 1, ["Oct", "Nov", "Dec"]].sum()
+                + df.loc[row.name - 1, ["Oct", "Nov", "Dec"]].sum()
             ) / 12
             return index
         except KeyError:
             return np.nan
 
-    cpi["cpi"] = cpi.apply(calculate, axis=1)
-    base_cpi = cpi.loc[base_year, "cpi"]
+    df["pce"] = df.apply(calculate, axis=1)
+    base_pce = df.loc[base_year, "pce"]
 
-    return cpi.reset_index()[["Year", "cpi"]]
+    return df.reset_index()[["Year", "pce"]]
 
 
 def inflation_adjust(row: pd.Series) -> float:
@@ -67,7 +54,7 @@ def inflation_adjust(row: pd.Series) -> float:
     Returns:
         float: Inflation adjusted expenditure.
     """
-    adjusted = row["Amount"] * base_cpi / row["cpi"]
+    adjusted = row["Amount"] * base_pce / row["pce"]
     return adjusted
 
 
@@ -159,15 +146,14 @@ def generate_long_data():
     financial_data.drop("Total", inplace=True, axis=1)
 
     # Add inflation adjusted amount
-    cpi_u = load_cpi_u()
-    cpi_u = calculate_cpi(cpi_u, financial_data["FiscalYear"].max())
+    pce = calculate_pce(financial_data["FiscalYear"].max())
     financial_data = financial_data.merge(
-        cpi_u, how="left", left_on="FiscalYear", right_on="Year"
+        pce, how="left", left_on="FiscalYear", right_on="Year"
     )
     financial_data["InflationAdjustedAmount"] = financial_data.apply(
         inflation_adjust, axis=1
     )
-    financial_data.drop(["Year", "cpi"], inplace=True, axis=1)
+    financial_data.drop(["Year", "pce"], inplace=True, axis=1)
 
     # Add column indicating which consolidated variable is associated
     consolidations = pd.read_excel(instructions, sheet_name="consolidated_categories")
