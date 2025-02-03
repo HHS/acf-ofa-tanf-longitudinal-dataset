@@ -373,6 +373,7 @@ class MockData:
         # Pivot data long and then export
         if long:
             sheet_name = f"{self._type.title()}DataLong.xlsx"
+            value_name = "Number" if self._type == "caseload" else "Amount"
             workbook = opxl.Workbook()
             worksheet = workbook.active
             worksheet.title = sheet_name
@@ -385,7 +386,7 @@ class MockData:
                     )
                     df = df.melt(
                         var_name="Category",
-                        value_name="Number",
+                        value_name=value_name,
                         ignore_index=False,
                     )
                     df["Funding"] = ws
