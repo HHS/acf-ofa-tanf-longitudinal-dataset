@@ -26,10 +26,15 @@ def generate_wide_data():
     )
 
 
-def generate_long_data():
-    """Generate Tableau-specific long dataset"""
-    df = pd.read_excel(os.path.join(tableau_dir, "data", "CaseloadDataLongRaw.xlsx"))
+def transform_caseload_long(df: pd.DataFrame) -> pd.DataFrame:
+    """Transformation for caseload long data
 
+    Args:
+        df (pd.DataFrame): Caseload dataset to transform
+
+    Returns:
+        pd.DataFrame: Transformed caseload dataset
+    """
     df["log_value"] = df["Number"].map(
         lambda x: math.log(x) if isinstance(x, (float, int)) and x != 0 else None
     )
@@ -67,6 +72,15 @@ def generate_long_data():
         [np.nan, np.inf, -np.inf], [0, 0, 0]
     )
     df.drop("base", inplace=True, axis=1)
+
+    return df
+
+
+def generate_long_data():
+    """Generate Tableau-specific long dataset"""
+    df = pd.read_excel(os.path.join(tableau_dir, "data", "CaseloadDataLongRaw.xlsx"))
+
+    df = transform_caseload_long(df)
 
     # Export
     df.to_excel(

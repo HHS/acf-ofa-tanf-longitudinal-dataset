@@ -5,8 +5,10 @@ import os
 import numpy as np
 import pandas as pd
 
-from otld.paths import input_dir, inter_dir, out_dir, tableau_dir
+from otld.paths import inter_dir, out_dir, tableau_dir
 from otld.utils import excel_to_dict, export_workbook, wide_with_index
+from otld.utils.consolidation_map import CONSOLIDATION_MAP
+from otld.utils.crosswalk_dict import crosswalk_dict
 
 
 def calculate_pce(base_year: int) -> pd.DataFrame:
@@ -92,24 +94,17 @@ def generate_wide_data():
     )
 
 
-def generate_long_data():
-    """Generate Tableau-specific long dataset"""
-    instructions = pd.ExcelFile(os.path.join(input_dir, "Instruction Crosswalk.xlsx"))
-    financial_data = pd.read_excel(
-        os.path.join(tableau_dir, "data", "FinancialDataLongRaw.xlsx")
-    )
-    crosswalk = pd.read_excel(instructions, sheet_name="crosswalk")
-
-    crosswalk["Category"] = crosswalk.apply(
-        lambda x: f"{x["196R"]}. {x["name"]}", axis=1
-    )
+def transform_financial_long(df: pd.DataFrame) -> pd.DataFrame:
+    # Line Crosswalk
+    crosswalk = pd.DataFrame.from_dict(crosswalk_dict, orient="index")
+    crosswalk["Category"] = crosswalk.apply(lambda x: f"{x.name}. {x["name"]}", axis=1)
     crosswalk = crosswalk[["Category", "description"]]
 
     # Percentage of TANF Funds
-    financial_data = financial_data.merge(crosswalk, how="left", on="Category")
+    df = df.merge(crosswalk, how="left", on="Category")
     awarded = (
-        financial_data[
-            financial_data["Category"].map(
+        df[
+            df["Category"].map(
                 lambda x: x
                 in [
                     "24. Total Expenditures",
@@ -122,48 +117,49 @@ def generate_long_data():
         .sum(["Amount"])
         .rename(columns={"Amount": "Total"})
     )
-    financial_data = financial_data.merge(
+    df = df.merge(
         awarded,
         how="left",
         on=["State", "FiscalYear", "Funding"],
     )
-    financial_data["pct_of_tanf"] = (
-        round(financial_data["Amount"] / financial_data["Total"], 4) * 100
-    ).replace([np.nan, np.inf, -np.inf], [0, 0, 0])
-    financial_data.drop("Total", inplace=True, axis=1)
+    df["pct_of_tanf"] = (round(df["Amount"] / df["Total"], 4) * 100).replace(
+        [np.nan, np.inf, -np.inf], [0, 0, 0]
+    )
+    df.drop("Total", inplace=True, axis=1)
 
     # Percentage of total
-    total = financial_data.loc[
-        financial_data["Funding"] == "Total",
+    total = df.loc[
+        df["Funding"] == "Total",
         ["State", "FiscalYear", "Category", "Amount"],
     ].rename(columns={"Amount": "Total"})
-    financial_data = financial_data.merge(
-        total, how="left", on=["State", "FiscalYear", "Category"]
+    df = df.merge(total, how="left", on=["State", "FiscalYear", "Category"])
+    df["pct_of_total"] = (round(df["Amount"] / df["Total"], 4) * 100).replace(
+        [np.nan, np.inf, -np.inf], [0, 0, 0]
     )
-    financial_data["pct_of_total"] = (
-        round(financial_data["Amount"] / financial_data["Total"], 4) * 100
-    ).replace([np.nan, np.inf, -np.inf], [0, 0, 0])
-    financial_data.drop("Total", inplace=True, axis=1)
+    df.drop("Total", inplace=True, axis=1)
 
     # Add inflation adjusted amount
-    pce = calculate_pce(financial_data["FiscalYear"].max())
-    financial_data = financial_data.merge(
-        pce, how="left", left_on="FiscalYear", right_on="Year"
-    )
-    financial_data["InflationAdjustedAmount"] = financial_data.apply(
-        inflation_adjust, axis=1
-    )
-    financial_data.drop(["Year", "pce"], inplace=True, axis=1)
+    pce = calculate_pce(df["FiscalYear"].max())
+    df = df.merge(pce, how="left", left_on="FiscalYear", right_on="Year")
+    df["InflationAdjustedAmount"] = df.apply(inflation_adjust, axis=1)
+    df.drop(["Year", "pce"], inplace=True, axis=1)
 
     # Add column indicating which consolidated variable is associated
-    consolidations = pd.read_excel(instructions, sheet_name="consolidated_categories")
-    consolidation_map = {}
-    consolidations.apply(
-        lambda row: update_consolidation_map(row, consolidation_map), axis=1
+    df["consolidated_column"] = df["Category"].map(
+        lambda x: get_consolidated_column(x, CONSOLIDATION_MAP)
     )
-    financial_data["consolidated_column"] = financial_data["Category"].map(
-        lambda x: get_consolidated_column(x, consolidation_map)
+
+    return df
+
+
+def generate_long_data():
+    """Generate Tableau-specific long dataset"""
+    financial_data = pd.read_excel(
+        os.path.join(tableau_dir, "data", "FinancialDataLongRaw.xlsx")
     )
+
+    # Transformations
+    financial_data = transform_financial_long(financial_data)
 
     # Export
     financial_data.to_excel(
