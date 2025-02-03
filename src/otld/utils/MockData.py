@@ -5,6 +5,7 @@ import random
 
 import openpyxl as opxl
 import pandas as pd
+from openpyxl.utils.dataframe import dataframe_to_rows
 
 from otld.utils.states import STATES
 
@@ -349,7 +350,7 @@ class MockData:
 
         return self
 
-    def export(self, directory: str = None, pandas: bool = False):
+    def export(self, directory: str = None, pandas: bool = False, long: bool = False):
         """Export mock data to a physical location or Pandas ExcelFile
 
         Args:
@@ -359,21 +360,46 @@ class MockData:
         assert (directory or pandas) and not (
             directory and pandas
         ), "One of `dir` or `pandas` must be specified."
-        if directory:
+        if directory and not long:
             for path, wb in self._workbooks.items():
                 path = os.path.join(directory, path)
                 wb.save(path)
                 wb.close()
-        elif pandas:
+        elif pandas or long:
             self._pandas = {}
             for path, wb in self._workbooks.items():
                 self._pandas[path] = pd.ExcelFile(wb, engine="openpyxl")
+
+        # Pivot data long and then export
+        if long:
+            sheet_name = f"{self._type.title()}DataLong.xlsx"
+            workbook = opxl.Workbook()
+            worksheet = workbook.active
+            worksheet.title = sheet_name
+
+            for path, wb in self._pandas.items():
+                for ws in wb.sheet_names:
+                    df = pd.read_excel(wb, sheet_name=ws).set_index(
+                        ["State", "FiscalYear"]
+                    )
+                    df = df.melt(
+                        var_name="Category",
+                        value_name="Number",
+                        ignore_index=False,
+                    )
+                    df["Funding"] = ws
+                    rows = dataframe_to_rows(df.reset_index(), index=False)
+                    for row in rows:
+                        worksheet.append(row)
+
+            self._workbooks[sheet_name] = workbook
+            self.export(directory=directory)
 
 
 if __name__ == "__main__":
     from otld.paths import test_dir
 
-    mock_data = MockData("financial", 2024)
+    mock_data = MockData("financial", [2021, 2022, 2023], True)
     mock_data.generate_data()
-    mock_data.export(pandas=True)
-    mock_data.export(os.path.join(test_dir, "mock"))
+    # mock_data.export(pandas=True)
+    mock_data.export(os.path.join(test_dir, "mock"), long=True)
