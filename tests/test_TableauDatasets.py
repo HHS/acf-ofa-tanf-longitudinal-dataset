@@ -14,20 +14,16 @@ MOCK_DIR = TEMP_DIR.name
 for dataset in ["financial", "caseload"]:
     mock_data = MockData(dataset, [2021, 2022, 2023], appended=True)
     mock_data.generate_data()
-    mock_data.export(directory=MOCK_DIR, long=True)
+    mock_data.export(directory=MOCK_DIR)
 
 FINANCIAL_MOCKED = [
     os.path.join(MOCK_DIR, f) for f in os.listdir(MOCK_DIR) if f.startswith("Financial")
 ]
-FINANCIAL_MOCKED.sort()
-FINANCIAL_MOCKED.reverse()
 CASELOAD_MOCKED = [
     os.path.join(MOCK_DIR, f) for f in os.listdir(MOCK_DIR) if f.startswith("Caseload")
 ]
-CASELOAD_MOCKED.sort()
-CASELOAD_MOCKED.reverse()
-assert len(FINANCIAL_MOCKED) == 2, "Incorrect number of financial files."
-assert len(CASELOAD_MOCKED) == 2, "Incorrect number of caseload files."
+assert len(FINANCIAL_MOCKED) == 1, "Incorrect number of financial files."
+assert len(CASELOAD_MOCKED) == 1, "Incorrect number of caseload files."
 
 INFLATION = os.path.join(MOCK_DIR, "pce.csv")
 with open(INFLATION, "w") as f:
@@ -43,24 +39,30 @@ class TestTableauDatasets(unittest.TestCase):
 
     def test_validate(self):
         open(os.path.join(self.mock_dir, "caseload.csv"), "w").close()
+        open(os.path.join(self.mock_dir, "inflation.txt"), "w").close()
         arguments = [
-            ["tribal", "temp.xlsx", "temp.xlsx", "tempdir/"],
-            ["caseload", "temp.xlsx", "temp.xlsx", "tempdir/"],
-            ["caseload", CASELOAD_MOCKED[0], "temp.xlsx", "tempdir/"],
+            ["tribal", "temp.xlsx", "tempdir/"],
+            ["caseload", "temp.xlsx", "tempdir/"],
             ["caseload", *CASELOAD_MOCKED, "tempdir/"],
+            ["caseload", os.path.join(self.mock_dir, "caseload.csv"), "tempdir/"],
+            ["financial", *FINANCIAL_MOCKED, self.tableau_dir],
+            ["financial", *FINANCIAL_MOCKED, self.tableau_dir, "-i", "temp.xlsx"],
             [
-                "caseload",
-                os.path.join(self.mock_dir, "caseload.csv"),
-                CASELOAD_MOCKED[1],
-                "tempdir/",
+                "financial",
+                *FINANCIAL_MOCKED,
+                self.tableau_dir,
+                "-i",
+                os.path.join(self.mock_dir, "inflation.txt"),
             ],
         ]
         raises = [
-            ValueError,
-            FileNotFoundError,
-            FileNotFoundError,
-            FileNotFoundError,
-            ValueError,
+            ValueError,  # Invalid type
+            FileNotFoundError,  # Wide file does not exist
+            FileNotFoundError,  # Destination does not exist
+            ValueError,  # Wide incorrect file type
+            ValueError,  # Must have inflation file
+            FileNotFoundError,  # Inflaiton file does not exist
+            ValueError,  # Incorrect file type
         ]
 
         for args, err in zip(arguments, raises):
