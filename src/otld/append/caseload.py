@@ -13,6 +13,7 @@ from otld.utils.caseload_utils import (
     CATEGORIES,
     OUTPUT_COLUMNS,
     clean_dataset,
+    extract_missing_average,
     format_final_dataset,
     merge_datasets,
     process_1997_1998_1999_data,
@@ -253,6 +254,13 @@ def process_workbook(
         if merged_data.empty:
             return master_wide
 
+        if year == 2012 and data_type == "State":
+            merged_data = merged_data.drop("One Parent Families", axis=1).merge(
+                extract_missing_average(file_path, "one-parent", generate=True),
+                how="left",
+                on="State",
+            )
+
         final_data = format_final_dataset(merged_data, OUTPUT_COLUMNS)
         if final_data.empty:
             return master_wide
@@ -287,7 +295,7 @@ def main():
         for file_path in file_list:
             year = int(file_path.split("fy")[1][:4])
             division_name = TAB_NAMES[data_type]
-            # if year != 2004 or division_name != "SSP-MOE":
+            # if year != 2012 or division_name != "SSP_MOE":
             #     continue
             master_wide[division_name] = process_workbook(
                 file_path,
