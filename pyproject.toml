@@ -18,3 +18,4 @@ build-backend = "setuptools.build_meta"
 
 [project.scripts]
 tanf-append="otld.append.append:main"
+tanf-tableau="otld.tableau.TableauDatasets:main"
