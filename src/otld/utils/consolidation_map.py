@@ -34,6 +34,7 @@ def gen_consolidation_map():
     consolidations.apply(
         lambda row: update_consolidation_map(row, consolidation_map), axis=1
     )
+    consolidations.fillna("", inplace=True)
 
     # Adapted from https://stackoverflow.com/questions/620367/how-to-jump-to-a-particular-line-in-a-huge-text-file
     handle = open(__file__, "rb+")
@@ -45,13 +46,15 @@ def gen_consolidation_map():
 
     handle.seek(0)
 
-    handle.seek(line_offset[55])
+    handle.seek(line_offset[58])
     handle.write(b"CONSOLIDATION_MAP = ")
     handle.write(json.dumps(consolidation_map, indent=4).encode())
     handle.write(b"\n\n")
+    handle.write(b"CONSOLIDATION_INSTRUCTIONS = ")
+    handle.write(json.dumps(consolidations.to_dict(), indent=4).encode())
+    handle.write(b"\n\n")
     handle.write(b'if __name__ == "__main__":\n')
     handle.write(b"\tgen_consolidation_map()")
-
 
 CONSOLIDATION_MAP = {
     "6": "Basic Assistance",
@@ -78,8 +81,62 @@ CONSOLIDATION_MAP = {
     "8b": "Authorized Solely Under Prior Law",
     "8c": "Authorized Solely Under Prior Law",
     "19": "Fatherhood & Two-Parent Family Programs",
-    "23": "Other",
+    "23": "Other"
+}
+
+CONSOLIDATION_INSTRUCTIONS = {
+    "instructions": {
+        "0": 6,
+        "1": 9,
+        "2": "2,11a",
+        "3": 22,
+        "4": "13,14",
+        "5": "7a,8a,20",
+        "6": "11b",
+        "7": 3,
+        "8": 18,
+        "9": 15,
+        "10": "10,12,16",
+        "11": "17,21",
+        "12": "7b,7c,8b,8c",
+        "13": 19,
+        "14": 23
+    },
+    "name": {
+        "0": "Basic Assistance",
+        "1": "Work, Education, & Training Activities",
+        "2": "Child Care (Spent or Transferred)",
+        "3": "Program Management",
+        "4": "Refundable Tax Credits",
+        "5": "Child Welfare Services",
+        "6": "Pre-Kindergarten/Head Start",
+        "7": "Transferred to SSBG",
+        "8": "Out-of-Wedlock Pregnancy Prevention",
+        "9": "Non-Recurrent Short Term Benefits",
+        "10": "Work Supports & Supportive Services",
+        "11": "Services for Children & Youth",
+        "12": "Authorized Solely Under Prior Law",
+        "13": "Fatherhood & Two-Parent Family Programs",
+        "14": "Other"
+    },
+    "notes": {
+        "0": "",
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": "May include Foster Care/Child Welfare authorized solely under prior law.\n",
+        "6": "",
+        "7": "",
+        "8": "",
+        "9": "",
+        "10": "May include Financial Education and Asset Development.",
+        "11": "May include Home Visiting.",
+        "12": "Excludes Foster Care/Child Welfare authorized solely under prior law.",
+        "13": "",
+        "14": ""
+    }
 }
 
 if __name__ == "__main__":
-    gen_consolidation_map()
+	gen_consolidation_map()
