@@ -7,7 +7,7 @@ import pandas as pd
 
 from otld.paths import inter_dir, out_dir, tableau_dir
 from otld.utils import excel_to_dict, export_workbook, wide_with_index
-from otld.utils.consolidation_map import CONSOLIDATION_MAP
+from otld.utils.consolidation import CONSOLIDATION_MAP
 from otld.utils.crosswalk_dict import crosswalk_dict
 
 
@@ -56,18 +56,6 @@ def inflation_adjust(row: pd.Series) -> float:
     """
     adjusted = row["Amount"] * base_pce / row["pce"]
     return adjusted
-
-
-def update_consolidation_map(row: pd.Series, map: dict):
-    instructions = row["instructions"]
-    name = row["name"]
-    if isinstance(instructions, int):
-        map.update({str(instructions): name})
-    elif isinstance(instructions, str):
-        instructions = instructions.split(",")
-        map.update({i.strip(): name for i in instructions})
-    else:
-        raise ValueError("Object is not int or str.")
 
 
 def get_consolidated_column(column: str, map: dict):
