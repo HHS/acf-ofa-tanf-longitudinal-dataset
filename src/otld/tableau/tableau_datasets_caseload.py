@@ -36,7 +36,7 @@ def transform_caseload_long(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: Transformed caseload dataset
     """
     df["log_value"] = df["Number"].map(
-        lambda x: math.log(x) if isinstance(x, (float, int)) and x != 0 else None
+        lambda x: math.log(x, 10) if isinstance(x, (float, int)) and x != 0 else None
     )
 
     # Calculate percentage of total
