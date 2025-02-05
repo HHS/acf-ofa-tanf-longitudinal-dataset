@@ -3,7 +3,7 @@ pip install -U pip
 pip install .
 
 # Run tests
-python3 -m unittest discover tests/
+python3 -m pytest tests/unit
 
 # If tests fail, exit with status 1, probably not needed
 # result=$(echo $?)
