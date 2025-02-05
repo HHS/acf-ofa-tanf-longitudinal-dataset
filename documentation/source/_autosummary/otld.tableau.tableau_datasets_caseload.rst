@@ -12,4 +12,5 @@ otld.tableau.tableau\_datasets\_caseload
       generate_long_data
       generate_wide_data
       main
+      transform_caseload_long
    

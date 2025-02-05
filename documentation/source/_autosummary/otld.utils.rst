@@ -15,6 +15,8 @@ otld.utils
    MockData
    caseload_utils
    checks
+   clean_pce
+   consolidation
    crosswalk_2014_2015
    crosswalk_dict
    expenditure_utils
