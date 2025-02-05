@@ -48,14 +48,14 @@ class GenericChecker:
         """ACF Instructions (196, 196R, Appended)"""
         return self._kind
 
-    def export(self, path: str | os.PathLike, sheet_name: str = None) -> None:
+    def export(self, path: str | os.PathLike, sheet_name: str = None, **kwargs) -> None:
         """Export checks to a workbook
 
         Args:
             path (str | os.PathLike): Path to export checks to.
             sheet_name (str, optional): An optional sheet name for the checks. Defaults to None.
         """
-        export_workbook(self._checks, path)
+        export_workbook(self._checks, path, **kwargs)
 
 
 class ExpenditureDataChecker(GenericChecker):

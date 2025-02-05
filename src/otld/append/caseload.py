@@ -309,7 +309,8 @@ def main():
         master_wide[frame].set_index(["State", "FiscalYear"], inplace=True)
 
     CaseloadDataChecker(master_wide, action="export").check().export(
-        os.path.join(diagnostics_dir, "caseload_checks.xlsx")
+        os.path.join(diagnostics_dir, "caseload_checks.xlsx"),
+        format_options=CASELOAD_FORMAT_OPTIONS,
     )
 
     # Save the original data files as before...
