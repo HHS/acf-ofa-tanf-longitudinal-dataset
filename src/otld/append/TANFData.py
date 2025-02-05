@@ -275,7 +275,7 @@ class TANFData:
                 self._to_append["data"], sheet_name=worksheet, header=None
             )
             df = self.get_header_wrapper(df)
-            df.columns = [col.strip() for col in df.columns]
+            df.columns = [str(col).strip() for col in df.columns]
 
             # Add year column
             df["Year"] = self._to_append["year"]

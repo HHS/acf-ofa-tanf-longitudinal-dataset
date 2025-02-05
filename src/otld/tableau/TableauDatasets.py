@@ -52,7 +52,7 @@ class TableauDatasets:
         parser = argparse.ArgumentParser(
             prog="tanf-tableau", description="Create Tableau Datasets"
         )
-        parser.add_argument("kind", type=str, help="Type of data to append.")
+        parser.add_argument("kind", type=str, help="Type of input dataset.")
         parser.add_argument("wide", type=str, help="Appended data in wide format.")
         parser.add_argument(
             "destination", type=str, help="Where to save the resultant dataset."
