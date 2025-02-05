@@ -51,9 +51,42 @@ class TANFData:
 
         self._out_dir = os.path.split(appended_path)[0]
 
+        self._to_append = {}
+
+        self.load_data(to_append_path)
+        self.set_sheets(sheets)
+
+    @property
+    def appended(self):
+        """Base file containing appended data"""
+        return self._appended
+
+    @property
+    def to_append(self):
+        """File, or list of files, to append to base file"""
+        return self._to_append
+
+    @property
+    def type(self):
+        """The kind of data being appended"""
+        return self._type
+
+    @property
+    def sheet_dict(self):
+        """Dictionary of sheets from which to extract information"""
+        return self._sheet_dict
+
+    def load_data(self, to_append_path: str):
         year_pattern = re.compile(r"(\d{4})")
 
-        self._to_append = {}
+        # If financial and list is length 1, then extract string
+        to_append_path = (
+            to_append_path[0]
+            if self._type == "financial"
+            and isinstance(to_append_path, list)
+            and len(to_append_path) == 1
+            else to_append_path
+        )
 
         # Load the data
         if isinstance(to_append_path, str):
@@ -93,6 +126,7 @@ class TANFData:
                 "Path to files to append must be a string or list of strings."
             )
 
+    def set_sheets(self, sheets: dict = {}):
         # Dictionary defining which sheets correspond to which tabs
         if sheets:
             self._sheet_dict = sheets
@@ -129,26 +163,6 @@ class TANFData:
                 },
             }
             self._sheet_dict.update({"internal": 1})
-
-    @property
-    def appended(self):
-        """Base file containing appended data"""
-        return self._appended
-
-    @property
-    def to_append(self):
-        """File, or list of files, to append to base file"""
-        return self._to_append
-
-    @property
-    def type(self):
-        """The kind of data being appended"""
-        return self._type
-
-    @property
-    def sheet_dict(self):
-        """Dictionary of sheets from which to extract information"""
-        return self._sheet_dict
 
     def identify_workbook_level(self, path: str):
         """Identify the level of the caseload workbook"""

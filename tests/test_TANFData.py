@@ -3,6 +3,8 @@ import tempfile
 import time
 import unittest
 
+from pandas import ExcelFile
+
 from data import CASELOAD_DATA_WIDE, FINANCIAL_DATA_WIDE, GET_HEADER_DICT
 from otld.append.TANFData import TANFData
 from otld.utils.MockData import MockData
@@ -76,10 +78,10 @@ class TestTANFData(unittest.TestCase):
         tanf_data.close_excel_files()
 
     def test_append_expenditure(self):
-        financial_data_wide = os.path.join(self.mock_dir, "FinancialDataWide.xlsx")
-        dict_to_excel(FINANCIAL_DATA_WIDE, financial_data_wide)
+        financial_data_wide_path = os.path.join(self.mock_dir, "FinancialDataWide.xlsx")
+        dict_to_excel(FINANCIAL_DATA_WIDE, financial_data_wide_path)
 
-        tanf_data = TANFData("financial", financial_data_wide, FINANCIAL_MOCKED[0])
+        tanf_data = TANFData("financial", financial_data_wide_path, FINANCIAL_MOCKED[0])
         tanf_data.append()
 
         current_date = time.strftime("%Y%m%d", time.gmtime())
@@ -98,12 +100,12 @@ class TestTANFData(unittest.TestCase):
         tanf_data.close_excel_files()
 
     def test_get_header_wrapper(self):
-        financial_data_wide = os.path.join(self.mock_dir, "FinancialDataWide.xlsx")
-        dict_to_excel(FINANCIAL_DATA_WIDE, financial_data_wide)
+        financial_data_wide_path = os.path.join(self.mock_dir, "FinancialDataWide.xlsx")
+        dict_to_excel(FINANCIAL_DATA_WIDE, financial_data_wide_path)
 
         tanf_data = TANFData(
             "financial",
-            financial_data_wide,
+            financial_data_wide_path,
             FINANCIAL_MOCKED[0],
         )
 
@@ -115,8 +117,8 @@ class TestTANFData(unittest.TestCase):
         tanf_data.close_excel_files()
 
     def test_get_worksheets(self):
-        financial_data_wide = os.path.join(self.mock_dir, "FinancialDataWide.xlsx")
-        dict_to_excel(FINANCIAL_DATA_WIDE, financial_data_wide)
+        financial_data_wide_path = os.path.join(self.mock_dir, "FinancialDataWide.xlsx")
+        dict_to_excel(FINANCIAL_DATA_WIDE, financial_data_wide_path)
 
         caseload_data_wide_path = os.path.join(self.mock_dir, "CaseloadDataWide.xlsx")
         dict_to_excel(CASELOAD_DATA_WIDE, caseload_data_wide_path)
@@ -124,7 +126,7 @@ class TestTANFData(unittest.TestCase):
         # Test externally provided sheets, financial
         tanf_data = TANFData(
             "financial",
-            financial_data_wide,
+            financial_data_wide_path,
             FINANCIAL_MOCKED,
             sheets={"financial": {"Federal": "September 2023"}},
         )
@@ -136,7 +138,7 @@ class TestTANFData(unittest.TestCase):
         # Test internally provided sheets, financial
         tanf_data = TANFData(
             "financial",
-            financial_data_wide,
+            financial_data_wide_path,
             FINANCIAL_MOCKED[0],
         )
         tanf_data._level = "Federal"
@@ -177,6 +179,47 @@ class TestTANFData(unittest.TestCase):
 
         tanf_data.close_excel_files()
 
+    def test_load_data(self):
+        financial_data_wide_path = os.path.join(self.mock_dir, "FinancialDataWide.xlsx")
+        dict_to_excel(FINANCIAL_DATA_WIDE, financial_data_wide_path)
+
+        caseload_data_wide_path = os.path.join(self.mock_dir, "CaseloadDataWide.xlsx")
+        dict_to_excel(CASELOAD_DATA_WIDE, caseload_data_wide_path)
+
+        # Check that financial data loads when string
+        tanf_data = TANFData(
+            "financial",
+            financial_data_wide_path,
+            FINANCIAL_MOCKED[0],
+        )
+        self.assertTrue(isinstance(tanf_data.to_append["data"], ExcelFile))
+
+        tanf_data.close_excel_files()
+
+        # Check that financial data loads when list
+        tanf_data = TANFData(
+            "financial",
+            financial_data_wide_path,
+            FINANCIAL_MOCKED,
+        )
+        self.assertTrue(isinstance(tanf_data.to_append["data"], ExcelFile))
+
+        tanf_data.close_excel_files()
+
+        # Check that caseload data loads
+        tanf_data = TANFData(
+            "caseload",
+            caseload_data_wide_path,
+            CASELOAD_MOCKED,
+        )
+        self.assertTrue(isinstance(tanf_data.to_append["data"], dict))
+        [
+            self.assertTrue(isinstance(frame, ExcelFile))
+            for frame in tanf_data.to_append["data"].values()
+        ]
+
+        tanf_data.close_excel_files()
+
     def tearDown(self):
         return super().tearDown()
 
@@ -184,5 +227,5 @@ class TestTANFData(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TestTANFData("test_append_caseload"))
+    # suite.addTest(TestTANFData("test_get_worksheets"))
     # unittest.TextTestRunner().run(suite)
