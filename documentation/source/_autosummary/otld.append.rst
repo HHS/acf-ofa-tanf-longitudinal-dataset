@@ -17,4 +17,6 @@ otld.append
    append_2010_2014
    append_2015_2023
    caseload
+   combine_appended_files
+   format_appended_files
    gui

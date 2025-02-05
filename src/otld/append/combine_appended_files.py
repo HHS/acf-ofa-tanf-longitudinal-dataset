@@ -8,7 +8,7 @@ import pandas as pd
 from otld.paths import input_dir, inter_dir
 from otld.utils import missingness, validate_data_frame
 from otld.utils.crosswalk_2014_2015 import crosswalk, crosswalk_dict, map_columns
-from otld.utils.expenditure_utils import reindex_state_year
+from otld.utils.expenditure_utils import consolidate_categories, reindex_state_year
 
 
 def get_column_list(crosswalk: pd.DataFrame, column: str | int) -> list[str]:
@@ -67,29 +67,6 @@ def format_state_index(value: tuple) -> tuple:
     )
 
     return state_name, value[1]
-
-
-def consolidate_categories(row: pd.Series, df: pd.DataFrame) -> None:
-    """Consolidate Funding categories (for visualization)
-
-    Args:
-        row (pd.Series): Row containing consolidation instructions and new variable name.
-        df (pd.DataFrame): DataFrame in which to create new columns.
-    """
-
-    columns = str(row["instructions"]).split(",")
-    try:
-        in_columns = [column in df.columns for column in columns]
-        assert all(in_columns)
-    except AssertionError:
-        present = []
-        for i, val in enumerate(in_columns):
-            if val is True:
-                present.append(columns[i])
-
-        columns = present
-
-    df[row["name"]] = df[columns].sum(axis=1)
 
 
 def main() -> dict[pd.DataFrame]:

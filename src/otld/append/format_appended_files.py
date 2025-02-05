@@ -8,7 +8,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from otld import combine_appended_files
+from otld.append import combine_appended_files
 from otld.utils.openpyxl_utils import export_workbook
 
 
@@ -75,7 +75,7 @@ def main():
     )
 
     frames["FinancialData"] = frames["FinancialData"][
-        frames["FinancialData"].map(lambda x: x not in drop_columns)
+        frames["FinancialData"]["Category"].map(lambda x: x not in drop_columns)
     ]
     export_workbook(frames, os.path.join(out_dir, "FinancialDataLong.xlsx"))
 

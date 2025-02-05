@@ -10,5 +10,7 @@ otld.utils.checks
       :toctree:
       :template: custom-class-template.rst
    
+      CaseloadDataChecker
       ExpenditureDataChecker
+      GenericChecker
    

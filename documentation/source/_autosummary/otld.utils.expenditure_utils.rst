@@ -9,5 +9,6 @@ otld.utils.expenditure\_utils
    .. autosummary::
       :toctree:
    
+      consolidate_categories
       reindex_state_year
    

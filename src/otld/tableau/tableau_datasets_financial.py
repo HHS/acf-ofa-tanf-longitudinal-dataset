@@ -5,40 +5,27 @@ import os
 import numpy as np
 import pandas as pd
 
-from otld.paths import input_dir, inter_dir, out_dir, tableau_dir
+from otld.paths import inter_dir, out_dir, tableau_dir
 from otld.utils import excel_to_dict, export_workbook, wide_with_index
+from otld.utils.consolidation import CONSOLIDATION_MAP
+from otld.utils.crosswalk_dict import crosswalk_dict
 
 
-def load_cpi_u() -> pd.DataFrame:
-    """Load the urban Consumer price index (CPI) data
-
-    Returns:
-        pd.DataFrame: CPI-U data frame
-    """
-    cpi = pd.read_excel(os.path.join(inter_dir, "cpi_u.xlsx"))
-    skip = 0
-    for i in range(cpi.shape[0]):
-        if cpi.iloc[i, 0] == "Year":
-            skip = i
-            break
-
-    cpi = pd.read_excel(os.path.join(inter_dir, "cpi_u.xlsx"), header=skip + 1)
-
-    return cpi
-
-
-def calculate_cpi(cpi: pd.DataFrame, base_year: int) -> pd.DataFrame:
-    """Output a base_cpi as well as calculate cpi for every federal fiscal year.
+def calculate_pce(path: str, base_year: int) -> pd.DataFrame:
+    """Output a base_pce as well as calculate pce for every federal fiscal year.
 
     Args:
-        cpi (pd.DataFrame): CPI data frame
+        path (str): Path to PCE csv
         base_year (int): The year to which to scale inflation adjusted dollars
 
     Returns:
-        pd.DataFrame: Data frame with cpi calculated
+        pd.DataFrame: Data frame with pce calculated
     """
-    global base_cpi
-    cpi.set_index("Year", inplace=True)
+    global base_pce
+
+    # Read in PCE
+    df = pd.read_csv(path).rename(columns={"year": "Year"})
+    df.set_index("Year", inplace=True)
 
     def calculate(row: pd.Series):
         try:
@@ -46,16 +33,16 @@ def calculate_cpi(cpi: pd.DataFrame, base_year: int) -> pd.DataFrame:
                 row[
                     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"]
                 ].sum()
-                + cpi.loc[row.name - 1, ["Oct", "Nov", "Dec"]].sum()
+                + df.loc[row.name - 1, ["Oct", "Nov", "Dec"]].sum()
             ) / 12
             return index
         except KeyError:
             return np.nan
 
-    cpi["cpi"] = cpi.apply(calculate, axis=1)
-    base_cpi = cpi.loc[base_year, "cpi"]
+    df["pce"] = df.apply(calculate, axis=1)
+    base_pce = df.loc[base_year, "pce"]
 
-    return cpi.reset_index()[["Year", "cpi"]]
+    return df.reset_index()[["Year", "pce"]]
 
 
 def inflation_adjust(row: pd.Series) -> float:
@@ -67,20 +54,8 @@ def inflation_adjust(row: pd.Series) -> float:
     Returns:
         float: Inflation adjusted expenditure.
     """
-    adjusted = row["Amount"] * base_cpi / row["cpi"]
+    adjusted = row["Amount"] * base_pce / row["pce"]
     return adjusted
-
-
-def update_consolidation_map(row: pd.Series, map: dict):
-    instructions = row["instructions"]
-    name = row["name"]
-    if isinstance(instructions, int):
-        map.update({str(instructions): name})
-    elif isinstance(instructions, str):
-        instructions = instructions.split(",")
-        map.update({i.strip(): name for i in instructions})
-    else:
-        raise ValueError("Object is not int or str.")
 
 
 def get_consolidated_column(column: str, map: dict):
@@ -105,24 +80,17 @@ def generate_wide_data():
     )
 
 
-def generate_long_data():
-    """Generate Tableau-specific long dataset"""
-    instructions = pd.ExcelFile(os.path.join(input_dir, "Instruction Crosswalk.xlsx"))
-    financial_data = pd.read_excel(
-        os.path.join(tableau_dir, "data", "FinancialDataLongRaw.xlsx")
-    )
-    crosswalk = pd.read_excel(instructions, sheet_name="crosswalk")
-
-    crosswalk["Category"] = crosswalk.apply(
-        lambda x: f"{x["196R"]}. {x["name"]}", axis=1
-    )
+def transform_financial_long(df: pd.DataFrame, pce_path: str) -> pd.DataFrame:
+    # Line Crosswalk
+    crosswalk = pd.DataFrame.from_dict(crosswalk_dict, orient="index")
+    crosswalk["Category"] = crosswalk.apply(lambda x: f"{x.name}. {x["name"]}", axis=1)
     crosswalk = crosswalk[["Category", "description"]]
 
     # Percentage of TANF Funds
-    financial_data = financial_data.merge(crosswalk, how="left", on="Category")
+    df = df.merge(crosswalk, how="left", on="Category")
     awarded = (
-        financial_data[
-            financial_data["Category"].map(
+        df[
+            df["Category"].map(
                 lambda x: x
                 in [
                     "24. Total Expenditures",
@@ -135,48 +103,50 @@ def generate_long_data():
         .sum(["Amount"])
         .rename(columns={"Amount": "Total"})
     )
-    financial_data = financial_data.merge(
+    df = df.merge(
         awarded,
         how="left",
         on=["State", "FiscalYear", "Funding"],
     )
-    financial_data["pct_of_tanf"] = (
-        round(financial_data["Amount"] / financial_data["Total"], 4) * 100
-    ).replace([np.nan, np.inf, -np.inf], [0, 0, 0])
-    financial_data.drop("Total", inplace=True, axis=1)
+    df["pct_of_tanf"] = (round(df["Amount"] / df["Total"], 4) * 100).replace(
+        [np.nan, np.inf, -np.inf], [0, 0, 0]
+    )
+    df.drop("Total", inplace=True, axis=1)
 
     # Percentage of total
-    total = financial_data.loc[
-        financial_data["Funding"] == "Total",
+    total = df.loc[
+        df["Funding"] == "Total",
         ["State", "FiscalYear", "Category", "Amount"],
     ].rename(columns={"Amount": "Total"})
-    financial_data = financial_data.merge(
-        total, how="left", on=["State", "FiscalYear", "Category"]
+    df = df.merge(total, how="left", on=["State", "FiscalYear", "Category"])
+    df["pct_of_total"] = (round(df["Amount"] / df["Total"], 4) * 100).replace(
+        [np.nan, np.inf, -np.inf], [0, 0, 0]
     )
-    financial_data["pct_of_total"] = (
-        round(financial_data["Amount"] / financial_data["Total"], 4) * 100
-    ).replace([np.nan, np.inf, -np.inf], [0, 0, 0])
-    financial_data.drop("Total", inplace=True, axis=1)
+    df.drop("Total", inplace=True, axis=1)
 
     # Add inflation adjusted amount
-    cpi_u = load_cpi_u()
-    cpi_u = calculate_cpi(cpi_u, financial_data["FiscalYear"].max())
-    financial_data = financial_data.merge(
-        cpi_u, how="left", left_on="FiscalYear", right_on="Year"
-    )
-    financial_data["InflationAdjustedAmount"] = financial_data.apply(
-        inflation_adjust, axis=1
-    )
-    financial_data.drop(["Year", "cpi"], inplace=True, axis=1)
+    pce = calculate_pce(pce_path, df["FiscalYear"].max())
+    df = df.merge(pce, how="left", left_on="FiscalYear", right_on="Year")
+    df["InflationAdjustedAmount"] = df.apply(inflation_adjust, axis=1)
+    df.drop(["Year", "pce"], inplace=True, axis=1)
 
     # Add column indicating which consolidated variable is associated
-    consolidations = pd.read_excel(instructions, sheet_name="consolidated_categories")
-    consolidation_map = {}
-    consolidations.apply(
-        lambda row: update_consolidation_map(row, consolidation_map), axis=1
+    df["consolidated_column"] = df["Category"].map(
+        lambda x: get_consolidated_column(x, CONSOLIDATION_MAP)
     )
-    financial_data["consolidated_column"] = financial_data["Category"].map(
-        lambda x: get_consolidated_column(x, consolidation_map)
+
+    return df
+
+
+def generate_long_data():
+    """Generate Tableau-specific long dataset"""
+    financial_data = pd.read_excel(
+        os.path.join(tableau_dir, "data", "FinancialDataLongRaw.xlsx")
+    )
+
+    # Transformations
+    financial_data = transform_financial_long(
+        financial_data, os.path.join(inter_dir, "pce_clean.csv")
     )
 
     # Export
@@ -188,7 +158,7 @@ def generate_long_data():
 
 
 def main():
-    generate_wide_data()
+    # generate_wide_data()
     generate_long_data()
 
 

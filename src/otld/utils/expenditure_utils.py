@@ -1,6 +1,6 @@
 """Common pandas utilities"""
 
-__all__ = ["reindex_state_year"]
+__all__ = ["reindex_state_year", "consolidate_categories"]
 
 
 import pandas as pd
@@ -47,3 +47,26 @@ def reindex_state_year(
     df = df.reindex(new_index)
 
     return df
+
+
+def consolidate_categories(row: pd.Series, df: pd.DataFrame) -> None:
+    """Consolidate Funding categories (for visualization)
+
+    Args:
+        row (pd.Series): Row containing consolidation instructions and new variable name.
+        df (pd.DataFrame): DataFrame in which to create new columns.
+    """
+
+    columns = str(row["instructions"]).split(",")
+    try:
+        in_columns = [column in df.columns for column in columns]
+        assert all(in_columns)
+    except AssertionError:
+        present = []
+        for i, val in enumerate(in_columns):
+            if val is True:
+                present.append(columns[i])
+
+        columns = present
+
+    df[row["name"]] = df[columns].sum(axis=1)

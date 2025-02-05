@@ -2,10 +2,10 @@ import os
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock
 
 from otld.append.append import TANFAppend
-from otld.paths import test_dir
 from otld.utils.MockData import MockData
 
 
@@ -16,7 +16,7 @@ class TestTANFAppend(unittest.TestCase):
         mock_dir = self.mock_dir
         mock_data = MockData("caseload", 2024)
         mock_data.generate_data()
-        mock_data.export(dir=mock_dir)
+        mock_data.export(directory=mock_dir)
 
     def tearDown(self):
         return super().tearDown()
@@ -25,7 +25,7 @@ class TestTANFAppend(unittest.TestCase):
         sys.argv = [
             "tanf-append",
             "caseload",
-            os.path.join(test_dir, "CaseloadDataWide.xlsx"),
+            os.path.join(self.mock_dir, "CaseloadDataWide.xlsx"),
             "-d",
             self.mock_dir,
         ]
@@ -46,14 +46,14 @@ class TestTANFAppend(unittest.TestCase):
         sys.argv = [
             "tanf-append",
             "caseload",
-            os.path.join(test_dir, "CaseloadDataWide.xlsx"),
+            os.path.join(self.mock_dir, "CaseloadDataWide.xlsx"),
             "-d",
             self.mock_dir,
         ]
 
         appender = TANFAppend()
         files = appender._to_append
-        files = [file.split("\\")[-1] for file in files]
+        files = [Path(file).name for file in files]
         files.sort()
         correct = [
             "fy2024_ssp_caseload.xlsx",
@@ -68,7 +68,7 @@ class TestTANFAppend(unittest.TestCase):
         sys.argv = [
             "tanf-append",
             "financial",
-            os.path.join(test_dir, "CaseloadDataWide.xlsx"),
+            os.path.join(self.mock_dir, "CaseloadDataWide.xlsx"),
             "-d",
             self.mock_dir,
             "-s",
@@ -88,7 +88,7 @@ class TestTANFAppend(unittest.TestCase):
         sys.argv = [
             "tanf-append",
             "caseload",
-            os.path.join(test_dir, "CaseloadDataWide.xlsx"),
+            os.path.join(self.mock_dir, "CaseloadDataWide.xlsx"),
             "-d",
             self.mock_dir,
             "-s",
@@ -121,7 +121,7 @@ class TestTANFAppend(unittest.TestCase):
         sys.argv = [
             "tanf-append",
             "financial",
-            os.path.join(test_dir, "CaseloadDataWide.xlsx"),
+            os.path.join(self.mock_dir, "CaseloadDataWide.xlsx"),
             "-d",
             self.mock_dir,
             "-s",
@@ -134,7 +134,7 @@ class TestTANFAppend(unittest.TestCase):
         sys.argv = [
             "tanf-append",
             "caseload",
-            os.path.join(test_dir, "CaseloadDataWide.xlsx"),
+            os.path.join(self.mock_dir, "CaseloadDataWide.xlsx"),
             "-d",
             self.mock_dir,
             "-s",
@@ -150,7 +150,7 @@ class TestTANFAppend(unittest.TestCase):
         sys.argv = [
             "tanf-append",
             "caseload",
-            os.path.join(test_dir, "CaseloadDataWide.xlsx"),
+            os.path.join(self.mock_dir, "CaseloadDataWide.xlsx"),
             "-d",
             self.mock_dir,
             "-s",
@@ -165,7 +165,7 @@ class TestTANFAppend(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # unittest.main()
-    suite = unittest.TestSuite()
-    suite.addTest(TestTANFAppend("test_append"))
-    unittest.TextTestRunner().run(suite)
+    unittest.main()
+    # suite = unittest.TestSuite()
+    # suite.addTest(TestTANFAppend("test_append"))
+    # unittest.TextTestRunner().run(suite)

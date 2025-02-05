@@ -6,17 +6,20 @@ from typing import List, Optional
 
 import pandas as pd
 
-from otld.paths import out_dir, tableau_dir
+from otld.paths import diagnostics_dir, out_dir, tableau_dir
 from otld.utils import export_workbook, get_header
 from otld.utils.caseload_utils import (
     CASELOAD_FORMAT_OPTIONS,
+    CATEGORIES,
     OUTPUT_COLUMNS,
     clean_dataset,
+    extract_missing_average,
     format_final_dataset,
     merge_datasets,
     process_1997_1998_1999_data,
     process_sheet,
 )
+from otld.utils.checks import CaseloadDataChecker
 
 # Configuration
 DATA_CONFIGS = {
@@ -86,17 +89,6 @@ DATA_CONFIGS = {
 FILES = {"Federal": [], "State": [], "Total": []}
 DATA_DIR = "data/original_data"
 TAB_NAMES = {"Federal": "TANF", "State": "SSP_MOE", "Total": "TANF_SSP"}
-
-CATEGORIES = [
-    "Total Families",
-    "Two Parent Families",
-    "One Parent Families",
-    "No Parent Families",
-    "Total Recipients",
-    "Adult Recipients",
-    "Children Recipients",
-]
-
 LONG_FORMAT_COLUMNS = ["FiscalYear", "State", "Funding", "Category", "Number"]
 
 
@@ -263,6 +255,13 @@ def process_workbook(
         if merged_data.empty:
             return master_wide
 
+        if year == 2012 and data_type == "State":
+            merged_data = merged_data.drop("One Parent Families", axis=1).merge(
+                extract_missing_average(file_path, "one-parent", generate=True),
+                how="left",
+                on="State",
+            )
+
         final_data = format_final_dataset(merged_data, OUTPUT_COLUMNS)
         if final_data.empty:
             return master_wide
@@ -297,7 +296,7 @@ def main():
         for file_path in file_list:
             year = int(file_path.split("fy")[1][:4])
             division_name = TAB_NAMES[data_type]
-            # if year != 2004 or division_name != "SSP-MOE":
+            # if year != 2012 or division_name != "SSP_MOE":
             #     continue
             master_wide[division_name] = process_workbook(
                 file_path,
@@ -308,6 +307,10 @@ def main():
 
     for frame in master_wide:
         master_wide[frame].set_index(["State", "FiscalYear"], inplace=True)
+
+    CaseloadDataChecker(master_wide, action="export").check().export(
+        os.path.join(diagnostics_dir, "caseload_checks.xlsx")
+    )
 
     # Save the original data files as before...
     export_workbook(

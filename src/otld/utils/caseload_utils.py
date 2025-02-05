@@ -25,6 +25,15 @@ OUTPUT_COLUMNS = [
 FAMILY_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*families")
 RECIPIENT_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*recipients")
 CASELOAD_FORMAT_OPTIONS = {"number_format": FORMAT_NUMBER_COMMA_SEPARATED1}
+CATEGORIES = [
+    "Total Families",
+    "Two Parent Families",
+    "One Parent Families",
+    "No Parent Families",
+    "Total Recipients",
+    "Adult Recipients",
+    "Children Recipients",
+]
 
 
 def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
@@ -336,3 +345,75 @@ def format_final_dataset(
     ]
 
     return df
+
+
+def extract_missing_average(
+    path: str, average: str, generate: bool = False
+) -> pd.Series:
+    workbook = pd.ExcelFile(path)
+    sheet_names = workbook.sheet_names
+
+    parameters = {
+        "two-parent": {
+            "regex": re.compile(r"(two|2)par"),
+            "name": "Two Parent Families",
+        },
+        "one-parent": {
+            "regex": re.compile(r"(one|1)par"),
+            "name": "One Parent Families",
+        },
+        "total-family": {
+            "regex": re.compile(r"tfam"),
+            "name": "Total Families",
+        },
+        "no-parent": {
+            "regex": re.compile(r"(zero|0)par"),
+            "name": "No Parent Families",
+        },
+        "total-recipients": {
+            "regex": re.compile(r"trec"),
+            "name": "Total Recipients",
+        },
+        "adult-recipients": {
+            "regex": re.compile(r"adults"),
+            "name": "Adult Recipients",
+        },
+        "child-recipients": {
+            "regex": re.compile(r"chi?ldre?n"),
+            "name": "Children Recipients",
+        },
+    }
+    column_name = parameters[average]["name"]
+    sheet_regex = parameters[average]["regex"]
+    for sheet in sheet_names:
+        sheet_clean = re.sub(r"\W|\s", "", sheet).lower()
+        if sheet_regex.match(sheet_clean):
+            df = pd.read_excel(workbook, sheet_name=sheet)
+            df = get_header(df)
+            df = clean_dataset(df)
+            # df.columns = df.columns.map(
+            #     lambda x: x.strftime("%b-%y") if isinstance(x, datetime) else x
+            # )
+
+            if generate:
+                df[column_name] = df.iloc[:, 2:13].mean(axis=1)
+                return df[["State", column_name]]
+            else:
+                df.columns = df.columns.map(
+                    lambda x: str(x).strip().lower().replace("\n", "")
+                )
+                columns = df.filter(regex="av.*fy").columns.tolist()
+                columns = ["state"] + columns
+                return df[columns].rename(
+                    columns={"state": "State", columns[1]: column_name}
+                )
+
+    return None
+
+
+if __name__ == "__main__":
+    print(
+        extract_missing_average(
+            "data/original_data/fy2012_ssp_caseload.xls", "one-parent"
+        )
+    )

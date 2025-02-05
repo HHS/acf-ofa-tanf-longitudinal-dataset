@@ -17,10 +17,12 @@ otld.utils.MockData.MockData
    .. autosummary::
    
       ~MockData.__init__
+      ~MockData.append_specifications
       ~MockData.data_specifications
       ~MockData.export
       ~MockData.generate_data
       ~MockData.generate_rows
+      ~MockData.validate
    
    
 

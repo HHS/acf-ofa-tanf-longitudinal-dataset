@@ -147,9 +147,11 @@ class TANFData:
 
     @property
     def sheet_dict(self):
+        """Dictionary of sheets from which to extract information"""
         return self._sheet_dict
 
     def identify_workbook_level(self, path: str):
+        """Identify the level of the caseload workbook"""
         if self._type == "caseload":
             if re.search(r"tanf?_caseload", path):
                 return "TANF"
@@ -161,9 +163,11 @@ class TANFData:
                 raise ValueError(f"Cannot process workbook: {path}")
 
     def get_current_sheet(self):
+        """Return the current sheet"""
         return self._sheet_dict[self._type][self._level]
 
     def get_worksheets(self):
+        """Get worksheets that correspond to the current level"""
         if self._type == "financial":
             self._sheets = self.get_current_sheet()
             return self
@@ -220,11 +224,24 @@ class TANFData:
 
         self.export_workbook()
 
-    def get_header_wrapper(self, df=pd.DataFrame):
+    def get_header_wrapper(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Wrapper for get_header
+
+        Re-runs with the concatenate option if the header has duplicates, numeric columns
+        or the data frame is empty
+
+        Args:
+            df (pd.DataFrame): DataFrame to search in for a header.
+
+        Returns:
+            pd.DataFrame: DataFrame columns renamed and any leading columns dropped.
+        """
         new_df = get_header(df)
 
-        if new_df.empty or any(
-            [isinstance(col, (int, float)) for col in new_df.columns]
+        if (
+            new_df.empty
+            or any([isinstance(col, (int, float)) for col in new_df.columns])
+            or new_df.columns.duplicated().any()
         ):
             new_df = get_header(df, concatenate=True)
 
@@ -341,6 +358,8 @@ class TANFData:
             self._df.columns = self._df.columns.map(rename)
 
     def validate_data_frame(self):
+        """Wraps validate_data_frame; Ensures a copy is used"""
+
         df = self._df.copy()
         validate_data_frame(df)
 
@@ -385,6 +404,7 @@ class TANFData:
         export_workbook(self._frames, path, format_options=format_options)
 
     def close_excel_files(self):
+        """Close all files"""
         workbooks = self._to_append["data"]
         if isinstance(workbooks, dict):
             for book in workbooks.values():

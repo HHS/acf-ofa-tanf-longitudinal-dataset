@@ -8,6 +8,7 @@ from otld.utils.expenditure_utils import reindex_state_year
 
 
 def wide_with_index(frames: dict[pd.DataFrame], tab_name: str = "FinancialData"):
+    """Add an index to a wide data frame"""
     out = pd.DataFrame()
     for name, data in frames.items():
         data = data.copy()

@@ -281,6 +281,7 @@ def add_us_total(df: pd.DataFrame) -> pd.DataFrame:
     """
     us_total = df.groupby("year").sum().reset_index()
     us_total.index = ["U.S. TOTAL" for i in range(us_total.shape[0])]
+    us_total.index.name = "STATE"
     df = pd.concat([df, us_total])
 
     return df

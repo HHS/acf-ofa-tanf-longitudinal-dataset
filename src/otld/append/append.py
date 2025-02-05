@@ -10,7 +10,11 @@ from otld.append.TANFData import TANFData
 
 
 class TANFAppend:
+    """Parses command line arguments, finds files, and calls TANFData.append"""
+
     def __init__(self):
+        """Parse command line arguments and options"""
+
         parser = self.parse_args(sys.argv[1:])
         self._kind = parser.kind
         self._appended = parser.appended
@@ -20,6 +24,8 @@ class TANFAppend:
         self.setup()
 
     def setup(self):
+        """Run other setup functions as needed"""
+
         if not self._to_append:
             self.get_files()
 
@@ -70,6 +76,8 @@ class TANFAppend:
         return parser.parse_args(args)
 
     def get_files(self):
+        """Find caseload or financial files in a provided directory"""
+
         self._to_append = []
         files = os.scandir(self._directory)
         for file in files:
@@ -81,6 +89,10 @@ class TANFAppend:
         return self
 
     def get_sheets(self):
+        """Load sheet dictionary
+
+        Performs several checks to ensure that the correct number of sheets are specified
+        """
         self._sheets = json.loads(self._sheets)
 
         if self._kind == "financial":
@@ -109,6 +121,7 @@ class TANFAppend:
 
 
 def main():
+    """Command line entry point"""
     appender = TANFAppend()
     appender.append()
 
