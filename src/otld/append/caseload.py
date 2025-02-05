@@ -2,11 +2,12 @@
 
 import os
 import re
+import shutil
 from typing import List, Optional
 
 import pandas as pd
 
-from otld.paths import diagnostics_dir, out_dir, tableau_dir
+from otld.paths import DATA_DIR, diagnostics_dir, out_dir, tableau_dir
 from otld.utils import export_workbook, get_header
 from otld.utils.caseload_utils import (
     CASELOAD_FORMAT_OPTIONS,
@@ -87,7 +88,7 @@ DATA_CONFIGS = {
 }
 
 FILES = {"Federal": [], "State": [], "Total": []}
-DATA_DIR = "data/original_data"
+DATA_DIR = f"{DATA_DIR}/original_data"
 TAB_NAMES = {"Federal": "TANF", "State": "SSP_MOE", "Total": "TANF_SSP"}
 LONG_FORMAT_COLUMNS = ["FiscalYear", "State", "Funding", "Category", "Number"]
 
@@ -188,7 +189,7 @@ def process_workbook(
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File does not exist: {file_path}")
 
-        print(f"\nProcessing {data_type} data for {year}...", end="", flush=True)
+        # print(f"\nProcessing {data_type} data for {year}...", end="", flush=True)
 
         # Special handling for 1998 and 1999
         if year in [1997, 1998, 1999]:
@@ -314,19 +315,16 @@ def main():
     )
 
     # Save the original data files as before...
+    wide_name = "CaseloadDataWide.xlsx"
+    long_name = "CaseloadDataLong.xlsx"
     export_workbook(
         master_wide,
-        os.path.join(out_dir, "CaseloadDataWide.xlsx"),
+        os.path.join(out_dir, wide_name),
         format_options=CASELOAD_FORMAT_OPTIONS,
     )
     export_workbook(
         master_wide,
         os.path.join(tableau_dir, "data", "CaseloadDataWideRaw.xlsx"),
-        format_options=CASELOAD_FORMAT_OPTIONS,
-    )
-    export_workbook(
-        master_wide,
-        "data/appended_data/CaseloadWide.xlsx",
         format_options=CASELOAD_FORMAT_OPTIONS,
     )
 
@@ -355,9 +353,15 @@ def main():
     )
     export_workbook(
         master_wide,
-        os.path.join(out_dir, "CaseloadDataLong.xlsx"),
+        os.path.join(out_dir, long_name),
         format_options=CASELOAD_FORMAT_OPTIONS,
     )
+
+    for file in [wide_name, long_name]:
+        shutil.copy(
+            os.path.join(out_dir, file),
+            os.path.join(DATA_DIR, "..", "appended_data", file),
+        )
 
 
 if __name__ == "__main__":
