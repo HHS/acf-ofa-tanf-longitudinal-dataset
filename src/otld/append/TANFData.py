@@ -173,7 +173,7 @@ class TANFData:
             return self
         elif self._type == "caseload":
             if not self._sheet_dict["internal"]:
-                self._sheets = self.get_current_sheet()
+                self._sheets = list(self.get_current_sheet().values())
                 return self
             sheets = []
             sheet_names = self._to_append["data"][self._level].sheet_names
@@ -424,16 +424,32 @@ if __name__ == "__main__":
     #     os.path.join(test_dir, "mock", "tanf_financial_data_fy_2024.xlsx"),
     # )
 
-    from otld.paths import scrap_dir
+    from otld.paths import test_dir
 
     tanf_data = TANFData(
         "caseload",
-        os.path.join(scrap_dir, "CaseloadDataWide.xlsx"),
+        os.path.join(test_dir, "CaseloadDataWide.xlsx"),
         [
-            os.path.join(scrap_dir, "mock", "fy2024_ssp_caseload.xlsx"),
-            os.path.join(scrap_dir, "mock", "fy2024_tanf_caseload.xlsx"),
-            os.path.join(scrap_dir, "mock", "fy2024_tanfssp_caseload.xlsx"),
+            os.path.join(test_dir, "mock", "fy2024_ssp_caseload.xlsx"),
+            os.path.join(test_dir, "mock", "fy2024_tanf_caseload.xlsx"),
+            os.path.join(test_dir, "mock", "fy2024_tanfssp_caseload.xlsx"),
         ],
+        {
+            "caseload": {
+                "TANF": {
+                    "family": "fycy2024-families",
+                    "recipient": "fycy2024-recipients",
+                },
+                "SSP_MOE": {
+                    "family": "Avg Month Num Fam",
+                    "recipient": "Avg Mo. Num Recipient",
+                },
+                "TANF_SSP": {
+                    "family": "fycy2024-families",
+                    "recipient": "Avg Mo. Num Recipient",
+                },
+            }
+        },
     )
 
     tanf_data.append()

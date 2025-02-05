@@ -149,11 +149,17 @@ class TestTANFData(unittest.TestCase):
             "caseload",
             caseload_data_wide_path,
             CASELOAD_MOCKED,
-            sheets={"caseload": {"TANF": "September 2023"}},
+            sheets={
+                "caseload": {
+                    "TANF": {"family": "September 2023", "recipient": "October 2023"}
+                }
+            },
         )
         tanf_data._level = "TANF"
 
-        self.assertEqual("September 2023", tanf_data.get_worksheets()._sheets)
+        self.assertEqual(
+            ["September 2023", "October 2023"], tanf_data.get_worksheets()._sheets
+        )
 
         tanf_data.close_excel_files()
 
