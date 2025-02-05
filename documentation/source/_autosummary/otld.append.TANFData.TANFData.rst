@@ -25,7 +25,9 @@ otld.append.TANFData.TANFData
       ~TANFData.get_header_wrapper
       ~TANFData.get_worksheets
       ~TANFData.identify_workbook_level
+      ~TANFData.load_data
       ~TANFData.rename_columns
+      ~TANFData.set_sheets
       ~TANFData.validate_data_frame
    
    
