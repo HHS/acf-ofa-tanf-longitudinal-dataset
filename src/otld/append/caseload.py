@@ -6,7 +6,7 @@ from typing import List, Optional
 
 import pandas as pd
 
-from otld.paths import out_dir, tableau_dir
+from otld.paths import diagnostics_dir, out_dir, tableau_dir
 from otld.utils import export_workbook, get_header
 from otld.utils.caseload_utils import (
     CASELOAD_FORMAT_OPTIONS,
@@ -19,6 +19,7 @@ from otld.utils.caseload_utils import (
     process_1997_1998_1999_data,
     process_sheet,
 )
+from otld.utils.checks import CaseloadDataChecker
 
 # Configuration
 DATA_CONFIGS = {
@@ -306,6 +307,10 @@ def main():
 
     for frame in master_wide:
         master_wide[frame].set_index(["State", "FiscalYear"], inplace=True)
+
+    CaseloadDataChecker(master_wide, action="export").check().export(
+        os.path.join(diagnostics_dir, "caseload_checks.xlsx")
+    )
 
     # Save the original data files as before...
     export_workbook(
