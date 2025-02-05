@@ -1,3 +1,5 @@
+"""Generate Tableau-specific datasets"""
+
 import argparse
 import os
 import sys
@@ -12,7 +14,11 @@ from otld.utils.expenditure_utils import consolidate_categories
 
 
 class TableauDatasets:
+    """Generate Tableau-specific datasets"""
+
     def __init__(self):
+        """Parse command line arguments and validate"""
+
         parser = self.parse_args(sys.argv[1:])
         self._kind = parser.kind.lower()
         self._wide = parser.wide
@@ -21,6 +27,8 @@ class TableauDatasets:
         self.validate()
 
     def validate(self):
+        """Validate the command line arguments"""
+
         if self._kind not in ["caseload", "financial"]:
             raise ValueError("Kind of data should either be caseload or financial")
 
@@ -67,6 +75,8 @@ class TableauDatasets:
         return parser.parse_args(args)
 
     def generate_wide_data(self):
+        """Generate wide tableau dataset"""
+
         frames = excel_to_dict(self._wide)
 
         format_options = {"skip_cols": 3}
@@ -80,6 +90,8 @@ class TableauDatasets:
         )
 
     def generate_long_data(self):
+        """Generate long tableau dataset"""
+
         consolidation = pd.DataFrame.from_dict(CONSOLIDATION_INSTRUCTIONS)
         value_name = "Number" if self._kind == "caseload" else "Amount"
         self._frames = excel_to_dict(self._wide)
@@ -115,11 +127,14 @@ class TableauDatasets:
             )
 
     def generate(self):
+        """Call generate_wide_data and generate_long_data"""
+
         self.generate_wide_data()
         self.generate_long_data()
 
 
 def main():
+    """Entry point for tanf-tableau command"""
     tableau_datasets = TableauDatasets()
     tableau_datasets.generate()
 

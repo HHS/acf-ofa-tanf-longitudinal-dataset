@@ -1,3 +1,5 @@
+"""Generate and store consolidation map and instructions"""
+
 import json
 import os
 
@@ -28,6 +30,7 @@ def update_consolidation_map(row: pd.Series, map: dict):
 
 
 def gen_consolidation_map():
+    """Write consolidation map and consolidation instructions to this file"""
     instructions = pd.ExcelFile(os.path.join(input_dir, "Instruction Crosswalk.xlsx"))
     consolidations = pd.read_excel(instructions, sheet_name="consolidated_categories")
     consolidation_map = {}
@@ -46,7 +49,7 @@ def gen_consolidation_map():
 
     handle.seek(0)
 
-    handle.seek(line_offset[58])
+    handle.seek(line_offset[62])
     handle.write(b"CONSOLIDATION_MAP = ")
     handle.write(json.dumps(consolidation_map, indent=4).encode())
     handle.write(b"\n\n")
@@ -55,6 +58,7 @@ def gen_consolidation_map():
     handle.write(b"\n\n")
     handle.write(b'if __name__ == "__main__":\n')
     handle.write(b"\tgen_consolidation_map()")
+
 
 CONSOLIDATION_MAP = {
     "6": "Basic Assistance",

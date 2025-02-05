@@ -25,6 +25,8 @@ from otld.utils.expenditure_utils import reindex_state_year
 
 
 class TANFData:
+    """Class to manage appending TANF caseload and financial data"""
+
     def __init__(
         self,
         type: str,
@@ -37,8 +39,10 @@ class TANFData:
         Args:
             type (str): Type of data being appended. Takes one of financial or caseload.
             appended_path (str): Path to the appended file. Should be xlsx format.
-            to_append_path (str): Path to the file to append. Should be xlsx format.
+            to_append_path (str | list[str]): Path to the file or files to append. Should be xlsx format.
+            sheets (dict[list], optional): A dictionary of sheets to extract. Defaults to {}.
         """
+
         assert appended_path.endswith(
             ".xlsx"
         ), "Appended file is not an xlsx formatted Excel Workbook"
@@ -76,7 +80,16 @@ class TANFData:
         """Dictionary of sheets from which to extract information"""
         return self._sheet_dict
 
-    def load_data(self, to_append_path: str):
+    def load_data(self, to_append_path: str | list[str]):
+        """Load TANF data to append
+
+        Args:
+            to_append_path (str | list[str]): File or list of files to append.
+
+        Raises:
+            TypeError: If to_append path is not a string or list of strings.
+        """
+
         year_pattern = re.compile(r"(\d{4})")
 
         # If financial and list is length 1, then extract string
@@ -127,6 +140,12 @@ class TANFData:
             )
 
     def set_sheets(self, sheets: dict = {}):
+        """Set sheet_dict
+
+        Args:
+            sheets (dict, optional): A dictionary of sheets. Defaults to {}.
+        """
+
         # Dictionary defining which sheets correspond to which tabs
         if sheets:
             self._sheet_dict = sheets

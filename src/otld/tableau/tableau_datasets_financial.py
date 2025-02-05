@@ -58,7 +58,16 @@ def inflation_adjust(row: pd.Series) -> float:
     return adjusted
 
 
-def get_consolidated_column(column: str, map: dict):
+def get_consolidated_column(column: str, map: dict) -> str:
+    """Get consolidated column associated with current column.
+
+    Args:
+        column (str): Current column name.
+        map (dict): Dictionary mapping columns and consolidated columns.
+
+    Returns:
+        str: Consolidated column name
+    """
     if column.find(".") == -1:
         return ""
 
@@ -81,6 +90,15 @@ def generate_wide_data():
 
 
 def transform_financial_long(df: pd.DataFrame, pce_path: str) -> pd.DataFrame:
+    """Transform long data
+
+    Args:
+        df (pd.DataFrame): Long financial data.
+        pce_path (str): Path to file containing PCE data (for inflation adjustments).
+
+    Returns:
+        pd.DataFrame: Tableau-ready dataframe.
+    """
     # Line Crosswalk
     crosswalk = pd.DataFrame.from_dict(crosswalk_dict, orient="index")
     crosswalk["Category"] = crosswalk.apply(lambda x: f"{x.name}. {x["name"]}", axis=1)
@@ -158,7 +176,8 @@ def generate_long_data():
 
 
 def main():
-    # generate_wide_data()
+    """Generate tableau data"""
+    generate_wide_data()
     generate_long_data()
 
 
