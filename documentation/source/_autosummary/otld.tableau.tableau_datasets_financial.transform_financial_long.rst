@@ -1,6 +1,6 @@
-otld.tableau.tableau\_datasets\_financial.update\_consolidation\_map
+otld.tableau.tableau\_datasets\_financial.transform\_financial\_long
 ====================================================================
 
 .. currentmodule:: otld.tableau.tableau_datasets_financial
 
-.. autofunction:: update_consolidation_map
+.. autofunction:: transform_financial_long

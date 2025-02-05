@@ -13,6 +13,7 @@ otld.utils.caseload\_utils
       analyze_guam_data
       clean_dataset
       clean_state
+      extract_missing_average
       format_final_dataset
       merge_datasets
       process_1997_1998_1999_data

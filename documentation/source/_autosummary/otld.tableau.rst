@@ -11,5 +11,6 @@ otld.tableau
    :template: custom-module-template.rst
    :recursive:
 
+   TableauDatasets
    tableau_datasets_caseload
    tableau_datasets_financial
