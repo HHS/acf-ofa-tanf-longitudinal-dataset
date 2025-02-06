@@ -11,6 +11,6 @@ otld.utils.checks
       :template: custom-class-template.rst
    
       CaseloadDataChecker
-      ExpenditureDataChecker
+      FinancialDataChecker
       GenericChecker
    
