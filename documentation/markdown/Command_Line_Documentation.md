@@ -1,6 +1,6 @@
 # Command Line Applications
 
-The OFA TANF Longitudinal Dataset (OTLD) package was primarily developed to handle the initial appending of OFA's expenditure and caseload TANF data. To make future creation of appended files simpler and Tableau related datasets simpler, however, we created a set of command line applications that enable appending new data and creating output datasets. This documentation describes these applications and their usage.
+The OFA TANF Longitudinal Dataset (OTLD) package was primarily developed to handle the initial appending of OFA's financial and caseload TANF data. To make future creation of appended files simpler and Tableau related datasets simpler, however, we created a set of command line applications that enable appending new data and creating output datasets. This documentation describes these applications and their usage.
 
 ## Append
 
@@ -12,7 +12,7 @@ The tanf-append command can be used to append a new year of data to an existing 
 
 - usage: tanf-append [-h] (-a TO_APPEND [TO_APPEND ...] | -d DIRECTORY) [-s SHEETS] kind appended
 - positional arguments:
-  - kind: The type of data to append. Should be either caseload or expenditure (financial is accepted as well).
+  - kind: The type of data to append. Should be either caseload or financial.
   - appended: The path to the base file (in wide format) containing appended data.
 - options:
   - -h, --help: Show help message and exit.
@@ -52,7 +52,7 @@ The tanf-tableau command generates Tableau-specific datasets.
 
 - usage: tanf-tableau [-h] [-i INFLATION] kind wide destination
 - positional arguments:
-  - kind: Input data type. Should be either caseload or expenditure (financial is accepted as well).
+  - kind: Input data type. Should be either caseload or financial.
   - wide: Path to appended data in wide format.
   - destination: Where to save the resultant dataset.
 - options:
