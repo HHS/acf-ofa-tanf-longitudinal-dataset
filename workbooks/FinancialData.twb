@@ -34,7 +34,7 @@
     <ZoneFriendlyName />
     <ZoneVisibilityControl />
   </document-format-change-manifest>
-  <repository-location id='TANFFinancialData_17337698504720' path='/workbooks' revision='3.3' />
+  <repository-location id='TANFFinancialData_17337698504720' path='/workbooks' revision='3.4' />
   <preferences>
     <preference name='ui.encoding.shelf.height' value='24' />
     <preference name='ui.shelf.height' value='26' />
@@ -1173,6 +1173,7 @@
               <approx-count>56</approx-count>
               <contains-null>true</contains-null>
               <collation flag='0' name='binary' />
+              <object-id>[us_hex_DC_connected_E27ADFC97F5343EE877C0DF652652CE4]</object-id>
             </metadata-record>
             <metadata-record class='column'>
               <remote-name>State_Abbr</remote-name>
@@ -1187,6 +1188,7 @@
               <approx-count>56</approx-count>
               <contains-null>true</contains-null>
               <collation flag='0' name='binary' />
+              <object-id>[us_hex_DC_connected_E27ADFC97F5343EE877C0DF652652CE4]</object-id>
             </metadata-record>
             <metadata-record class='column'>
               <remote-name>Geometry</remote-name>
@@ -1200,6 +1202,7 @@
               <aggregation>Collect</aggregation>
               <approx-count>56</approx-count>
               <contains-null>true</contains-null>
+              <object-id>[us_hex_DC_connected_E27ADFC97F5343EE877C0DF652652CE4]</object-id>
             </metadata-record>
           </metadata-records>
         </connection>
@@ -7002,8 +7005,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='700' minheight='700' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='220' type-v2='layout-basic' w='100000' x='0' y='0'>
-              <zone h='98000' id='219' param='vert' type-v2='layout-flow' w='98400' x='800' y='1000'>
+            <zone h='100000' id='228' type-v2='layout-basic' w='100000' x='0' y='0'>
+              <zone h='98000' id='227' param='vert' type-v2='layout-flow' w='98400' x='800' y='1000'>
                 <zone h='7500' id='96' mode='dropdown' name='SideBySideBar' param='[federated.0a80p7j0tvmqde182g0mx14ghaib].[yr:FiscalYear:ok]' type-v2='filter' values='database' w='16000' x='83200' y='1000'>
                   <zone-style>
                     <format attr='border-color' value='#000000' />
@@ -7246,7 +7249,8 @@
                   <run>Æ&#10;</run>
                   <run fontsize='11'>- us_hex_DC_connected - Coordinates for creating a hex map of the United States with D.C. connected.</run>
                   <run>Æ&#10;&#10;</run>
-                  <run fontsize='11'>For detailed documentation regarding the expenditure data, please see GitHub [INSERT LINK HERE]</run>
+                  <run fontsize='11'>For detailed documentation regarding the expenditure data, please see GitHub: </run>
+                  <run auto-url='true' fontcolor='#0000ff' fontname='Benton Sans Book' fontsize='11' hyperlink='tabdoc:load-url url=&amp;quot;OFA TANF Longitudinal Dataset Documentation — OFA TANF Longitudinal Dataset 0.0.1 documentation&amp;quot;' underline='true'>OFA TANF Longitudinal Dataset Documentation — OFA TANF Longitudinal Dataset 0.0.1 documentation</run>
                 </formatted-text>
                 <zone-style>
                   <format attr='border-color' value='#000000' />
@@ -7563,8 +7567,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='1000' minheight='1000' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='662' type-v2='layout-basic' w='100000' x='0' y='0'>
-              <zone h='97916' id='661' param='vert' type-v2='layout-flow' w='98438' x='781' y='1042'>
+            <zone h='100000' id='670' type-v2='layout-basic' w='100000' x='0' y='0'>
+              <zone h='97916' id='669' param='vert' type-v2='layout-flow' w='98438' x='781' y='1042'>
                 <zone fixed-size='280' h='97916' id='134' is-fixed='true' name='HexMap' w='98438' x='781' y='1042'>
                   <layout-cache has-max-size-w='true' maxwidth='1680' minheight='215' minwidth='1680' type-h='scalable' type-w='scalable' />
                   <zone-style>
@@ -7915,8 +7919,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='750' minheight='750' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='352' type-v2='layout-basic' w='100000' x='0' y='0'>
-              <zone h='97916' id='351' param='vert' type-v2='layout-flow' w='98438' x='781' y='1042'>
+            <zone h='100000' id='360' type-v2='layout-basic' w='100000' x='0' y='0'>
+              <zone h='97916' id='359' param='vert' type-v2='layout-flow' w='98438' x='781' y='1042'>
                 <zone h='7813' id='9' mode='dropdown' name='WithinStateBar' param='[federated.0a80p7j0tvmqde182g0mx14ghaib].[none:Funding:nk]' show-all='false' type-v2='filter' w='15625' x='83594' y='15105'>
                   <zone-style>
                     <format attr='border-color' value='#000000' />
@@ -8132,8 +8136,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='750' minheight='750' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='359' type-v2='layout-basic' w='100000' x='0' y='0'>
-              <zone h='84000' id='358' param='vert' type-v2='layout-flow' w='84000' x='8000' y='8000'>
+            <zone h='100000' id='367' type-v2='layout-basic' w='100000' x='0' y='0'>
+              <zone h='84000' id='366' param='vert' type-v2='layout-flow' w='84000' x='8000' y='8000'>
                 <zone h='7813' id='16' mode='dropdown' name='WithinStateLongitudinalLine' param='[federated.0a80p7j0tvmqde182g0mx14ghaib].[none:Funding:nk]' show-all='false' type-v2='filter' w='18262' x='80957' y='15105'>
                   <zone-style>
                     <format attr='border-color' value='#000000' />
@@ -8351,8 +8355,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='700' minheight='700' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='370' type-v2='layout-basic' w='100000' x='0' y='0'>
-              <zone h='84000' id='369' param='vert' type-v2='layout-flow' w='84000' x='8000' y='8000'>
+            <zone h='100000' id='378' type-v2='layout-basic' w='100000' x='0' y='0'>
+              <zone h='84000' id='377' param='vert' type-v2='layout-flow' w='84000' x='8000' y='8000'>
                 <zone h='7813' id='98' mode='dropdown' name='WithinStateLongitudinalPct' param='[federated.0a80p7j0tvmqde182g0mx14ghaib].[none:Funding:nk]' show-all='false' type-v2='filter' values='database' w='15625' x='83594' y='15105'>
                   <zone-style>
                     <format attr='border-color' value='#000000' />
@@ -8510,8 +8514,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='1050' minheight='1050' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='252' type-v2='layout-basic' w='100000' x='0' y='0'>
-              <zone h='98000' id='251' param='vert' type-v2='layout-flow' w='98400' x='800' y='1000'>
+            <zone h='100000' id='260' type-v2='layout-basic' w='100000' x='0' y='0'>
+              <zone h='98000' id='259' param='vert' type-v2='layout-flow' w='98400' x='800' y='1000'>
                 <zone h='7500' id='9' mode='dropdown' name='ContinentalPcts' param='[federated.0a80p7j0tvmqde182g0mx14ghaib].[none:Funding:nk]' show-all='false' type-v2='filter' w='16000' x='83200' y='1000'>
                   <zone-style>
                     <format attr='border-color' value='#000000' />
@@ -8776,8 +8780,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='700' minheight='700' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='113' type-v2='layout-basic' w='100000' x='0' y='0'>
-              <zone h='84000' id='112' param='vert' type-v2='layout-flow' w='84000' x='8000' y='8000'>
+            <zone h='100000' id='121' type-v2='layout-basic' w='100000' x='0' y='0'>
+              <zone h='84000' id='120' param='vert' type-v2='layout-flow' w='84000' x='8000' y='8000'>
                 <zone h='7500' id='8' mode='dropdown' name='USTotalComparisonBar' param='[federated.0a80p7j0tvmqde182g0mx14ghaib].[none:Funding:nk]' show-all='false' type-v2='filter' w='16000' x='83200' y='14500'>
                   <zone-style>
                     <format attr='border-color' value='#000000' />
@@ -9022,8 +9026,8 @@
         <devicelayout auto-generated='true' name='Phone'>
           <size maxheight='700' minheight='700' sizing-mode='vscroll' />
           <zones>
-            <zone h='100000' id='113' type-v2='layout-basic' w='100000' x='0' y='0'>
-              <zone h='84000' id='112' param='vert' type-v2='layout-flow' w='84000' x='8000' y='8000'>
+            <zone h='100000' id='121' type-v2='layout-basic' w='100000' x='0' y='0'>
+              <zone h='84000' id='120' param='vert' type-v2='layout-flow' w='84000' x='8000' y='8000'>
                 <zone h='7500' id='8' mode='dropdown' name='USTotalComparisonLine' param='[federated.0a80p7j0tvmqde182g0mx14ghaib].[none:Funding:nk]' show-all='false' type-v2='filter' w='16000' x='83200' y='14500'>
                   <zone-style>
                     <format attr='border-color' value='#000000' />
@@ -9112,7 +9116,7 @@
     </dashboard>
   </dashboards>
   <windows source-height='72'>
-    <window class='dashboard' name='INFO' tab-color='#4f779a'>
+    <window class='dashboard' maximized='true' name='INFO' tab-color='#4f779a'>
       <viewpoints />
       <active id='-1' />
       <simple-id uuid='{1DDBD4C3-61B2-418E-9D8B-7E57A720FBC8}' />
@@ -9249,7 +9253,7 @@
       </viewpoint>
       <simple-id uuid='{8A79B61D-7577-45CE-9EC0-F6ECA6A2DB51}' />
     </window>
-    <window class='dashboard' maximized='true' name='LandingPage'>
+    <window class='dashboard' name='LandingPage'>
       <viewpoints>
         <viewpoint name='HexMap'>
           <zoom type='entire-view' />
@@ -10004,23 +10008,23 @@
         <default-execution-subgraph-guid value='d3a2a523-a6c6-45c0-a649-aa5de5afb148' />
       </properties>
       <node-execution-subgraphs>
-        <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='0c81222b-9abc-4815-8f61-eb69e53a202b' />
         <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='65356493-a3d9-4b89-98df-53139a3eb4bf' />
+        <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='0c81222b-9abc-4815-8f61-eb69e53a202b' />
         <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='91ca0d39-ddff-4cc4-a25e-fe2148e2c029' />
-        <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='985ad249-43c0-42dc-a18b-6e2e2ee12212' />
         <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='59b2f57d-f72b-4350-9440-d08579cfc535' />
-        <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='749c4d70-5db8-4c43-960f-53c0009984ad' />
+        <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='985ad249-43c0-42dc-a18b-6e2e2ee12212' />
         <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='eed552a2-ce88-47b5-8edb-f804edd7fcd1' />
+        <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='749c4d70-5db8-4c43-960f-53c0009984ad' />
         <pair execution-subgraph-guid='d3a2a523-a6c6-45c0-a649-aa5de5afb148' node-guid='b413f700-560b-43e6-8c64-03a82f2352e6' />
       </node-execution-subgraphs>
       <nodes>
-        <single-value-field-node fieldname='[Parameters].[Parameter 1]' fieldname-input-guid='7dd6ad12-6a76-4378-9f29-295bddfa51ef' node-guid='0c81222b-9abc-4815-8f61-eb69e53a202b' value-output-guid='3c7767f3-edd4-452f-b738-26dd9e679326' />
         <_.fcp.DatagraphNodeAxisTitle.true...axis-title-node duplicate-index='0' fieldname='[federated.0a80p7j0tvmqde182g0mx14ghaib].[sum:Calculation_1546986496759406593:qk]' node-guid='65356493-a3d9-4b89-98df-53139a3eb4bf' orientation='vertical' sheet-identifier='{E1A4939E-666F-4CED-A8FC-615022DD71C5}' title-input-guid='9d430059-0bac-4a4b-8480-97b7acd8840e' />
+        <single-value-field-node fieldname='[Parameters].[Parameter 1]' fieldname-input-guid='7dd6ad12-6a76-4378-9f29-295bddfa51ef' node-guid='0c81222b-9abc-4815-8f61-eb69e53a202b' value-output-guid='3c7767f3-edd4-452f-b738-26dd9e679326' />
         <_.fcp.DatagraphNodeAxisTitle.true...axis-title-node duplicate-index='0' fieldname='[federated.0a80p7j0tvmqde182g0mx14ghaib].[sum:Calculation_1546986496759406593:qk]' node-guid='91ca0d39-ddff-4cc4-a25e-fe2148e2c029' orientation='horizontal' sheet-identifier='{E6F8F758-F526-4090-8AB9-9D95D6842718}' title-input-guid='534f3e00-1121-48e4-92e5-51d0fde9cb31' />
-        <dashboard-zone-visibility-node dashboard-identifier='{528D5ADE-D3FB-4F3B-9BD9-F6646C527230}' node-guid='985ad249-43c0-42dc-a18b-6e2e2ee12212' visibility-input-guid='96236183-d0a9-42bc-8b53-99e9515b8ab1' zone-id='314' />
         <single-value-field-node fieldname='[Parameters].[Parameter 2]' fieldname-input-guid='3ad3945e-5a81-4df1-b62b-71f7879688c6' node-guid='59b2f57d-f72b-4350-9440-d08579cfc535' value-output-guid='563db156-ee8e-494b-a237-880a0d87b860' />
-        <_.fcp.DatagraphNodeAxisTitle.true...axis-title-node duplicate-index='0' fieldname='[federated.0a80p7j0tvmqde182g0mx14ghaib].[sum:Calculation_1546986496759406593:qk]' node-guid='749c4d70-5db8-4c43-960f-53c0009984ad' orientation='vertical' sheet-identifier='{9BBBD14E-CC68-4A0C-A55A-51668D73EACD}' title-input-guid='26fd5927-bb50-4e67-9007-aaed2e5c40a2' />
+        <dashboard-zone-visibility-node dashboard-identifier='{528D5ADE-D3FB-4F3B-9BD9-F6646C527230}' node-guid='985ad249-43c0-42dc-a18b-6e2e2ee12212' visibility-input-guid='96236183-d0a9-42bc-8b53-99e9515b8ab1' zone-id='314' />
         <_.fcp.DatagraphNodeAxisTitle.true...axis-title-node duplicate-index='0' fieldname='[federated.0a80p7j0tvmqde182g0mx14ghaib].[sum:Calculation_1546986496759406593:qk]' node-guid='eed552a2-ce88-47b5-8edb-f804edd7fcd1' orientation='vertical' sheet-identifier='{F22889EF-3DB2-4588-8D16-0A16CF1203F5}' title-input-guid='b43f0ddb-6c01-4d09-bc8a-6a3d82f9e80a' />
+        <_.fcp.DatagraphNodeAxisTitle.true...axis-title-node duplicate-index='0' fieldname='[federated.0a80p7j0tvmqde182g0mx14ghaib].[sum:Calculation_1546986496759406593:qk]' node-guid='749c4d70-5db8-4c43-960f-53c0009984ad' orientation='vertical' sheet-identifier='{9BBBD14E-CC68-4A0C-A55A-51668D73EACD}' title-input-guid='26fd5927-bb50-4e67-9007-aaed2e5c40a2' />
         <_.fcp.DatagraphNodeAxisTitle.true...axis-title-node duplicate-index='0' fieldname='[federated.0a80p7j0tvmqde182g0mx14ghaib].[sum:Calculation_1546986496759406593:qk]' node-guid='b413f700-560b-43e6-8c64-03a82f2352e6' orientation='vertical' sheet-identifier='{642BCFDF-D68E-408C-BEBE-6EE0FFBCE4FA}' title-input-guid='23b9ee7c-8bf8-4efe-bd9e-5bf665b7196a' />
       </nodes>
       <edges>
