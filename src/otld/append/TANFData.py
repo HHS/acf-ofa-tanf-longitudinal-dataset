@@ -21,7 +21,7 @@ from otld.utils.caseload_utils import (
     format_final_dataset,
 )
 from otld.utils.crosswalk_dict import crosswalk_dict
-from otld.utils.expenditure_utils import reindex_state_year
+from otld.utils.financial_utils import reindex_state_year
 
 
 class TANFData:

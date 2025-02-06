@@ -4,7 +4,7 @@ __all__ = ["wide_with_index"]
 
 import pandas as pd
 
-from otld.utils.expenditure_utils import reindex_state_year
+from otld.utils.financial_utils import reindex_state_year
 
 
 def wide_with_index(frames: dict[pd.DataFrame], tab_name: str = "FinancialData"):

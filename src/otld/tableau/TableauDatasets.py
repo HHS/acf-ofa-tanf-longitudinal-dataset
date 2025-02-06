@@ -10,7 +10,7 @@ from openpyxl.styles.numbers import FORMAT_NUMBER_COMMA_SEPARATED1
 from otld.tableau import tableau_datasets_caseload, tableau_datasets_financial
 from otld.utils import excel_to_dict, export_workbook, wide_with_index
 from otld.utils.consolidation import CONSOLIDATION_INSTRUCTIONS
-from otld.utils.expenditure_utils import consolidate_categories
+from otld.utils.financial_utils import consolidate_categories
 
 
 class TableauDatasets:

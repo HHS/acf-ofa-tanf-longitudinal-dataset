@@ -14,7 +14,7 @@ from otld.utils import (
     standardize_line_number,
     validate_data_frame,
 )
-from otld.utils.expenditure_utils import reindex_state_year
+from otld.utils.financial_utils import reindex_state_year
 from otld.utils.LineTracker import LineTracker
 
 # Instantiate a LineTracker object to track what files lines came from.
