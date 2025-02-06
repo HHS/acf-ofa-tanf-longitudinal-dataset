@@ -1,4 +1,4 @@
-"""Class for validation checks of expenditure data"""
+"""Class for validation checks of caseload and financial data"""
 
 import os
 import re
@@ -14,7 +14,7 @@ class GenericChecker:
         """Initialize instance of GenericChecker class
 
         Args:
-            df (pd.DataFrame): Expenditure data DataFrame
+            df (pd.DataFrame): Financial data DataFrame
             level (str): Funding level (Federal, State, Total)
             kind (str): ACF Instructions (196, 196R, Appended)
             action (str, optional): Action to take when an assertion fails.
@@ -30,7 +30,7 @@ class GenericChecker:
 
     @property
     def df(self):
-        """Expenditure data frame"""
+        """Financial data frame"""
         return self._df
 
     @property
@@ -58,11 +58,11 @@ class GenericChecker:
         export_workbook(self._checks, path, **kwargs)
 
 
-class ExpenditureDataChecker(GenericChecker):
-    """Implement validation checks for the expenditure data"""
+class FinancialDataChecker(GenericChecker):
+    """Implement validation checks for the financial data"""
 
     def __init__(self, df: pd.DataFrame, level: str, kind: str, action: str = "error"):
-        """Initialize instance of ExpenditureDataChecker"""
+        """Initialize instance of FinancialDataChecker"""
         super().__init__(df, level, kind, action)
         self.names_to_lines()
 
@@ -89,14 +89,14 @@ class ExpenditureDataChecker(GenericChecker):
     def check(self):
         """Choose which check(s) to perform"""
         if self._level == "Federal":
-            self.federal_expenditure_data_checks()
+            self.federal_financial_data_checks()
         elif self._level == "State":
             pass
         elif self._level == "Total":
             pass
 
-    def federal_expenditure_data_checks(self):
-        """Execute federal expenditure data checks"""
+    def federal_financial_data_checks(self):
+        """Execute federal financial data checks"""
         checks = self._checks
         df = self._df.copy()
         df["funds"] = df["1"] + df["5"] - df["2"] - df["3"] - df["24"]

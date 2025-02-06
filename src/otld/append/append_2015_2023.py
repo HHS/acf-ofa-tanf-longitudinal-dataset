@@ -10,7 +10,7 @@ from fuzzywuzzy import fuzz, process
 
 from otld.paths import diagnostics_dir, input_dir, inter_dir
 from otld.utils import (
-    ExpenditureDataChecker,
+    FinancialDataChecker,
     convert_to_numeric,
     delete_empty_columns,
     get_column_names,
@@ -179,7 +179,7 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
     for df in [state_df, federal_df]:
         validate_data_frame(df)
 
-    validator = ExpenditureDataChecker(federal_df, "Federal", "196R", "export")
+    validator = FinancialDataChecker(federal_df, "Federal", "196R", "export")
     validator.check()
     validator.export(os.path.join(diagnostics_dir, "federal_checks_2015_2023.xlsx"))
 

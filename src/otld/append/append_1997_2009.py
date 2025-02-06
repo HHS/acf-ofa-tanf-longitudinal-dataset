@@ -8,7 +8,7 @@ import pandas as pd
 
 from otld.paths import diagnostics_dir, input_dir, inter_dir
 from otld.utils import (
-    ExpenditureDataChecker,
+    FinancialDataChecker,
     convert_to_numeric,
     standardize_file_name,
     standardize_line_number,
@@ -365,7 +365,7 @@ def main(export: bool = False) -> tuple[pd.DataFrame]:
     for df in [federal_df, state_df]:
         validate_data_frame(df)
 
-    validator = ExpenditureDataChecker(federal_df, "Federal", "196", "export")
+    validator = FinancialDataChecker(federal_df, "Federal", "196", "export")
     validator.check()
     validator.export(os.path.join(diagnostics_dir, "federal_checks_1997_2009.xlsx"))
 
