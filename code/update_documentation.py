@@ -191,7 +191,7 @@ if __name__ == "__main__":
         doc_dir, "build", "html", "TransformationDocumentation.html"
     )
     index = os.path.join(doc_dir, "build", "html", "index.html")
-    nav_bar = os.path.join(current_dir, "..", "data", "nav_bar.html")
+    nav_bar = os.path.join(doc_dir, "html", "nav_bar.html")
     soup = update_transformation_documentation(transformation_documentation)
     soup = add_nav_bar(nav_bar, soup)
     write_soup(transformation_documentation, soup)

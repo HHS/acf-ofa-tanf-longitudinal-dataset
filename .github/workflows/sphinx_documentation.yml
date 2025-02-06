@@ -23,7 +23,7 @@ jobs:
           args: >-
             -o 
             "./documentation/build/html/TransformationDocumentation.html"
-            "./data/TransformationDocumentation.docx" 
+            "./documentation/docs/TransformationDocumentation.docx" 
       - name: Index and transformation
         id: transformation
         run: sudo .venv/bin/python3 code/update_documentation.py
