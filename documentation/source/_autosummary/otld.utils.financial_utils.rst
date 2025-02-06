@@ -1,7 +1,7 @@
-otld.utils.expenditure\_utils
-=============================
+otld.utils.financial\_utils
+===========================
 
-.. automodule:: otld.utils.expenditure_utils
+.. automodule:: otld.utils.financial_utils
 
    
    .. rubric:: Functions

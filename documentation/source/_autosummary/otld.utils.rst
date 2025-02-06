@@ -19,7 +19,7 @@ otld.utils
    consolidation
    crosswalk_2014_2015
    crosswalk_dict
-   expenditure_utils
+   financial_utils
    generate_column_dict_196
    generate_column_dict_196_r
    get_cpi_u
