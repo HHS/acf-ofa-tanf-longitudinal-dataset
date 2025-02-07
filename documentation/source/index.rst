@@ -14,6 +14,7 @@ General Documentation
 .. toctree::
    Installation
    Command-Line-Documentation
+   TransformationDocumentation
 
 Module Code
 --------------------------------

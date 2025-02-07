@@ -1,0 +1,17 @@
+,Formula,Field Name,Notes
+0,=6,Basic Assistance,0
+1,=9,"Work, Education, & Training Activities",0
+2,=2+11a,Child Care (Spent or Transferred),0
+3,=22,Program Management,0
+4,=13+14,Refundable Tax Credits,0
+5,=7a+8a+20,Child Welfare Services,"May include Foster Care/Child Welfare authorized solely under prior law.
+"
+6,=11b,Pre-Kindergarten/Head Start,0
+7,=3,Transferred to SSBG,0
+8,=18,Out-of-Wedlock Pregnancy Prevention,0
+9,=15,Non-Recurrent Short Term Benefits,0
+10,=10+12+16,Work Supports & Supportive Services,May include Financial Education and Asset Development.
+11,=17+21,Services for Children & Youth,May include Home Visiting.
+12,=7b+7c+8b+8c,Authorized Solely Under Prior Law,Excludes Foster Care/Child Welfare authorized solely under prior law.
+13,=19,Fatherhood & Two-Parent Family Programs,0
+14,=23,Other,0

@@ -1,0 +1,54 @@
+,Line Number in ACF-196R,Line Number(s) in ACF-196,Column Name in Appended File,Type,Description
+0,,,State,String,State that funding amounts pertain to
+1,,,FiscalYear,Integer,Federal fiscal year (October - September) to which funds can be attributed
+2,1,1,1. Awarded,Integer,The cumulative total of federal TANF funds awarded
+3,2,2,2. Transfers to Child Care and Development Fund (CCDF) Discretionary,Integer,The total SFAG funds that the state transferred to the Discretionary Fund of the CCDF during the FFY
+4,3,3,3. Transfers to Social Services Block Grant (SSBG),Integer,The total federal SFAG funds the state transferred to the SSBG during the FFY
+5,4,4,4. Adjusted Award,Integer,The net total of funds available for TANF after subtracting the amounts transferred to the CCDF program (Line 2) and/or the SSBG program (Line 3).
+6,5,Carryover,5. Carryover,Integer,"The sum of the Federal Unliquidated Obligations and Unobligated Balances for a GY award, as of the end of the previous FFY"
+7,6,5a,6. Basic Assistance,Integer,The total expenditures from lines 6a.and 6b.
+8,6a,,"6a. Basic Assistance (excluding Payments for Relative Foster Care, and Adoption and Guardianship Subsidies)",Integer,"Basic assistance is defined as cash, payments, vouchers, and other forms of benefits designed to meet a family’s ongoing basic needs (i.e., for food, clothing, shelter, utilities, household goods, personal care items, and general incidental expenses)"
+9,6b,,6b. Relative Foster Care Maintenance Payments and Adoption and Guardianship Subsidies,Integer,Basic assistance provided on behalf of a child or children for whom the child welfare agency has legal placement and care responsibility and is living with a caretaker relative; or child or children living with legal guardians
+10,7,5d,7. Assistance Authorized Solely Under Prior Law,Integer,"The total expenditures from lines 7a., 7b., and 7c"
+11,7a,,7a. Foster Care Payments,Integer,"Foster care assistance on behalf of children, authorized solely under section 404(a)(2) of the Act and referenced in a state’s former AFDC or Emergency Assistance plan"
+12,7b,,7b. Juvenile Justice Payments,Integer,"Assistance payments on behalf of children in the state’s juvenile justice system, authorized solely under section 404(a)(2) of the Act and referenced in a state’s former AFDC or Emergency Assistance plan"
+13,7c,,7c. Emergency Assistance Authorized Solely Under Prior Law,Integer,Other benefits authorized solely under section 404(a)(2) of the Act and referenced in a state’s former AFDC or Emergency Assistance plan
+14,8,6l,8. Non-Assistance Authorized Solely Under Prior Law,Integer,"The total expenditures from lines 8a., 8b., and 8c"
+15,8a,,8a. Child Welfare or Foster Care Services,Integer,"Services provided to children and their families involved in the state’s child welfare system, authorized solely under section 404(a)(2) of the Act, and referenced in a state’s former AFDC or Emergency Assistance plan"
+16,8b,,8b. Juvenile Justice Services,Integer,"Juvenile justice services provided to children, youth, and families, authorized solely under section 404(a)(2) of the Act, and referenced in a state’s former AFDC or Emergency Assistance plan"
+17,8c,,8c. Emergency Services Authorized Solely Under Prior Law,Integer,"Other services, authorized solely under section 404(a)(2) of the Act, and referenced in a state’s former AFDC or Emergency Assistance plan"
+18,9,6a,"9. Work, Education, and Training Activities",Integer,"The total expenditures from lines 9a., 9b., and 9c"
+19,9a,6a1,9a. Subsidized Employment,Integer,"Payments to employers or third parties to help cover the costs of employee wages, benefits, supervision, or training"
+20,9b,6a2,9b. Education and Training,Integer,"Education and training activities, including secondary education (including alternative programs); adult education, high school diploma-equivalent (such as GED) and ESL classes; education directly related to employment; job skills training; education provided as vocational educational training or career and technical education; and post-secondary education"
+21,9c,6a3,9c. Additional Work Activities,Integer,Work activities that have not been reported in employment subsidies or education and training
+22,10,"5c,6c",10. Work Supports,Integer,"Assistance and non-assistance transportation benefits, such as the value of allowances, bus tokens, car payments, auto repair, auto insurance reimbursement, and van services provided in order to help families obtain, retain, or advance in employment, participate in other work activities, or as a non-recurrent, short-term benefit"
+23,11,,11. Early Care and Education,Integer,The total expenditures from lines 11a. and 11b
+24,11a,"5b,6b",11a. Child Care (Assistance and Non-Assistance),Integer,"Child care expenditures for families that need child care to work, participate in work activities (such as job search, community service, education, or training), or for respite purposes"
+25,11b,,11b. Pre-Kindergarten/Head Start,Integer,"Pre-kindergarten or kindergarten education programs (allowable if they do not meet the definition of a “general state expense”), expansion of Head Start programs, or other school readiness programs"
+26,12,6d,12. Financial Education and Asset Developments,Integer,"Programs and initiatives designed to support the development and protection of assets including contributions to Individual Development Accounts (IDAs) and related operational costs (that fall outside the definition of administrative costs), financial education services, tax credit outreach campaigns and tax filing assistance programs, initiatives to support access to mainstream banking, and credit and debt management counseling"
+27,13,6e,13. Refundable Earned Income Tax Credits,Integer,"Refundable portion of state or local earned income tax credits (EITC) paid to families and otherwise consistent with the requirements of 45 CFR Parts 260 and 263 of the TANF regulations. If the state is using an intercept to recoup a debt owed to the state, only the portion of the refundable EITC that is actually received by the family may be considered a federal TANF or MOE expenditure"
+28,14,6f,14. Non-EITC Refundable State Tax Credits,Integer,"Refundable portion of other tax credits provided under state or local law that are consistent with the purposes of TANF and the requirements of 45 CFR Parts 260 and 263 of the TANF regulations (e.g., state refundable child care tax credit)"
+29,15,6g,15. Non-Recurrent Short Term Benefits,Integer,"Short-term benefits to families in the form of cash, vouchers, subsidies, or similar form of payment to deal with a specific crisis situation or episode of need and excluded from the definition of assistance on that basis"
+30,16,,16. Supportive Services,Integer,"Services such as domestic violence services, and health, mental health, substance abuse and disability services, housing counseling services, and other family supports"
+31,17,,17. Services for Children and Youth,Integer,Programs designed to support and enrich the development and improve the life-skills and educational attainment of children and youth
+32,18,6h,18. Prevention of Out-of-Wedlock Pregnancies,Integer,"Programs that provide sex education or abstinence education and family planning services to individuals, couples, and families in an effort to reduce out-of-wedlock pregnancies"
+33,19,6i,19. Fatherhood and Two-Parent Family Formation and Maintenance Programs,Integer,Programs that aim to promote responsible fatherhood and/or encourage the formation and maintenance of two-parent families
+34,20,,20. Child Welfare Services,Integer,"The total expenditures from lines 20a., 20b., and 20c"
+35,20a,,20a. Family Support/Family Preservation/Reunification Services,Integer,"Community-based services, provided to families involved in the child welfare system that are designed to increase the strength and stability of families so children may remain in or return to their homes"
+36,20b,,20b. Adoption Services,Integer,Services and activities designed to promote and support successful adoptions
+37,20c,,20c. Additional Child Welfare Services,Integer,"Other services provided to children and families at risk of being in the child welfare system, or who are involved in the child welfare system"
+38,21,,21. Home Visiting Programs,Integer,"Expenditures on programs where nurses, social workers, or other professionals/para-professionals provide services to families in their homes, including evaluating the families’ circumstances; providing information and guidance around maternal health and child health and development; and connecting families to necessary resources and services"
+39,22,,22. Program Management,Integer,"The total expenditures from lines 22a., 22b., and 22c"
+40,22a,6j,22a. Administrative Costs,Integer,"Based on the nature or function of the contract, states must include appropriate administrative costs associated with contracts and subcontracts that count towards the 15 percent administrative cost caps"
+41,22b,,22b. Assessment/Service Provision,Integer,"Costs associated with screening and assessment (including substance abuse screening), SSI/SSDI application services, case planning and management, and direct service provision that are neither “administrative costs,” as defined at 45 CFR Part 263.0, nor are otherwise able to be allocated to another expenditure category"
+42,22c,6k,22c. Systems,Integer,Costs related to monitoring and tracking under the program
+43,23,6m,23. Other,Integer,Non-assistance activities that were not included under Line 6 through Line 22
+44,25,8,NOT INCLUDED,0,0
+45,26,6c1,NOT INCLUDED,0,0
+46,24,7,24. Total Expenditures,Integer,"The total expenditures (i.e., the sum of Line 6 through Line 23)"
+47,27,9,27. Federal Unliquidated Obligations,Integer,Obligations reported on this line must meet the definition of obligations contained in 45 CFR 92.3
+48,28,10,28. Unobligated Balance,Integer,Total federal unobligated balances of the GY’s funds in Columns A and D as of the end of each FFY
+49,,5,NOT INCLUDED,0,0
+50,,6,NOT INCLUDED,0,0
+51,,6c2,NOT INCLUDED,0,0
+52,,12,NOT INCLUDED,0,0

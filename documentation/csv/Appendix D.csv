@@ -1,0 +1,10 @@
+,Column Name,Type,Description
+0,State,String,State reporting caseload data.
+1,FiscalYear,Integer,The fiscal year (October-September) for which caseload data are being reported.
+2,Total Families,Float,The total number of families receiving TANF.
+3,Two Parent Families,Float,The total number of two-parent families receiving TANF.
+4,One Parent Families,Float,The total number of one-parent families receiving TANF.
+5,No Parent Families,Float,The total number of no-parent families receiving TANF.
+6,Total Recipients,Float,The total number of TANF recipients.
+7,Adult Recipients,Float,The number of adult TANF recipients.
+8,Children Recipients,Float,The number of child TANF recipients.
