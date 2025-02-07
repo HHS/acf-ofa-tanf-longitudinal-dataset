@@ -104,7 +104,7 @@ def find_matching_sheet(
     Args:
         sheet_names (List[str]): A list of sheet names.
         pattern (str): String identifying which type of sheet (families or recipients)
-            is being searched for.
+        is being searched for.
         file_path (str): Path to caseload file.
 
     Raises:
@@ -180,7 +180,7 @@ def process_workbook(
     Raises:
         FileNotFoundError: Raise a FileNotFoundError if the target file does not exist.
         AttributeError: Raise an AttributeError if either the families or recipients tab
-            cannot be found.
+        cannot be found.
 
     Returns:
         pd.DataFrame: Concatenated data frame.

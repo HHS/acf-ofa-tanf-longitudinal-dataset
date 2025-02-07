@@ -50,20 +50,20 @@ def get_header(
     Args:
         df (pd.DataFrame): A data frame to search within.
         column (str | int, optional): A column to search within for value `find`.
-            Defaults to None.
+        Defaults to None.
         find (str, optional): A value to search for within `column`. Defaults to None.
         reset (bool, optional): Boolean indicating whether the index should be reset before searching
-            for the header. Defaults to False.
+        for the header. Defaults to False.
         sanitize (bool, optional): A boolean indicating whether to manipulate column
-            headers before searching them. Defaults to False.
+        headers before searching them. Defaults to False.
         idx (bool, optional): A boolean indicating whether to return simply the
-            row index of the header rather than the series containin the header.
-            Defaults to False.
+        row index of the header rather than the series containin the header.
+        Defaults to False.
 
     Returns:
         int | pd.DataFrame | pd.Series: Returns a data frame with leading rows removed
-            and the header updated if only a data frame is provided. Otherwise returns
-            either an integer index or a series containing potential column names.
+        and the header updated if only a data frame is provided. Otherwise returns
+        either an integer index or a series containing potential column names.
     """
     df = df.copy()
     if reset:
