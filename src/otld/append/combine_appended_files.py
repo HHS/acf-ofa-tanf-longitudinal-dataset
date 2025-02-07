@@ -8,7 +8,7 @@ import pandas as pd
 from otld.paths import input_dir, inter_dir
 from otld.utils import missingness, validate_data_frame
 from otld.utils.crosswalk_2014_2015 import crosswalk, crosswalk_dict, map_columns
-from otld.utils.expenditure_utils import consolidate_categories, reindex_state_year
+from otld.utils.financial_utils import consolidate_categories, reindex_state_year
 
 
 def get_column_list(crosswalk: pd.DataFrame, column: str | int) -> list[str]:

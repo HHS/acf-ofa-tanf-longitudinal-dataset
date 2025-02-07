@@ -1,0 +1,23 @@
+name: Integration Tests
+run-name: Pull request for ${{ github.ref }} triggered integration tests.
+on: pull_request
+
+jobs:
+  run-tests:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository code
+        id: checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install package
+        id: installation
+        run: |
+          pip install -U pip
+          pip install .
+      - name: Run tests
+        id: tests
+        run: python3 -m pytest tests/integration

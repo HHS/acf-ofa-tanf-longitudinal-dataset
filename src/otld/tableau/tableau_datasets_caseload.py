@@ -27,7 +27,7 @@ def generate_wide_data():
 
 
 def transform_caseload_long(df: pd.DataFrame) -> pd.DataFrame:
-    """Transformation for caseload long data
+    """Transformations for caseload long data
 
     Args:
         df (pd.DataFrame): Caseload dataset to transform

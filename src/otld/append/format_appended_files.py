@@ -4,11 +4,13 @@ This module formats appended TANF financial data.
 """
 
 import os
+import shutil
 
 import numpy as np
 import pandas as pd
 
 from otld.append import combine_appended_files
+from otld.paths import DATA_DIR, out_dir, tableau_dir
 from otld.utils.openpyxl_utils import export_workbook
 
 
@@ -51,9 +53,9 @@ def main():
         "Other",
     ]
 
-    export_workbook(
-        frames, os.path.join(out_dir, "FinancialDataWide.xlsx"), drop_columns
-    )
+    wide_name = "FinancialDataWide.xlsx"
+    long_name = "FinancialDataLong.xlsx"
+    export_workbook(frames, os.path.join(out_dir, wide_name), drop_columns)
 
     frames["FinancialData"] = []
     for frame in frames:
@@ -77,10 +79,13 @@ def main():
     frames["FinancialData"] = frames["FinancialData"][
         frames["FinancialData"]["Category"].map(lambda x: x not in drop_columns)
     ]
-    export_workbook(frames, os.path.join(out_dir, "FinancialDataLong.xlsx"))
+    export_workbook(frames, os.path.join(out_dir, long_name))
+
+    for file in [wide_name, long_name]:
+        shutil.copy(
+            os.path.join(out_dir, file), os.path.join(DATA_DIR, "appended_data", file)
+        )
 
 
 if __name__ == "__main__":
-    from otld.paths import out_dir, tableau_dir
-
     main()

@@ -1,6 +1,6 @@
 """Utility modules"""
 
-from .checks import ExpenditureDataChecker
+from .checks import FinancialDataChecker
 from .openpyxl_utils import *
 from .pandas_utils import *
 from .states import STATES

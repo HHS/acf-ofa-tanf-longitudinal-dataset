@@ -1,3 +1,5 @@
+"""Clean PCE data"""
+
 import os
 
 import pandas as pd
@@ -21,6 +23,14 @@ MONTH_MAP = {
 
 
 def split_year_month(string: str) -> tuple[str]:
+    """Split combined year and month.
+
+    Args:
+        string (str): Combined string containing year and month.
+
+    Returns:
+        tuple[str]: Tuple of strings containing the year and month (year, month).
+    """
     year, month = string.split("M")
     year = int(year)
     month = MONTH_MAP[month]
@@ -28,6 +38,7 @@ def split_year_month(string: str) -> tuple[str]:
 
 
 def clean_pce():
+    """Clean PCE data"""
     df = pd.read_excel(
         os.path.join(inter_dir, "pce.xlsx"), sheet_name="U20304-M", header=7
     )

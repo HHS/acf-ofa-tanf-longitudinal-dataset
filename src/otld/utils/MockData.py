@@ -167,6 +167,12 @@ class MockData:
         return self._pandas
 
     def validate(self):
+        """Validate inputs
+
+        Raises:
+            ValueError: When appended is false and year is not an integer.
+            ValueError: When appended is true and year is not list.
+        """
         if self._appended is False and not isinstance(self._year, int):
             raise ValueError("Year should be an integer.")
         elif self._appended is True and not isinstance(self._year, list):

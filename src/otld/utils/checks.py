@@ -1,4 +1,4 @@
-"""Class for validation checks of expenditure data"""
+"""Class for validation checks of caseload and financial data"""
 
 import os
 import re
@@ -14,8 +14,8 @@ class GenericChecker:
         """Initialize instance of GenericChecker class
 
         Args:
-            df (pd.DataFrame): Expenditure data DataFrame
-            level (str): Funding level (Federal, State, Total)
+            df (pd.DataFrame): TANF data DataFrame
+            level (str): Funding level
             kind (str): ACF Instructions (196, 196R, Appended)
             action (str, optional): Action to take when an assertion fails.
             Defaults to "error", but also accepts "export"
@@ -30,7 +30,7 @@ class GenericChecker:
 
     @property
     def df(self):
-        """Expenditure data frame"""
+        """Financial data frame"""
         return self._df
 
     @property
@@ -48,21 +48,29 @@ class GenericChecker:
         """ACF Instructions (196, 196R, Appended)"""
         return self._kind
 
-    def export(self, path: str | os.PathLike, sheet_name: str = None) -> None:
+    def export(self, path: str | os.PathLike, sheet_name: str = None, **kwargs) -> None:
         """Export checks to a workbook
 
         Args:
             path (str | os.PathLike): Path to export checks to.
             sheet_name (str, optional): An optional sheet name for the checks. Defaults to None.
         """
-        export_workbook(self._checks, path)
+        export_workbook(self._checks, path, **kwargs)
 
 
-class ExpenditureDataChecker(GenericChecker):
-    """Implement validation checks for the expenditure data"""
+class FinancialDataChecker(GenericChecker):
+    """Implement validation checks for the financial data"""
 
     def __init__(self, df: pd.DataFrame, level: str, kind: str, action: str = "error"):
-        """Initialize instance of ExpenditureDataChecker"""
+        """Initialize FinancialDataChecker
+
+        Args:
+            df (pd.DataFrame): Financial data DataFrame
+            level (str): Funding level (Federal, State, Total)
+            kind (str): ACF Instructions (196, 196R, Appended)
+            action (str, optional): Action to take when an assertion fails.
+            Defaults to "error", but also accepts "export"
+        """
         super().__init__(df, level, kind, action)
         self.names_to_lines()
 
@@ -89,14 +97,14 @@ class ExpenditureDataChecker(GenericChecker):
     def check(self):
         """Choose which check(s) to perform"""
         if self._level == "Federal":
-            self.federal_expenditure_data_checks()
+            self.federal_financial_data_checks()
         elif self._level == "State":
             pass
         elif self._level == "Total":
             pass
 
-    def federal_expenditure_data_checks(self):
-        """Execute federal expenditure data checks"""
+    def federal_financial_data_checks(self):
+        """Execute federal financial data checks"""
         checks = self._checks
         df = self._df.copy()
         df["funds"] = df["1"] + df["5"] - df["2"] - df["3"] - df["24"]
@@ -147,21 +155,32 @@ class CaseloadDataChecker(GenericChecker):
         level: str = "",
         action: str = "error",
     ):
+        """Initialize CaseloadDataChecker
+
+        Args:
+            df (pd.DataFrame): Caseload data DataFrame
+            level (str): Funding level (TANF, TANF-SSP, SSP-MOE)
+            action (str, optional): Action to take when an assertion fails. Defaults to "error".
+        """
         super().__init__(df, level, None, action)
 
     def check(self):
+        """Run caseload data checks"""
+        # If a dictionary of data frames, then loop through
         if isinstance(self._df, dict):
             self._df_dict = self._df
             for frame in self._df_dict:
                 self._level = frame
                 self._df = self._df_dict[frame]
                 self.caseload_data_checks()
+        # Otherwise, run checks directly
         else:
             self.caseload_data_checks()
 
         return self
 
     def caseload_data_checks(self):
+        """Generic caseload data checks"""
         checks = self._checks
         df = self._df.copy()
 
