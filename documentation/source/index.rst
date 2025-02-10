@@ -16,7 +16,7 @@ General Documentation
    Command-Line-Documentation
    TransformationDocumentation
 
-Module Code
+Module Documentation
 --------------------------------
 
 .. autosummary::
