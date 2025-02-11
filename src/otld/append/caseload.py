@@ -10,6 +10,8 @@ import pandas as pd
 from otld.paths import DATA_DIR, diagnostics_dir, out_dir, tableau_dir
 from otld.utils import export_workbook, get_header
 from otld.utils.caseload_utils import (
+    CASELOAD_FOOTNOTES_LONG,
+    CASELOAD_FOOTNOTES_WIDE,
     CASELOAD_FORMAT_OPTIONS,
     CATEGORIES,
     OUTPUT_COLUMNS,
@@ -321,6 +323,7 @@ def main():
         master_wide,
         os.path.join(out_dir, wide_name),
         format_options=CASELOAD_FORMAT_OPTIONS,
+        footnotes=CASELOAD_FOOTNOTES_WIDE,
     )
     export_workbook(
         master_wide,
@@ -355,6 +358,7 @@ def main():
         master_wide,
         os.path.join(out_dir, long_name),
         format_options=CASELOAD_FORMAT_OPTIONS,
+        footnotes=CASELOAD_FOOTNOTES_LONG,
     )
 
     for file in [wide_name, long_name]:

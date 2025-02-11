@@ -35,6 +35,37 @@ CATEGORIES = [
     "Children Recipients",
 ]
 
+CASELOAD_FOOTNOTES_WIDE = {
+    "TANF": [
+        [
+            "From FY 2002 to FY 2005 Guam's caseload figures reflect an estimate based on the first quarter of FY 2002."
+        ]
+    ],
+    "TANF_SSP": [
+        [
+            "From FY 2002 to FY 2005 Guam's caseload figures reflect an estimate based on the first quarter of FY 2002."
+        ]
+    ],
+}
+
+
+def unique_notes(footnotes: dict):
+    for key, value in footnotes.items():
+        notes = []
+        for note in value:
+            if note not in notes:
+                notes.append(note)
+
+        footnotes[key] = notes
+
+
+CASELOAD_FOOTNOTES_LONG = {
+    "CaseloadData": [
+        note for notes in CASELOAD_FOOTNOTES_WIDE.values() for note in notes
+    ]
+}
+unique_notes(CASELOAD_FOOTNOTES_LONG)
+
 
 def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
     """Display ambiguous values in data frame (0, -, blank)
