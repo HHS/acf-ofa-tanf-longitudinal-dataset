@@ -5,6 +5,7 @@ __all__ = [
     "get_merged_value",
     "get_column_names",
     "export_workbook",
+    "long_notes",
 ]
 
 import openpyxl
@@ -235,3 +236,23 @@ def export_workbook(
 
     # Export
     wb.save(path)
+
+
+def long_notes(new_key: str, footnotes: dict[list[list]]):
+    footnotes = footnotes.copy()
+    footnotes[new_key] = [note for notes in footnotes.values() for note in notes]
+
+    for key in list(footnotes.keys()):
+        if key == new_key:
+            continue
+        del footnotes[key]
+
+    for key, value in footnotes.items():
+        notes = []
+        for note in value:
+            if note not in notes:
+                notes.append(note)
+
+        footnotes[key] = notes
+
+    return footnotes

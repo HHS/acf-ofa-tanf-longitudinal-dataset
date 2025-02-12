@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from openpyxl.styles.numbers import BUILTIN_FORMATS
 
-from otld.utils import get_header
+from otld.utils import get_header, long_notes
 
 OUTPUT_COLUMNS = [
     "FiscalYear",
@@ -49,22 +49,7 @@ CASELOAD_FOOTNOTES_WIDE = {
 }
 
 
-def unique_notes(footnotes: dict):
-    for key, value in footnotes.items():
-        notes = []
-        for note in value:
-            if note not in notes:
-                notes.append(note)
-
-        footnotes[key] = notes
-
-
-CASELOAD_FOOTNOTES_LONG = {
-    "CaseloadData": [
-        note for notes in CASELOAD_FOOTNOTES_WIDE.values() for note in notes
-    ]
-}
-unique_notes(CASELOAD_FOOTNOTES_LONG)
+CASELOAD_FOOTNOTES_LONG = long_notes("CaseloadData", CASELOAD_FOOTNOTES_WIDE)
 
 
 def analyze_ambiguous_values(df: pd.DataFrame) -> dict:
