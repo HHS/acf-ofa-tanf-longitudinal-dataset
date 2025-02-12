@@ -33,6 +33,8 @@ class TANFData:
         appended_path: str,
         to_append_path: str | list[str],
         sheets: dict[list] = {},
+        footnotes: dict[list[list]] = {},
+        tableau: bool = False,
     ):
         """Initialize TANFData class
 
@@ -59,6 +61,8 @@ class TANFData:
 
         self.load_data(to_append_path)
         self.set_sheets(sheets)
+        self._footnotes = footnotes
+        self._tableau = tableau
 
     @property
     def appended(self):
@@ -79,6 +83,16 @@ class TANFData:
     def sheet_dict(self):
         """Dictionary of sheets from which to extract information"""
         return self._sheet_dict
+
+    @property
+    def footnotes(self):
+        """Any footnotes to include in the final files"""
+        return self._footnotes
+
+    @property
+    def tableau(self):
+        """Boolean indicating whether tableau-specific datasets should be output"""
+        return self._tableau
 
     def load_data(self, to_append_path: str | list[str]):
         """Load TANF data to append
@@ -411,7 +425,15 @@ class TANFData:
             self._out_dir,
             f"{title}Wide_{current_date}.xlsx",
         )
-        export_workbook(self._frames, path, format_options=format_options)
+        export_workbook(
+            self._frames, path, format_options=format_options, footnotes=self._footnotes
+        )
+        if self._tableau:
+            export_workbook(
+                self._frames,
+                path.replace(f"{title}Wide_", f"{title}WideTableau_"),
+                format_options=format_options,
+            )
 
         # Reshape and export long data
         path = os.path.join(
@@ -434,7 +456,9 @@ class TANFData:
             if frame != title:
                 del self._frames[frame]
 
-        export_workbook(self._frames, path, format_options=format_options)
+        export_workbook(
+            self._frames, path, format_options=format_options, footnotes=self._footnotes
+        )
 
     def close_excel_files(self):
         """Close all files"""

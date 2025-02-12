@@ -163,6 +163,48 @@ class TestTANFAppend(unittest.TestCase):
         with self.assertRaises(AssertionError):
             TANFAppend()
 
+    def test_tableau(self):
+        # Assert tableau parameter is true with the -t option and false otherwise
+        sys.argv = [
+            "tanf-append",
+            "caseload",
+            os.path.join(self.mock_dir, "CaseloadDataWide.xlsx"),
+            "-d",
+            self.mock_dir,
+            "-t",
+        ]
+        self.assertTrue(TANFAppend()._tableau)
+
+        sys.argv = [
+            "tanf-append",
+            "caseload",
+            os.path.join(self.mock_dir, "CaseloadDataWide.xlsx"),
+            "-d",
+            self.mock_dir,
+        ]
+        self.assertFalse(TANFAppend()._tableau)
+
+    def test_footnotes(self):
+        sys.argv = [
+            "tanf-append",
+            "caseload",
+            os.path.join(self.mock_dir, "CaseloadDataWide.xlsx"),
+            "-d",
+            self.mock_dir,
+            "-f",
+            """{
+                "TANF": [["Footnote 1"], ["Footnote 2"]],
+                "TANF_SSP": [["Footnote 1"], ["Footnote 2"]]
+            }""",
+        ]
+        self.assertEqual(
+            {
+                "TANF": [["Footnote 1"], ["Footnote 2"]],
+                "TANF_SSP": [["Footnote 1"], ["Footnote 2"]],
+            },
+            TANFAppend()._footnotes,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
