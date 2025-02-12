@@ -89,7 +89,7 @@ class TANFAppend:
             "--tableau",
             action="store_true",
             dest="tableau",
-            help="Generate an additional file without headers or footers, suitable for use in the creation of tableau files.",
+            help="Generate an additional file without headers or footers suitable for use in the creation of tableau files.",
         )
 
         return parser.parse_args(args)

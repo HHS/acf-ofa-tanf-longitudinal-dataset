@@ -2,7 +2,7 @@ Command Line Applications
 =========================
 
 The OFA TANF Longitudinal Dataset (OTLD) package was primarily developed
-to handle the initial appending of OFA’s financial and caseload TANF
+to handle the initial appending of OFA's financial and caseload TANF
 data. To make future creation of appended files simpler and Tableau
 related datasets simpler, however, we created a set of command line
 applications that enable appending new data and creating output
@@ -42,6 +42,8 @@ Documentation
    -  -s SHEETS, –sheets SHEETS: List of sheets to extract from files to
       append. Only necessary if the default sheet options are failing.
       Should be a JSON formatted string (`see examples <#examples>`__).
+   - -f FOOTNOTES, --footnotes FOOTNOTES: List of footnotes to include in appended files. Should be a JSON formatted string (`see examples <#examples>`__)
+   - -t, --tableau: Generate an additional file without headers or footers suitable for use in the creation of tableau files.
 
 Examples
 ~~~~~~~~
@@ -65,6 +67,12 @@ Examples
    > set sheets="{""financial"": {""Total"": ""B. Total Expenditures"", ""Federal"": ""C.1 Federal Expenditures"", ""State"": ""C.2 State Expenditures""}}"
 
    > tanf-append financial appended/FinancialDataWide.xlsx -d to_append -s %sheets%
+
+.. code-block::
+
+   > set footnotes="{""TANF"": [[""From 2002-2005 Guam's caseload data was imputed""], [""Another footnote""]], ""SSP_MOE"": [[""A third footnote""]]}"
+
+   > tanf-append caseload appended/CaseloadDataWide.xlsx -d to_append -f %footnotes%
 
 Tableau
 -------
