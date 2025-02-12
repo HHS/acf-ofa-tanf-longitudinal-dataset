@@ -10,6 +10,7 @@ from otld.utils import (
     convert_to_numeric,
     export_workbook,
     get_header,
+    long_notes,
     standardize_line_number,
     validate_data_frame,
 )
@@ -457,7 +458,10 @@ class TANFData:
                 del self._frames[frame]
 
         export_workbook(
-            self._frames, path, format_options=format_options, footnotes=self._footnotes
+            self._frames,
+            path,
+            format_options=format_options,
+            footnotes=long_notes(title, self._footnotes),
         )
 
     def close_excel_files(self):
