@@ -1,0 +1,52 @@
+,Line Number in ACF-196R,Line Number(s) in ACF-196,Operation,Column Name in Appended File
+0,1,1,Rename,1. Awarded
+1,2,2,Rename,2. Transfers to Child Care and Development Fund (CCDF) Discretionary
+2,3,3,Rename,3. Transfers to Social Services Block Grant (SSBG)
+3,4,4,Rename,4. Adjusted Award
+4,5,Carryover,Rename,5. Carryover
+5,6,5a,Rename,6. Basic Assistance
+6,6a,,,"6a. Basic Assistance (excluding Payments for Relative Foster Care, and Adoption and Guardianship Subsidies)"
+7,6b,,,6b. Relative Foster Care Maintenance Payments and Adoption and Guardianship Subsidies
+8,7,5d,Rename,7. Assistance Authorized Solely Under Prior Law
+9,7a,,,7a. Foster Care Payments
+10,7b,,,7b. Juvenile Justice Payments
+11,7c,,,7c. Emergency Assistance Authorized Solely Under Prior Law
+12,8,6l,Rename,8. Non-Assistance Authorized Solely Under Prior Law
+13,8a,,,8a. Child Welfare or Foster Care Services
+14,8b,,,8b. Juvenile Justice Services
+15,8c,,,8c. Emergency Services Authorized Solely Under Prior Law
+16,9,6a,Rename,"9. Work, Education, and Training Activities"
+17,9a,6a1,Rename,9a. Subsidized Employment
+18,9b,6a2,Rename,9b. Education and Training
+19,9c,6a3,Rename,9c. Additional Work Activities
+20,10,"5c,6c",Sum,10. Work Supports
+21,11,,,11. Early Care and Education
+22,11a,"5b,6b",Sum,11a. Child Care (Assistance and Non-Assistance)
+23,11b,,,11b. Pre-Kindergarten/Head Start
+24,12,6d,Rename,12. Financial Education and Asset Developments
+25,13,6e,Rename,13. Refundable Earned Income Tax Credits
+26,14,6f,Rename,14. Non-EITC Refundable State Tax Credits
+27,15,6g,Rename,15. Non-Recurrent Short Term Benefits
+28,16,,,16. Supportive Services
+29,17,,,17. Services for Children and Youth
+30,18,6h,Rename,18. Prevention of Out-of-Wedlock Pregnancies
+31,19,6i,Rename,19. Fatherhood and Two-Parent Family Formation and Maintenance Programs
+32,20,,,20. Child Welfare Services
+33,20a,,,20a. Family Support/Family Preservation/Reunification Services
+34,20b,,,20b. Adoption Services
+35,20c,,,20c. Additional Child Welfare Services
+36,21,,,21. Home Visiting Programs
+37,22,,,22. Program Management
+38,22a,6j,Rename,22a. Administrative Costs
+39,22b,,,22b. Assessment/Service Provision
+40,22c,6k,Rename,22c. Systems
+41,23,6m,Rename,23. Other
+42,25,8,,NOT INCLUDED
+43,26,6c1,,NOT INCLUDED
+44,24,7,Rename,24. Total Expenditures
+45,27,9,Rename,27. Federal Unliquidated Obligations
+46,28,10,Rename,28. Unobligated Balance
+47,,5,,NOT INCLUDED
+48,,6,,NOT INCLUDED
+49,,6c2,,NOT INCLUDED
+50,,12,,NOT INCLUDED

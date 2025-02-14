@@ -5,10 +5,10 @@ import os
 
 import numpy as np
 import pandas as pd
-from openpyxl.styles.numbers import FORMAT_NUMBER_COMMA_SEPARATED1
 
 from otld.paths import tableau_dir
 from otld.utils import excel_to_dict, export_workbook, wide_with_index
+from otld.utils.caseload_utils import CASELOAD_FORMAT_OPTIONS
 
 
 def generate_wide_data():
@@ -16,13 +16,12 @@ def generate_wide_data():
     frames = excel_to_dict(
         os.path.join(tableau_dir, "data", "CaseloadDataWideRaw.xlsx")
     )
+    options = CASELOAD_FORMAT_OPTIONS.copy()
+    options.update({"skip_cols": 4})
     export_workbook(
         wide_with_index(frames, "CaseloadData"),
         os.path.join(tableau_dir, "data", "CaseloadDataWide.xlsx"),
-        format_options={
-            "skip_cols": 3,
-            "number_format": FORMAT_NUMBER_COMMA_SEPARATED1,
-        },
+        format_options=options,
     )
 
 

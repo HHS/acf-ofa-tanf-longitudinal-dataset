@@ -5,10 +5,10 @@ import os
 import sys
 
 import pandas as pd
-from openpyxl.styles.numbers import FORMAT_NUMBER_COMMA_SEPARATED1
 
 from otld.tableau import tableau_datasets_caseload, tableau_datasets_financial
 from otld.utils import excel_to_dict, export_workbook, wide_with_index
+from otld.utils.caseload_utils import CASELOAD_FORMAT_OPTIONS
 from otld.utils.consolidation import CONSOLIDATION_INSTRUCTIONS
 from otld.utils.financial_utils import consolidate_categories
 
@@ -81,7 +81,7 @@ class TableauDatasets:
 
         format_options = {"skip_cols": 3}
         if self._kind == "caseload":
-            format_options.update({"number_format": FORMAT_NUMBER_COMMA_SEPARATED1})
+            format_options.update(CASELOAD_FORMAT_OPTIONS)
 
         export_workbook(
             wide_with_index(frames, f"{self._kind.title()}Data"),

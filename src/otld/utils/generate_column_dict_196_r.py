@@ -23,7 +23,7 @@ def split_line(
     Args:
         line (str): The line to be split.
         line_re (re.Pattern, optional): A regex pattern to use to split `line`.
-            Defaults to re.compile(r"Lines?\s?(.+?\.)\s+(.+?)\.", re.DOTALL).
+        Defaults to re.compile(r"Lines?\s?(.+?\.)\s+(.+?)\.", re.DOTALL).
 
     Returns:
         tuple[str, str]: A tuple containing the line_number associated with `line` and

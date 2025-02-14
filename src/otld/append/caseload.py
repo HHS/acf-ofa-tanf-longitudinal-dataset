@@ -10,6 +10,8 @@ import pandas as pd
 from otld.paths import DATA_DIR, diagnostics_dir, out_dir, tableau_dir
 from otld.utils import export_workbook, get_header
 from otld.utils.caseload_utils import (
+    CASELOAD_FOOTNOTES_LONG,
+    CASELOAD_FOOTNOTES_WIDE,
     CASELOAD_FORMAT_OPTIONS,
     CATEGORIES,
     OUTPUT_COLUMNS,
@@ -104,7 +106,7 @@ def find_matching_sheet(
     Args:
         sheet_names (List[str]): A list of sheet names.
         pattern (str): String identifying which type of sheet (families or recipients)
-            is being searched for.
+        is being searched for.
         file_path (str): Path to caseload file.
 
     Raises:
@@ -180,7 +182,7 @@ def process_workbook(
     Raises:
         FileNotFoundError: Raise a FileNotFoundError if the target file does not exist.
         AttributeError: Raise an AttributeError if either the families or recipients tab
-            cannot be found.
+        cannot be found.
 
     Returns:
         pd.DataFrame: Concatenated data frame.
@@ -321,6 +323,7 @@ def main():
         master_wide,
         os.path.join(out_dir, wide_name),
         format_options=CASELOAD_FORMAT_OPTIONS,
+        footnotes=CASELOAD_FOOTNOTES_WIDE,
     )
     export_workbook(
         master_wide,
@@ -355,6 +358,7 @@ def main():
         master_wide,
         os.path.join(out_dir, long_name),
         format_options=CASELOAD_FORMAT_OPTIONS,
+        footnotes=CASELOAD_FOOTNOTES_LONG,
     )
 
     for file in [wide_name, long_name]:

@@ -1,4 +1,8 @@
-{{ fullname | escape | underline}}
+{% if fullname == "otld" %}
+   {{- "Module Documentation" | escape | underline -}}
+{% else %}
+   {{- fullname | escape | underline -}}
+{% endif %}
 
 .. automodule:: {{ fullname }}
 

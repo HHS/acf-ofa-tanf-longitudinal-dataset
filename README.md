@@ -1,8 +1,9 @@
 # OFA TANF Longitudinal Dataset
 Repository for pilot creating longitudinal dataset from TANF financial data
 
-## Detailed Module Documentation
-[See here for detailed module documentation](https://redesigned-dollop-j7o5ezp.pages.github.io/index.html)
-
-## Command Line Application Documentation
-[See here for command line application documentation](documentation/markdown/Command_Line_Documentation.md)
+## Documentation
+- [Home Page](https://redesigned-dollop-j7o5ezp.pages.github.io/index.html)
+- [Package Installation](https://redesigned-dollop-j7o5ezp.pages.github.io/Installation.html)
+- [Command Line Applications](https://redesigned-dollop-j7o5ezp.pages.github.io/Command-Line-Documentation.html)
+- [Transformation Documentation](https://redesigned-dollop-j7o5ezp.pages.github.io/TransformationDocumentation.html)
+- [Modules](https://redesigned-dollop-j7o5ezp.pages.github.io/_autosummary/otld.html)

@@ -6,9 +6,9 @@ from typing import List, Optional
 
 import numpy as np
 import pandas as pd
-from openpyxl.styles.numbers import FORMAT_NUMBER_COMMA_SEPARATED1
+from openpyxl.styles.numbers import BUILTIN_FORMATS
 
-from otld.utils import get_header
+from otld.utils import get_header, long_notes
 
 OUTPUT_COLUMNS = [
     "FiscalYear",
@@ -24,7 +24,7 @@ OUTPUT_COLUMNS = [
 
 FAMILY_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*families")
 RECIPIENT_SHEET_REGEX_PATTERN = re.compile(r"fy(cy)?\d{4}.*recipients")
-CASELOAD_FORMAT_OPTIONS = {"number_format": FORMAT_NUMBER_COMMA_SEPARATED1}
+CASELOAD_FORMAT_OPTIONS = {"number_format": BUILTIN_FORMATS[3]}
 CATEGORIES = [
     "Total Families",
     "Two Parent Families",
@@ -34,6 +34,22 @@ CATEGORIES = [
     "Adult Recipients",
     "Children Recipients",
 ]
+
+CASELOAD_FOOTNOTES_WIDE = {
+    "TANF": [
+        [
+            "From FY 2002 to FY 2005 Guam's caseload figures reflect an estimate based on the first quarter of FY 2002."
+        ]
+    ],
+    "TANF_SSP": [
+        [
+            "From FY 2002 to FY 2005 Guam's caseload figures reflect an estimate based on the first quarter of FY 2002."
+        ]
+    ],
+}
+
+
+CASELOAD_FOOTNOTES_LONG = long_notes("CaseloadData", CASELOAD_FOOTNOTES_WIDE)
 
 
 def analyze_ambiguous_values(df: pd.DataFrame) -> dict:

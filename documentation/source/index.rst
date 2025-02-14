@@ -8,6 +8,17 @@ OFA TANF Longitudinal Dataset Documentation
 
 This documentation outlines the modules and functions for appending OFA's TANF data.
 
+General Documentation
+--------------------------------
+
+.. toctree::
+   Installation
+   Command-Line-Documentation
+   TransformationDocumentation
+
+Module Documentation
+--------------------------------
+
 .. autosummary::
    :toctree: _autosummary
    :template: custom-module-template.rst

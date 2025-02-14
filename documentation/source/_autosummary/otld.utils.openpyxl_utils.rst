@@ -15,5 +15,6 @@ otld.utils.openpyxl\_utils
       format_openpyxl_worksheet
       get_column_names
       get_merged_value
+      long_notes
       set_column_widths
    

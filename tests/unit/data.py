@@ -9264,3 +9264,14 @@ PCE = {
         "65": 123.939,
     },
 }
+
+CASELOAD_SHEETS = {
+    "caseload": {
+        "TANF": {"family": "fycy2024-families", "recipient": "fycy2024-recipients"},
+        "SSP_MOE": {
+            "family": "Avg Month Num Fam",
+            "recipient": "Avg Mo. Num Recipient",
+        },
+        "TANF_SSP": {"family": "fycy2024-families"},
+    }
+}

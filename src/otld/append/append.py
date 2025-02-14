@@ -21,6 +21,8 @@ class TANFAppend:
         self._to_append = parser.to_append
         self._directory = parser.directory
         self._sheets = parser.sheets
+        self._footnotes = parser.footnotes or {}
+        self._tableau = parser.tableau or False
         self.setup()
 
     def setup(self):
@@ -31,6 +33,9 @@ class TANFAppend:
 
         if self._sheets:
             self.get_sheets()
+
+        if self._footnotes:
+            self._footnotes = json.loads(self._footnotes)
 
         return self
 
@@ -71,6 +76,20 @@ class TANFAppend:
             dest="sheets",
             type=str,
             help="List of sheets to extract from files to append. Should be a JSON formatted string.",
+        )
+        parser.add_argument(
+            "-f",
+            "--footnotes",
+            dest="footnotes",
+            type=str,
+            help="List of footnotes to include in appended files. Should be a JSON formatted string.",
+        )
+        parser.add_argument(
+            "-t",
+            "--tableau",
+            action="store_true",
+            dest="tableau",
+            help="Generate an additional file without headers or footers suitable for use in the creation of tableau files.",
         )
 
         return parser.parse_args(args)
@@ -116,7 +135,14 @@ class TANFAppend:
 
     def append(self):
         """Instantiate TANFData object and call append method"""
-        tanf_data = TANFData(self._kind, self._appended, self._to_append, self._sheets)
+        tanf_data = TANFData(
+            self._kind,
+            self._appended,
+            self._to_append,
+            self._sheets,
+            self._footnotes,
+            self._tableau,
+        )
         tanf_data.append()
 
 
@@ -146,4 +172,4 @@ if __name__ == "__main__":
         "-d",
         os.path.join(test_dir, "mock"),
     ]
-    TANFAppend()
+    appender = TANFAppend()

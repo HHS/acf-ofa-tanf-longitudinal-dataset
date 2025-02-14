@@ -5,6 +5,7 @@ __all__ = [
     "get_merged_value",
     "get_column_names",
     "export_workbook",
+    "long_notes",
 ]
 
 import openpyxl
@@ -175,7 +176,11 @@ def format_openpyxl_worksheet(
 
 
 def export_workbook(
-    frames: dict, path: str, drop: list[str] = [], format_options: dict = {}
+    frames: dict,
+    path: str,
+    drop: list[str] = [],
+    format_options: dict = {},
+    footnotes: dict[list[list]] = {},
 ):
     """Export a dictionary of data frames as an Excel Workbook.
 
@@ -189,16 +194,21 @@ def export_workbook(
     wb = openpyxl.Workbook()
     ws = wb.active
 
-    i = 0
-    for frame in frames:
+    # If there are footnotes, then the keys should be a subset of frames.keys()
+    if footnotes:
+        frame_set = set(frames.keys())
+        note_set = set(footnotes.keys())
+        assert frame_set.issuperset(
+            note_set
+        ), f"All keys in footnotes ({footnotes.keys()}) should be in frames ({frames.keys()})"
+
+    for i, frame in enumerate(frames):
         if i == 0:
             ws = wb.active
             ws.title = frame
         else:
             wb.create_sheet(frame)
             ws = wb[frame]
-
-        i += 1
 
         df = frames[frame].copy()
         if drop:
@@ -210,7 +220,39 @@ def export_workbook(
             ws.append(row)
 
         add_table(ws, frame, ws.dimensions)
+
+        # If there are footnotes, add them after the table. Otherwise continue.
+        if footnotes:
+            notes = footnotes.get(frame, [])
+
+            for row in notes:
+                row = row.copy()
+                while len(row) < ws.max_column:
+                    row += [""]
+
+                ws.append(row)
+
         format_openpyxl_worksheet(ws, **format_options)
 
     # Export
     wb.save(path)
+
+
+def long_notes(new_key: str, footnotes: dict[list[list]]):
+    footnotes = footnotes.copy()
+    footnotes[new_key] = [note for notes in footnotes.values() for note in notes]
+
+    for key in list(footnotes.keys()):
+        if key == new_key:
+            continue
+        del footnotes[key]
+
+    for key, value in footnotes.items():
+        notes = []
+        for note in value:
+            if note not in notes:
+                notes.append(note)
+
+        footnotes[key] = notes
+
+    return footnotes

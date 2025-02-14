@@ -39,7 +39,9 @@ otld.append.TANFData.TANFData
    .. autosummary::
    
       ~TANFData.appended
+      ~TANFData.footnotes
       ~TANFData.sheet_dict
+      ~TANFData.tableau
       ~TANFData.to_append
       ~TANFData.type
    
