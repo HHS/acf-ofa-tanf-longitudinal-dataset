@@ -1,0 +1,92 @@
+import json
+import os
+import tempfile
+import time
+import tkinter as tk
+import unittest
+from tkinter import Tk
+
+from data import CASELOAD_SHEETS
+from otld.append import gui
+from otld.utils.caseload_utils import CASELOAD_FOOTNOTES_WIDE
+from otld.utils.MockData import MockData
+
+TEMP_DIR = tempfile.TemporaryDirectory()
+MOCK_DIR = TEMP_DIR.name
+for directory in ["raw", "appended"]:
+    os.mkdir(os.path.join(MOCK_DIR, directory))
+
+for dataset in ["financial", "caseload"]:
+    mock_data = MockData(dataset, 2024)
+    mock_data.generate_data()
+    mock_data.export(directory=os.path.join(MOCK_DIR, "raw"))
+    del mock_data
+    mock_data = MockData(dataset, list(range(2015, 2024)), appended=True)
+    mock_data.generate_data()
+    mock_data.export(directory=os.path.join(MOCK_DIR, "appended"))
+
+CASELOAD_SHEETS_PATH = os.path.join(MOCK_DIR, "sheets.json")
+with open(CASELOAD_SHEETS_PATH, "w") as f:
+    json.dump(CASELOAD_SHEETS, f)
+    f.close()
+
+CASELOAD_FOOTNOTES_PATH = os.path.join(MOCK_DIR, "footnotes.json")
+with open(CASELOAD_FOOTNOTES_PATH, "w") as f:
+    json.dump(CASELOAD_FOOTNOTES_WIDE, f)
+    f.close()
+
+
+# Adapted from https://stackoverflow.com/questions/4083796/how-do-i-run-unittest-on-a-tkinter-app
+# class TKinterTestCase(unittest.TestCase):
+#     def setUp(self):
+#         self.root = Tk()
+#         self.pump_events()
+
+#     def teardown(self):
+#         if self.root:
+#             self.root.destroy()
+#             self.pump_events()
+
+#     def pump_events(self):
+#         while self.root.dooneevent(_tkinter.ALL_EVENTS | _tkinter.DONT_WAIT):
+#             pass
+
+
+class TestFileSelect(unittest.TestCase):
+    def test_gui(self):
+        file_select = gui.FileSelect(Tk())
+        file_select.kind.set("caseload")
+        file_select.children["appended_entry"].insert(
+            0,
+            os.path.join(MOCK_DIR, "appended", "CaseloadDataWide.xlsx").replace(
+                "\\", "/"
+            ),
+        )
+        file_select.children["to_append"].children["to_append_entry"].insert(
+            0, os.path.join(MOCK_DIR, "raw").replace("\\", "/")
+        )
+        file_select.children["sheets_text"].insert(
+            tk.END, CASELOAD_SHEETS_PATH.replace("\\", "/")
+        )
+        file_select.children["footnotes_text"].insert(
+            tk.END, CASELOAD_FOOTNOTES_PATH.replace("\\", "/")
+        )
+        try:
+            file_select.children["append_button"].invoke()
+        except Exception as e:
+            raise e
+
+        # Check that files exist
+        current_date = time.strftime("%Y%m%d", time.gmtime())
+        wide_path = os.path.join(
+            MOCK_DIR, "appended", f"CaseloadDataWide_{current_date}.xlsx"
+        )
+        long_path = os.path.join(
+            MOCK_DIR, "appended", f"CaseloadDataLong_{current_date}.xlsx"
+        )
+        self.assertTrue(os.path.exists(wide_path))
+        self.assertTrue(os.path.exists(long_path))
+
+
+if __name__ == "__main__":
+    unittest.main()
