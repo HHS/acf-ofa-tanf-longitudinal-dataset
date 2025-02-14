@@ -47,6 +47,8 @@ class TANFData(TANFAppend):
         appended_path: str,
         to_append_path: str | list[str] | tuple[str],
         sheets: str = None,
+        footnotes: str = None,
+        tableau: bool = False,
     ):
 
         sys.argv = [
@@ -56,6 +58,9 @@ class TANFData(TANFAppend):
         ]
 
         # Add to_append to sys.argv
+        if len(to_append_path) == 1 and isinstance(to_append_path, tuple):
+            to_append_path = to_append_path[0]
+
         if (
             isinstance(to_append_path, str)
             and os.path.splitext(to_append_path)[1] == ""
@@ -73,6 +78,18 @@ class TANFData(TANFAppend):
                     sheets = json.dumps(json.load(f))
 
             sys.argv.extend(["-s", sheets])
+
+        # Load footnotes if file is present, otherwise extend args
+        if footnotes:
+            if os.path.exists(footnotes):
+                with open(footnotes, "r") as f:
+                    footnotes = json.dumps(json.load(f))
+
+            sys.argv.extend(["-f", footnotes])
+
+        # If tableau is true, add flag
+        if tableau:
+            sys.argv.append("-t")
 
         super().__init__()
 
@@ -100,9 +117,12 @@ class ParentFrame(ttk.Frame):
         path = askdirectory()
         entry.insert(0, path)
 
-    def browse_sheets(self, entry: ttk.Entry):
+    def browse_sheets(self, entry: ttk.Entry | tk.Text):
         path = askopenfilename()
-        entry.insert(0, path)
+        if isinstance(entry, ttk.Entry):
+            entry.insert(0, path)
+        elif isinstance(entry, tk.Text):
+            entry.insert(tk.END, path)
 
     def display_waiting_window(self):
         """Update the tkinter window to display a waiting message.
@@ -120,41 +140,54 @@ class ParentFrame(ttk.Frame):
         waiting_message.pack(anchor="center")
         self._main.update()
 
+    # Adapted from https://stackoverflow.com/questions/4770993/how-can-i-make-silent-exceptions-louder-in-tkinter
+    def show_error(self, *args):
+        err = traceback.format_exception(*args)
+        tkMessageBox.showerror("Exception", err)
+
 
 class FileSelect(ParentFrame):
     def __init__(self, main: Tk):
         main.report_callback_exception = self.show_error
         super().__init__(main, padx=10, fill="x", expand=True)
-        self.sheets = tk.StringVar()
         self.kind = tk.StringVar()
         self.appended = tk.StringVar()
         self.to_append = tk.StringVar()
+        self.sheets = tk.StringVar()
+        self.footnotes = tk.StringVar()
+        self.tableau = tk.BooleanVar()
         self.pack_type()
         self.pack_appended()
         self.pack_to_append()
         self.pack_sheets()
+        self.pack_footnotes()
         self.pack_append_button()
-
-    def append_clicked(self):
-        self.display_waiting_window()
-        tanf_data = TANFData(
-            self.kind.get().lower(),
-            self.appended.get(),
-            self.tk.splitlist(self.to_append.get()),
-            self.sheets.get(),
-        )
-        # tanf_data.append()
-        self._main.destroy()
 
     def pack_type(self):
         # Select type
-        type_label = ttk.Label(self, text="What type of data are you appending?")
-        type_label.pack()
+        container = ttk.Frame(self, name="pack_type")
+        container.pack(expand=True)
 
+        type_frame = ttk.Frame(container, name="type")
+        type_frame.pack(side="left", padx=10)
+
+        type_label = ttk.Label(type_frame, text="What type of data are you appending?")
+        type_label.pack()
         type_dropdown = ttk.OptionMenu(
-            self, self.kind, "Financial", "Financial", "Caseload"
+            type_frame, self.kind, "Financial", "Financial", "Caseload"
         )
-        type_dropdown.pack(fill="x")
+        type_dropdown.pack()
+
+        tableau_frame = ttk.Frame(container, name="tableau")
+        tableau_frame.pack(side="right", padx=10)
+
+        tableau_label = ttk.Label(
+            tableau_frame, text="Output a dataset for tableau conversion?"
+        )
+        tableau_label.pack()
+
+        tableau_checkbutton = ttk.Checkbutton(tableau_frame, variable=self.tableau)
+        tableau_checkbutton.pack()
 
     def pack_appended(self):
         # Select appended data
@@ -204,14 +237,33 @@ class FileSelect(ParentFrame):
         # Optionally, provide sheets
         ttk.Label(
             self,
-            text="Select sheet(s) to extract from files to be appended (optional).",
+            text="Specify, or select a file specifying, sheet(s) to extract from files to be appended (optional).",
+            name="sheets_label",
         ).pack(pady=(10, 0))
-        sheet_entry = ttk.Entry(self, textvariable=self.sheets)
-        sheet_entry.pack(fill="x", expand=True)
+        entry = tk.Text(self, height=10, width=10, name="sheets_text")
+        entry.pack(fill="x", expand=True)
+        self.sheets = entry
         ttk.Button(
             self,
             text="Get Sheets From File",
-            command=lambda: self.browse_sheets(sheet_entry),
+            command=lambda: self.browse_sheets(entry),
+            name="sheets_button",
+        ).pack()
+
+    def pack_footnotes(self):
+        # Optionally, provide sheets
+        ttk.Label(
+            self,
+            text="Specify, or select a file specifying, footnotes to add to the appended files (optional).",
+            name="footnotes_label",
+        ).pack(pady=(10, 0))
+        entry = tk.Text(self, height=10, width=10, name="footnotes_text")
+        entry.pack(fill="x", expand=True)
+        self.footnotes = entry
+        ttk.Button(
+            self,
+            text="Get Footnotes From File",
+            command=lambda: self.browse_sheets(entry),
         ).pack()
 
     def pack_append_button(self):
@@ -220,20 +272,29 @@ class FileSelect(ParentFrame):
             self,
             text="Append Files",
             command=lambda: self.append_clicked(),
+            name="append_button",
         )
         append_button.pack(fill="x", expand=True, pady=10)
 
-    # Adapted from https://stackoverflow.com/questions/4770993/how-can-i-make-silent-exceptions-louder-in-tkinter
-    def show_error(self, *args):
-        err = traceback.format_exception(*args)
-        tkMessageBox.showerror("Exception", err)
+    def append_clicked(self):
+        tanf_data = TANFData(
+            self.kind.get().lower(),
+            self.appended.get(),
+            self.tk.splitlist(self.to_append.get()),
+            self.sheets.get("1.0", "end-1c"),
+            self.footnotes.get("1.0", "end-1c"),
+            self.tableau.get(),
+        )
+        self.display_waiting_window()
+        tanf_data.append()
+        self._main.destroy()
 
 
 def main():
     # Initialize the Tkinter window
     root = Tk()
     root.title("Append TANF Data")
-    root.geometry("400x350")
+    root.geometry("700x700")
 
     gui = FileSelect(root)
     gui.mainloop()
