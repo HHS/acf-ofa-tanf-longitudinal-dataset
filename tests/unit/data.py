@@ -9272,6 +9272,9 @@ CASELOAD_SHEETS = {
             "family": "Avg Month Num Fam",
             "recipient": "Avg Mo. Num Recipient",
         },
-        "TANF_SSP": {"family": "fycy2024-families"},
+        "TANF_SSP": {
+            "family": "fycy2024-families",
+            "recipient": "Avg Mo. Num Recipient",
+        },
     }
 }
