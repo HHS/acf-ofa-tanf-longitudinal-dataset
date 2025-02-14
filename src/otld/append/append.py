@@ -144,6 +144,7 @@ class TANFAppend:
             self._tableau,
         )
         tanf_data.append()
+        tanf_data.close_excel_files()
 
 
 def main():
