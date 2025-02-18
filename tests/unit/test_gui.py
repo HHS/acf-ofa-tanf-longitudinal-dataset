@@ -6,7 +6,7 @@ import tkinter as tk
 import unittest
 from tkinter import Tk
 
-from data import CASELOAD_SHEETS
+from data import CASELOAD_SHEETS, FINANCIAL_SHEETS
 from otld.append import gui
 from otld.utils.caseload_utils import CASELOAD_FOOTNOTES_WIDE
 from otld.utils.MockData import MockData
@@ -35,30 +35,33 @@ with open(CASELOAD_FOOTNOTES_PATH, "w") as f:
     json.dump(CASELOAD_FOOTNOTES_WIDE, f)
     f.close()
 
+CURRENT_DATE = time.strftime("%Y%m%d", time.gmtime())
 
-# Adapted from https://stackoverflow.com/questions/4083796/how-do-i-run-unittest-on-a-tkinter-app
-# class TKinterTestCase(unittest.TestCase):
-#     def setUp(self):
-#         self.root = Tk()
-#         self.pump_events()
 
-#     def teardown(self):
-#         if self.root:
-#             self.root.destroy()
-#             self.pump_events()
+def assert_appended_exists(path: str, kind: str):
+    wide_path = os.path.join(path, f"{kind.title()}DataWide_{CURRENT_DATE}.xlsx")
+    long_path = os.path.join(path, f"{kind.title()}DataLong_{CURRENT_DATE}.xlsx")
+    try:
+        assert os.path.exists(wide_path)
+    except Exception:
+        return False
 
-#     def pump_events(self):
-#         while self.root.dooneevent(_tkinter.ALL_EVENTS | _tkinter.DONT_WAIT):
-#             pass
+    try:
+        assert os.path.exists(long_path)
+    except Exception:
+        return False
+
+    return True
 
 
 class TestFileSelect(unittest.TestCase):
-    def test_gui(self):
+    def test_fs_caseload(self):
+        kind = "caseload"
         file_select = gui.FileSelect(Tk())
-        file_select.kind.set("caseload")
+        file_select.kind.set(kind)
         file_select.children["appended_entry"].insert(
             0,
-            os.path.join(MOCK_DIR, "appended", "CaseloadDataWide.xlsx").replace(
+            os.path.join(MOCK_DIR, "appended", f"{kind.title()}DataWide.xlsx").replace(
                 "\\", "/"
             ),
         )
@@ -77,16 +80,38 @@ class TestFileSelect(unittest.TestCase):
             raise e
 
         # Check that files exist
-        current_date = time.strftime("%Y%m%d", time.gmtime())
-        wide_path = os.path.join(
-            MOCK_DIR, "appended", f"CaseloadDataWide_{current_date}.xlsx"
+        self.assertTrue(
+            assert_appended_exists(os.path.join(MOCK_DIR, "appended"), kind)
         )
-        long_path = os.path.join(
-            MOCK_DIR, "appended", f"CaseloadDataLong_{current_date}.xlsx"
+
+    def test_fs_financial(self):
+        kind = "financial"
+        file_select = gui.FileSelect(Tk())
+        file_select.kind.set(kind)
+        file_select.children["appended_entry"].insert(
+            0,
+            os.path.join(MOCK_DIR, "appended", f"{kind.title()}DataWide.xlsx").replace(
+                "\\", "/"
+            ),
         )
-        self.assertTrue(os.path.exists(wide_path))
-        self.assertTrue(os.path.exists(long_path))
+        file_select.children["to_append"].children["to_append_entry"].insert(
+            0, os.path.join(MOCK_DIR, "raw").replace("\\", "/")
+        )
+        file_select.children["sheets_text"].insert(tk.END, json.dumps(FINANCIAL_SHEETS))
+
+        try:
+            file_select.children["append_button"].invoke()
+        except Exception as e:
+            raise e
+
+        # Check that files exist
+        self.assertTrue(
+            assert_appended_exists(os.path.join(MOCK_DIR, "appended"), kind)
+        )
 
 
 if __name__ == "__main__":
     unittest.main()
+    # suite = unittest.TestSuite()
+    # suite.addTest(TestFileSelect("test_fs_caseload"))
+    # unittest.TextTestRunner().run(suite)
