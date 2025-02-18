@@ -3,7 +3,6 @@
 import json
 import os
 import sys
-import time
 import tkinter as tk
 import tkinter.messagebox as tkMessageBox
 import traceback
@@ -11,33 +10,6 @@ from tkinter import Tk, ttk
 from tkinter.filedialog import askdirectory, askopenfilename, askopenfilenames
 
 from otld.append.append import TANFAppend
-
-
-# Idea adapted from https://www.artima.com/weblogs/viewpost.jsp?thread=240845#decorator-functions-with-decorator-arguments
-class log_to_waiting:
-    def __init__(self, root: Tk):
-        """Wrapper to log errors to tkinter window.
-
-        Args:
-            cls (type): Class definition.
-        """
-        self.root = root
-
-    def __call__(self, object):
-        def wrapper(*args, **kwargs):
-            try:
-                value = object(*args, **kwargs)
-                return value
-            except Exception as e:
-                waiting_message = self.root.children["waiting"].children[
-                    "waiting_message"
-                ]
-                message = e.__str__() + ".\n" + "This window will close in 10 seconds."
-                waiting_message.configure(text=message)
-                self.root.update()
-                time.sleep(10)
-
-        return wrapper
 
 
 class TANFData(TANFAppend):
