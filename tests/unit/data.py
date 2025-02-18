@@ -9278,3 +9278,11 @@ CASELOAD_SHEETS = {
         },
     }
 }
+
+FINANCIAL_SHEETS = {
+    "financial": {
+        "Total": "B. Total Expenditures",
+        "Federal": "C.1 Federal Expenditures",
+        "State": "C.2 State Expenditures",
+    }
+}
