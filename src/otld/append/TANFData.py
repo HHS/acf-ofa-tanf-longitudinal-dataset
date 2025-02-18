@@ -16,6 +16,7 @@ from otld.utils import (
 )
 from otld.utils.caseload_utils import (
     CASELOAD_FORMAT_OPTIONS,
+    CATEGORIES,
     FAMILY_SHEET_REGEX_PATTERN,
     RECIPIENT_SHEET_REGEX_PATTERN,
     clean_dataset,
@@ -23,6 +24,11 @@ from otld.utils.caseload_utils import (
 )
 from otld.utils.crosswalk_dict import crosswalk_dict
 from otld.utils.financial_utils import reindex_state_year
+
+FINANCIAL_COLUMN_NAMES = {
+    key: f"{key}. {value["name"]}" if value["name"] else ""
+    for key, value in crosswalk_dict.items()
+}
 
 
 class TANFData:
@@ -374,7 +380,7 @@ class TANFData:
 
             # Convert line numbers to column names using crosswalk_dict
             renamer = {
-                columns[i]: crosswalk_dict[number]["name"]
+                columns[i]: FINANCIAL_COLUMN_NAMES[number]
                 for i, number in enumerate(numbers)
             }
 
@@ -410,6 +416,17 @@ class TANFData:
 
         df = self._df.copy()
         validate_data_frame(df)
+        columns = self._df.columns
+        if self._type == "caseload":
+            incorrect = [column for column in columns if column not in CATEGORIES]
+            assert incorrect == [], f"Incorrect columns {incorrect}"
+        elif self._type == "financial":
+            incorrect = [
+                column
+                for column in columns
+                if column not in list(FINANCIAL_COLUMN_NAMES.values())
+            ]
+            assert incorrect == [], f"Incorrect columns {incorrect}"
 
     def export_workbook(self):
         """Export data to Excel workbook"""
@@ -477,40 +494,40 @@ class TANFData:
 
 
 if __name__ == "__main__":
-    # from otld.paths import test_dir
-
-    # tanf_data = TANFData(
-    #     "financial",
-    #     os.path.join(test_dir, "FinancialDataWide.xlsx"),
-    #     os.path.join(test_dir, "mock", "tanf_financial_data_fy_2024.xlsx"),
-    # )
-
     from otld.paths import test_dir
 
     tanf_data = TANFData(
-        "caseload",
-        os.path.join(test_dir, "CaseloadDataWide.xlsx"),
-        [
-            os.path.join(test_dir, "mock", "fy2024_ssp_caseload.xlsx"),
-            os.path.join(test_dir, "mock", "fy2024_tanf_caseload.xlsx"),
-            os.path.join(test_dir, "mock", "fy2024_tanfssp_caseload.xlsx"),
-        ],
-        {
-            "caseload": {
-                "TANF": {
-                    "family": "fycy2024-families",
-                    "recipient": "fycy2024-recipients",
-                },
-                "SSP_MOE": {
-                    "family": "Avg Month Num Fam",
-                    "recipient": "Avg Mo. Num Recipient",
-                },
-                "TANF_SSP": {
-                    "family": "fycy2024-families",
-                    "recipient": "Avg Mo. Num Recipient",
-                },
-            }
-        },
+        "financial",
+        os.path.join(test_dir, "FinancialDataWide.xlsx"),
+        os.path.join(test_dir, "mock", "tanf_financial_data_fy_2024.xlsx"),
     )
+
+    # from otld.paths import test_dir
+
+    # tanf_data = TANFData(
+    #     "caseload",
+    #     os.path.join(test_dir, "CaseloadDataWide.xlsx"),
+    #     [
+    #         os.path.join(test_dir, "mock", "fy2024_ssp_caseload.xlsx"),
+    #         os.path.join(test_dir, "mock", "fy2024_tanf_caseload.xlsx"),
+    #         os.path.join(test_dir, "mock", "fy2024_tanfssp_caseload.xlsx"),
+    #     ],
+    #     {
+    #         "caseload": {
+    #             "TANF": {
+    #                 "family": "fycy2024-families",
+    #                 "recipient": "fycy2024-recipients",
+    #             },
+    #             "SSP_MOE": {
+    #                 "family": "Avg Month Num Fam",
+    #                 "recipient": "Avg Mo. Num Recipient",
+    #             },
+    #             "TANF_SSP": {
+    #                 "family": "fycy2024-families",
+    #                 "recipient": "Avg Mo. Num Recipient",
+    #             },
+    #         }
+    #     },
+    # )
 
     tanf_data.append()
