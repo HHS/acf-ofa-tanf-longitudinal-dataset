@@ -17,7 +17,8 @@ Description
 
 The tanf-append command can be used to append a new year of data to an
 existing appended data set. For example, given a dataset spanning
-1997-1998, tanf-append can be used to append new data from 1999.
+1997-1998, tanf-append can be used to append new data from 1999. Use
+tanf-append-gui for a graphical user interface (GUI).
 
 Documentation
 ~~~~~~~~~~~~~
@@ -82,7 +83,8 @@ Tableau
 Description
 ~~~~~~~~~~~
 
-The tanf-tableau command generates Tableau-specific datasets.
+The tanf-tableau command generates Tableau-specific datasets. Use tanf-tableau-gui
+for a GUI.
 
 .. _documentation-1:
 
