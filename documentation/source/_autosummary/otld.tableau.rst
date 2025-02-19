@@ -12,5 +12,6 @@ otld.tableau
    :recursive:
 
    TableauDatasets
+   gui
    tableau_datasets_caseload
    tableau_datasets_financial
