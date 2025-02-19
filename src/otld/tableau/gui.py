@@ -2,64 +2,15 @@
 
 import sys
 import tkinter as tk
-import tkinter.messagebox as tkMessageBox
-import traceback
 from tkinter import Tk, ttk
-from tkinter.filedialog import askdirectory, askopenfilename
 
 from otld.tableau import TableauDatasets
-
-
-class ParentFrame(ttk.Frame):
-    def __init__(self, main: Tk, **kwargs):
-        super().__init__(main)
-        self.pack(**kwargs)
-        self._main = main
-
-    def browse_file(self, entry: ttk.Entry):
-        """Prompt the user to select a file.
-
-        Args:
-            entry (ttk.Entry): A tkinter Entry widget in which to display the selected file.
-        """
-        path = askopenfilename()
-        entry.insert(0, path)
-
-    def browse_dir(self, entry: ttk.Entry):
-        path = askdirectory()
-        entry.insert(0, path)
-
-    def browse_sheets(self, entry: ttk.Entry | tk.Text):
-        path = askopenfilename()
-        if isinstance(entry, ttk.Entry):
-            entry.insert(0, path)
-        elif isinstance(entry, tk.Text):
-            entry.insert(tk.END, path)
-
-    def display_waiting_window(self):
-        """Update the tkinter window to display a waiting message.
-
-        Args:
-            root (Tk): A root tkinter window.
-        """
-        self.destroy()
-        waiting = ttk.Frame(self._main, name="waiting")
-        waiting.pack(padx=10, fill="x", expand=True)
-
-        waiting_message = ttk.Label(
-            waiting, text="Please wait, data is being appended.", name="waiting_message"
-        )
-        waiting_message.pack(anchor="center")
-        self._main.update()
-
-    # Adapted from https://stackoverflow.com/questions/4770993/how-can-i-make-silent-exceptions-louder-in-tkinter
-    def show_error(self, *args):
-        err = traceback.format_exception(*args)
-        tkMessageBox.showerror("Exception", err)
+from otld.utils.tkinter_utils import ParentFrame
 
 
 class FileSelect(ParentFrame):
     def __init__(self, main: Tk):
+        """Create the GUI"""
         main.report_callback_exception = self.show_error
         super().__init__(main, padx=10, fill="x", expand=True)
 
@@ -75,6 +26,7 @@ class FileSelect(ParentFrame):
         self.pack_confirm_button()
 
     def pack_type(self):
+        """Add the type dropdown menu"""
         # Select type
         type_label = ttk.Label(self, text="Type of data?")
         type_label.pack()
@@ -85,6 +37,7 @@ class FileSelect(ParentFrame):
         type_dropdown.pack()
 
     def pack_appended(self):
+        """Add the appended file selection section"""
         # Select appended data
         appended_label = ttk.Label(self, text="Select file containing appended data.")
         appended_label.pack(pady=(10, 0))
@@ -100,6 +53,7 @@ class FileSelect(ParentFrame):
         appended_browse.pack(expand=True)
 
     def pack_destination(self):
+        """Add the destination selection"""
         # Select output destination
         destination_label = ttk.Label(self, text="Select destination for Tableau data.")
         destination_label.pack(pady=(10, 0))
@@ -115,6 +69,7 @@ class FileSelect(ParentFrame):
         destination_browse.pack(expand=True)
 
     def pack_inflation(self):
+        """Add the inflation file selection"""
         # Optionally, select a file containing PCE data
         inflation_label = ttk.Label(
             self, text="(Optionally) Select a file containing inflation (PCE) data."
@@ -132,6 +87,7 @@ class FileSelect(ParentFrame):
         inflation_browse.pack(expand=True)
 
     def pack_confirm_button(self):
+        """Add the confirm button"""
         # Append button
         append_button = ttk.Button(
             self,
@@ -142,6 +98,7 @@ class FileSelect(ParentFrame):
         append_button.pack(fill="x", expand=True, pady=10)
 
     def create_sys_argv(self):
+        """Create arguments as if being run from the command line"""
         sys.argv = [
             "tanf-tableau",
             self.kind.get().lower(),
@@ -153,6 +110,7 @@ class FileSelect(ParentFrame):
             sys.argv.extend(["-i", self.inflation.get()])
 
     def confirm_clicked(self):
+        """Code to run when confirm is clicked"""
         self.display_waiting_window()
         self.create_sys_argv()
         TableauDatasets.main()
@@ -160,6 +118,7 @@ class FileSelect(ParentFrame):
 
 
 def main():
+    """Entry point for command line application"""
     # Initialize the Tkinter window
     root = Tk()
     root.title("Append TANF Data")
