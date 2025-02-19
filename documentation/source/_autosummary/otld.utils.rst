@@ -29,5 +29,6 @@ otld.utils
    states
    string_utils
    tableau_utils
+   tkinter_utils
    validate_data_frame
    validation
