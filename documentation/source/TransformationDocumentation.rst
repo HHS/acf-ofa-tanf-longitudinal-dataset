@@ -350,28 +350,28 @@ Appendix A: Mapping ACF-196 to ACF-196R
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. csv-table::
-	:file: ..\csv\Appendix A.csv
+	:file: ../csv/Appendix A.csv
 	:header-rows: 1
 
 Appendix B: Financial Data Metadata
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. csv-table::
-	:file: ..\csv\Appendix B.csv
+	:file: ../csv/Appendix B.csv
 	:header-rows: 1
 
 Appendix C: Consolidated Expenditure Categories
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. csv-table::
-	:file: ..\csv\Appendix C.csv
+	:file: ../csv/Appendix C.csv
 	:header-rows: 1
 
 Appendix D: Caseload Data Metadata
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. csv-table::
-	:file: ..\csv\Appendix D.csv
+	:file: ../csv/Appendix D.csv
 	:header-rows: 1
 
 .. [1]
