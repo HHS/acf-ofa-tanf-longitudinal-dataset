@@ -1,7 +1,7 @@
 Transformations
 =======================================================================================
 
-*Last updated Dec 23, 2024*
+*Last updated Feb 10, 2024*
 
 Introduction
 ------------
@@ -19,7 +19,7 @@ of work to understand the data and to compile it over time.
 
 When these data accessibility issues were resurfaced by a recent
 Presidential Management Fellows (PMF) Challenge Team report, OFA reached
-out the ACF Tech Data Surge Team (henceforth, the Surge Team) for
+out to the ACF Tech Data Surge Team (henceforth, the Surge Team) for
 support. The PMF report made three recommendations:
 
 1. That OFA take additional steps to showcase the TANF data, by creating
@@ -38,7 +38,7 @@ financial data for the full range of years available, to create the
 metadata files for these new datasets, and to develop a dashboard to
 showcase this data in Tableau. The present document outlines the steps
 taken to append the caseload data, append the financial data and define
-Tableau related variables (where applicable) for each dataset.
+Tableau related variables for each dataset.
 
 Financial Data
 --------------
@@ -47,7 +47,7 @@ Description of the Data
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The TANF financial data are currently published in one or more Microsoft
-excel workbooks for each fiscal year. In 2015, a revised version of the
+Excel workbooks for each fiscal year. In 2015, a revised version of the
 `ACF-196 <https://www.acf.hhs.gov/sites/default/files/documents/ofa/instruction_completion_acf_196.pdf>`__
 instructions
 (`ACF-196R <https://www.acf.hhs.gov/sites/default/files/documents/ofa/acf_196r_instructions_final.pdf>`__)
@@ -152,7 +152,7 @@ in 2010, this sum is precalculated in the public-facing workbooks, but
 in 1997-2009 this is not the case. Therefore, to generate the state tab
 in this period we explicitly sum the SFAG and SSP funds.
 
-Similarly, from 1997-2009 carryover—the funds in a state’s budget that
+Similarly, from 1997-2009, carryover—the funds in a state’s budget that
 are residuals from prior years—is not included in the workbooks. To get
 this figure, we sum the federal unliquidated obligations (Line 9, 196)
 and unobligated balance (Line 10, 196) in the year prior to the current
@@ -190,7 +190,7 @@ were revised. This resulted in an increase in the number of reporting
 categories. Practically, this means that some lines in ACF-196R map
 directly to lines in ACF-196, some lines have no ACF-196 analogue, and
 in some cases multiple lines in ACF-196 need to be summed to arrive at a
-single line in ACF-196R. We created a crosswalk which maps ACF-196
+single line in ACF-196R. OFA created a crosswalk which maps ACF-196
 columns to their corresponding ACF-196R counterparts. Then, after
 labeling column names with their respective line numbers for all files,
 we leveraged the crosswalk to perform the necessary renaming and
@@ -248,14 +248,14 @@ at the federal and state funding levels is $55 and $45 respectively,
 then pct_of_total at the federal level will be 55% and pct_of_total at
 the state level will be 45%.
 
-We calculate inflation adjusted amounts using the CPI-U. [2]_ To
-calculate the CPI-U for the federal fiscal year, we take the average of
-the current year’s CPI-U from January through September and the previous
-year’s CPI-U from October through December. [3]_ For example, to
-calculate CPI-U for 1999 we take the average of the CPI-U for October
-1998 through September 1999. To produce inflation adjusted amounts, we
-multiply the raw amount by the base year’s CPI-U (2023) and divide by
-the target year’s CPI-U.
+We calculate inflation adjusted amounts using the Personal Consumption
+Expenditures Price Index (PCE). [2]_ To calculate the PCE for the
+federal fiscal year, we take the average of the current year’s PCE from
+January through September and the previous year’s PCE from October
+through December. [3]_ For example, to calculate PCE for 1999 we take
+the average of the PCE for October 1998 through September 1999. To
+produce inflation adjusted amounts, we multiply the raw amount by the
+base year’s (2023) PCE and divide by the target year’s PCE.
 
 Caseload Data
 -------------
@@ -273,7 +273,7 @@ Microsoft Excel workbooks each fiscal year: a workbook containing TANF,
 or federal, caseload figures, a workbook containing Separate State
 Programs (SSP) and Maintenance of Effort (MOE), or state, caseload
 figures, and a workbook containing the total caseload (sum of TANF and
-SSP-MOE). These workbooks contain tables reporting monthly caseload
+SSP-MOE). These workbooks house tables reporting monthly caseload
 figures, as well as tables reporting the average caseload for the fiscal
 year (October - September). The average number of families and
 individual recipients receiving TANF are reported separately. The
@@ -316,7 +316,7 @@ applied the following transformations to generate a longitudinal file:
 
 -  Remove notes and header rows.
 
--  Round numeric values to the nearest 100\ :sup:`th`.
+-  Round numeric values to the nearest integer.
 
 .. _tableau-variables-1:
 
@@ -380,10 +380,11 @@ Appendix D: Caseload Data Metadata
    Families <https://www.acf.hhs.gov/ofa/data/state-tanf-spending-fy-2015>`__
 
 .. [2]
-   `CPI-All Urban Consumers (Current Series) - Help and
-   Information <https://www.bls.gov/help/one_screen/cu.htm>`__
+   `Personal Consumption Expenditures Price Index \| U.S. Bureau of
+   Economic Analysis
+   (BEA) <https://www.bea.gov/data/personal-consumption-expenditures-price-index>`__
 
 .. [3]
-   We source our CPI-U figures from the Bureau of Labor Statistics:
-   `Bureau of Labor Statistics
-   Data <https://data.bls.gov/timeseries/CUUR0000SA0/pdq/SurveyOutputServlet>`__
+   We source our PCE figures from the Bureau of Economic Analysis: `BEA
+   : Data
+   Archive <https://apps.bea.gov/histdatacore/histChildLevels.html?HMI=7&oldDiv=National%20Accounts>`__
