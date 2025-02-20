@@ -12,6 +12,8 @@ from otld.utils import tkinter_utils
 
 
 class TANFData(TANFAppend):
+    """Wrapper for the TANFAppend class"""
+
     def __init__(
         self,
         kind: str,
@@ -66,6 +68,8 @@ class TANFData(TANFAppend):
 
 
 class ParentFrame(tkinter_utils.ParentFrame):
+    """Wrapper for ParentFrame class"""
+
     def browse_file(self, entry: ttk.Entry):
         """Prompt the user to select a file or files.
 
@@ -81,6 +85,8 @@ class ParentFrame(tkinter_utils.ParentFrame):
 
 
 class FileSelect(ParentFrame):
+    """Class for creating the appending GUI"""
+
     def __init__(self, main: Tk):
         """Create the GUI"""
         main.report_callback_exception = self.show_error

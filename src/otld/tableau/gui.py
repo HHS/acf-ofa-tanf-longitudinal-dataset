@@ -9,6 +9,8 @@ from otld.utils.tkinter_utils import ParentFrame
 
 
 class FileSelect(ParentFrame):
+    """Class for creating the Tableau GUI"""
+
     def __init__(self, main: Tk):
         """Create the GUI"""
         main.report_callback_exception = self.show_error

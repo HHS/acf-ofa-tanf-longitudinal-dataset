@@ -6,6 +6,8 @@ from tkinter.filedialog import askdirectory, askopenfilename
 
 
 class ParentFrame(ttk.Frame):
+    """Base class for command line application GUIs"""
+
     def __init__(self, main: Tk, **kwargs):
         """Instantiate ParentFrame object"""
         super().__init__(main)
