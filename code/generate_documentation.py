@@ -58,7 +58,7 @@ def convert_transformation_documentation(
         span = appendix[1]
         letter = re.search(r"([A-Z]):", title).group(1)
 
-        new_text = f"{title}\n{"~"*len(title)}\n\n.. csv-table::\n\t:file: ..\\csv\\Appendix {letter}.csv\n\t:header-rows: 1\n\n"
+        new_text = f"{title}\n{"~"*len(title)}\n\n.. csv-table::\n\t:file: ../csv/Appendix {letter}.csv\n\t:header-rows: 1\n\n"
 
         text_span = text[span[0] : stop]
         text = text.replace(text_span, new_text)

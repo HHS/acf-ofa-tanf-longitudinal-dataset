@@ -18,7 +18,9 @@ build-backend = "setuptools.build_meta"
 
 [project.scripts]
 tanf-append="otld.append.append:main"
+tanf-append-gui="otld.append.gui:main"
 tanf-tableau="otld.tableau.TableauDatasets:main"
+tanf-tableau-gui="otld.tableau.gui:main"
 
 [tool.pytest.ini_options]
 markers = [
