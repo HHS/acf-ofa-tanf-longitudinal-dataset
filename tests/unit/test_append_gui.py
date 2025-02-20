@@ -11,6 +11,10 @@ from otld.append import gui
 from otld.utils.caseload_utils import CASELOAD_FOOTNOTES_WIDE
 from otld.utils.MockData import MockData
 
+if os.name != "nt" and os.getenv("GITHUB_ACTIONS"):
+    os.system("Xvfb :1 -screen 0 1600x1200x16  &")
+    os.environ["DISPLAY"] = ":1.0"
+
 TEMP_DIR = tempfile.TemporaryDirectory()
 MOCK_DIR = TEMP_DIR.name
 for directory in ["raw", "appended"]:

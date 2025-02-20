@@ -9,6 +9,11 @@ from data import PCE
 from otld.tableau.gui import FileSelect
 from otld.utils.MockData import MockData
 
+# https://stackoverflow.com/questions/67760308/test-tkinter-tcl-gui-using-github-actions
+if os.name != "nt" and os.getenv("GITHUB_ACTIONS"):
+    os.system("Xvfb :1 -screen 0 1600x1200x16  &")
+    os.environ["DISPLAY"] = ":1.0"
+
 TEMP_DIR = tempfile.TemporaryDirectory()
 MOCK_DIR = TEMP_DIR.name
 for dataset in ["financial", "caseload"]:
