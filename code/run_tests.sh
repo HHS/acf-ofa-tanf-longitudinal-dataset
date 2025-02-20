@@ -1,6 +1,7 @@
 # Install packages
 pip install -U pip
 pip install .
+sudo apt-get install python3-tk
 
 # Run tests
 python3 -m pytest tests/unit
