@@ -6,7 +6,7 @@ source .venv/bin/activate
 pip install -U pip
 pip install .
 pip install beautifulsoup4 lxml
-pip install python3-tk
+apt-get install python3-tk
 
 # Remove old documentation and regenerate
 rm -rf documentation/source/_autosummary
