@@ -113,7 +113,7 @@ class FileSelect(ParentFrame):
 
     def confirm_clicked(self):
         """Code to run when confirm is clicked"""
-        self.display_waiting_window()
+        self.display_waiting_window("Please wait, data is being generated.")
         self.create_sys_argv()
         TableauDatasets.main()
         self._main.destroy()

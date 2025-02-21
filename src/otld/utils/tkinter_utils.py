@@ -44,7 +44,7 @@ class ParentFrame(ttk.Frame):
         elif isinstance(entry, tk.Text):
             entry.insert(tk.END, path)
 
-    def display_waiting_window(self):
+    def display_waiting_window(self, message="Please wait, data is being appended."):
         """Update the tkinter window to display a waiting message.
 
         Args:
@@ -54,9 +54,7 @@ class ParentFrame(ttk.Frame):
         waiting = ttk.Frame(self._main, name="waiting")
         waiting.pack(padx=10, fill="x", expand=True)
 
-        waiting_message = ttk.Label(
-            waiting, text="Please wait, data is being appended.", name="waiting_message"
-        )
+        waiting_message = ttk.Label(waiting, text=message, name="waiting_message")
         waiting_message.pack(anchor="center")
         self._main.update()
 
