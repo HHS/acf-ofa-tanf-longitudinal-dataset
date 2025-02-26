@@ -115,4 +115,4 @@ Examples
 
 ::
 
-   tanf-tableau caseload appended/CaseloadDataWide.xlsx tablea/data
+   tanf-tableau caseload appended/CaseloadDataWide.xlsx tableau/data
