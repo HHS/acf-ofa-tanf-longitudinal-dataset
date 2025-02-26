@@ -21,6 +21,15 @@ following command can be used to create a virtual environment:
 
    py -m venv <name of virtual environment>
 
+.. note::
+
+   If you find that the above command does not work for you when trying to setup a virtual environment,
+   please try:
+
+   .. code-block::
+      
+      python -m venv <name of virtual environment>
+
 Activate the virtual environment before installing any packages.
 Assuming a virtual environment named .venv:
 
