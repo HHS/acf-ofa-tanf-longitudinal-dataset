@@ -20,32 +20,6 @@ existing appended data set. For example, given a dataset spanning
 1997-1998, tanf-append can be used to append new data from 1999. Use
 tanf-append-gui for a graphical user interface (GUI).
 
-Documentation
-~~~~~~~~~~~~~
-
--  usage: tanf-append [-h] (-a TO_APPEND [TO_APPEND …] \| -d DIRECTORY)
-   [-s SHEETS] kind appended
--  positional arguments:
-
-   -  kind: The type of data to append. Should be either caseload or
-      financial.
-   -  appended: The path to the base file (in wide format) containing
-      appended data.
-
--  options:
-
-   -  -h, –help: Show help message and exit.
-   -  -a TO_APPEND [TO_APPEND …], –append TO_APPEND [TO_APPEND …]: List
-      of files to append to the base file. One of -a or -d must be
-      specified.
-   -  -d Directory, –dir Directory: Directory in which to find files to
-      append. One of -a or -d must be specified.
-   -  -s SHEETS, –sheets SHEETS: List of sheets to extract from files to
-      append. Only necessary if the default sheet options are failing.
-      Should be a JSON formatted string (`see examples <#examples>`__).
-   - -f FOOTNOTES, --footnotes FOOTNOTES: List of footnotes to include in appended files. Should be a JSON formatted string (`see examples <#examples>`__)
-   - -t, --tableau: Generate an additional file without headers or footers suitable for use in the creation of tableau files.
-
 Examples
 ~~~~~~~~
 
@@ -75,6 +49,36 @@ Examples
 
    > tanf-append caseload appended/CaseloadDataWide.xlsx -d to_append -f %footnotes%
 
+.. code-block::
+
+   > tanf-append-gui
+
+Documentation
+~~~~~~~~~~~~~
+
+-  usage: tanf-append [-h] (-a TO_APPEND [TO_APPEND …] \| -d DIRECTORY)
+   [-s SHEETS] kind appended
+-  positional arguments:
+
+   -  kind: The type of data to append. Should be either caseload or
+      financial.
+   -  appended: The path to the base file (in wide format) containing
+      appended data.
+
+-  options:
+
+   -  -h, –help: Show help message and exit.
+   -  -a TO_APPEND [TO_APPEND …], –append TO_APPEND [TO_APPEND …]: List
+      of files to append to the base file. One of -a or -d must be
+      specified.
+   -  -d Directory, –dir Directory: Directory in which to find files to
+      append. One of -a or -d must be specified.
+   -  -s SHEETS, –sheets SHEETS: List of sheets to extract from files to
+      append. Only necessary if the default sheet options are failing.
+      Should be a JSON formatted string (`see examples <#examples>`__).
+   - -f FOOTNOTES, --footnotes FOOTNOTES: List of footnotes to include in appended files. Should be a JSON formatted string (`see examples <#examples>`__)
+   - -t, --tableau: Generate an additional file without headers or footers suitable for use in the creation of tableau files.
+
 Tableau
 -------
 
@@ -87,6 +91,21 @@ The tanf-tableau command generates Tableau-specific datasets. Use tanf-tableau-g
 for a GUI.
 
 .. _documentation-1:
+
+Examples
+~~~~~~~~
+
+.. code-block::
+
+   > tanf-tableau financial appended/FinancialDataWide.xlsx tableau/data -i pce.csv
+
+.. code-block::
+
+   > tanf-tableau caseload appended/CaseloadDataWide.xlsx tableau/data
+
+.. code-block::
+
+   > tanf-tableau-gui
 
 Documentation
 ~~~~~~~~~~~~~
@@ -105,14 +124,3 @@ Documentation
       calculating inflation-adjusted figures
 
 .. _examples-1:
-
-Examples
-~~~~~~~~
-
-::
-
-   tanf-tableau financial appended/FinancialDataWide.xlsx tableau/data -i pce.csv
-
-::
-
-   tanf-tableau caseload appended/CaseloadDataWide.xlsx tableau/data
