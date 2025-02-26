@@ -4,11 +4,11 @@ import subprocess
 
 import pandas as pd
 
-from otld.paths import root
-
-DOCS_DIR = os.path.join(root, "documentation")
 ROOT = os.path.join(os.path.dirname(__file__), "..")
-CSV_DIR = os.path.join(ROOT, "documentation", "csv")
+DOC_DIR = os.path.join(ROOT, "documentation")
+CSV_DIR = os.path.join(DOC_DIR, "csv")
+XLSX_DIR = os.path.join(DOC_DIR, "xlsx")
+DOCX_DIR = os.path.join(DOC_DIR, "docs")
 SOURCE_DIR = os.path.join(ROOT, "documentation", "source")
 
 
@@ -77,9 +77,9 @@ def convert_transformation_documentation(
 
 
 def main():
-    appendices_to_csv(os.path.join(DOCS_DIR, "Appendices.xlsx"), CSV_DIR)
+    appendices_to_csv(os.path.join(XLSX_DIR, "Appendices.xlsx"), CSV_DIR)
     convert_transformation_documentation(
-        os.path.join(DOCS_DIR, "TransformationDocumentation.docx"), SOURCE_DIR
+        os.path.join(DOCX_DIR, "TransformationDocumentation.docx"), SOURCE_DIR
     )
 
 
