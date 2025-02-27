@@ -58,15 +58,7 @@ def consolidate_categories(row: pd.Series, df: pd.DataFrame) -> None:
     """
 
     columns = str(row["instructions"]).split(",")
-    try:
-        in_columns = [column in df.columns for column in columns]
-        assert all(in_columns)
-    except AssertionError:
-        present = []
-        for i, val in enumerate(in_columns):
-            if val is True:
-                present.append(columns[i])
-
-        columns = present
+    columns = [df.filter(regex=rf"^{column}\.").columns for column in columns]
+    columns = [column.tolist()[0] for column in columns if len(column) > 0]
 
     df[row["name"]] = df[columns].sum(axis=1)

@@ -114,13 +114,11 @@ class TANFData:
         year_pattern = re.compile(r"(\d{4})")
 
         # If financial and list is length 1, then extract string
-        to_append_path = (
-            to_append_path[0]
-            if self._type == "financial"
-            and isinstance(to_append_path, list)
-            and len(to_append_path) == 1
-            else to_append_path
-        )
+        if self._type == "financial" and isinstance(to_append_path, list):
+            assert (
+                len(to_append_path) == 1
+            ), f"Too many financial files found: {len(to_append_path)}."
+            to_append_path = to_append_path[0]
 
         # Load the data
         if isinstance(to_append_path, str):
@@ -144,6 +142,9 @@ class TANFData:
                     "xlsx"
                 ), f"File to append is not an xlsx formatted Excel Workbook {path}"
 
+            assert (
+                len(to_append_path) == 3
+            ), f"Too many caseload files found: {len(to_append_path)}."
             # Load files
             self._to_append["data"] = {
                 self.identify_workbook_level(path): pd.ExcelFile(path)
