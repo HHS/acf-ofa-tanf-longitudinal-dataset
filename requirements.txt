@@ -15,7 +15,7 @@ iniconfig==2.0.0
 Jinja2==3.1.4
 MarkupSafe==3.0.2
 numpy==2.1.2
--e git+https://github.com/HHS/acf-ofa-tanf-longitudinal-dataset.git@60b4b86b220c5bff2d7d928ad0b7a6fc428f7380#egg=ofa_tanf_longitudinal_dataset
+-e git+https://github.com/HHS/acf-ofa-tanf-longitudinal-dataset.git@1c498507cac7347cbd5d848ca65507e696a2c50d#egg=ofa_tanf_longitudinal_dataset
 openpyxl==3.1.5
 packaging==24.1
 pandas==2.2.3
@@ -31,7 +31,7 @@ python-dateutil==2.9.0.post0
 pytz==2024.2
 pywin32-ctypes==0.2.3
 requests==2.32.3
-setuptools==75.6.0
+setuptools==80.9.0
 six==1.16.0
 snowballstemmer==2.2.0
 Sphinx==8.1.3
