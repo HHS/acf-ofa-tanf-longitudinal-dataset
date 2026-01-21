@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "pandas", "openpyxl", "fuzzywuzzy", 
     "pdfminer.six", "sphinx", "xlsxwriter",
-    "pyinstaller", "pytest", "urllib3>=2.6.0"
+    "pyinstaller", "pytest", "urllib3>=2.6.3"
 ]
 
 [project.optional-dependencies]
