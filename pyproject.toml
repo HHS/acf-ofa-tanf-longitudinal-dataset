@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "pandas", "openpyxl", "fuzzywuzzy", 
-    "pdfminer.six", "sphinx", "xlsxwriter",
+    "pdfminer.six>=20251230", "sphinx", "xlsxwriter",
     "pyinstaller", "pytest", "urllib3>=2.6.3"
 ]
 

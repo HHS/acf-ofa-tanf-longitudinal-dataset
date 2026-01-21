@@ -15,11 +15,11 @@ iniconfig==2.0.0
 Jinja2==3.1.4
 MarkupSafe==3.0.2
 numpy==2.1.2
--e git+https://github.com/HHS/acf-ofa-tanf-longitudinal-dataset.git@230b6c7fd71f2f040258b33a6e05197dd41550ab#egg=ofa_tanf_longitudinal_dataset
+-e git+https://github.com/HHS/acf-ofa-tanf-longitudinal-dataset.git@82f6cd25c13038191a86d4a699043d9f05837ac1#egg=ofa_tanf_longitudinal_dataset
 openpyxl==3.1.5
 packaging==24.1
 pandas==2.2.3
-pdfminer.six==20251107
+pdfminer.six==20260107
 pefile==2023.2.7
 pluggy==1.5.0
 pycparser==2.22
